@@ -1,0 +1,4 @@
+module CCryptoOpenSSL {
+    umbrella "/Users/maartene/Development/Vapor/MissionToMars/.build/checkouts/crypto/Sources/CCryptoOpenSSL/include"
+    export *
+}
