@@ -1,0 +1,10 @@
+import XCTest
+// 1
+@testable import AppTests
+
+// 2
+XCTMain([
+  testCase(AppTests.allTests),
+  testCase(PlayerTests.allTests),
+  testCase(PlayerDBTests.allTests)
+])

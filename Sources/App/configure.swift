@@ -20,8 +20,8 @@ public func configure(
     try services.register(FluentSQLiteProvider())
     
     // Configure a SQLite database
-    //let sqlite = try SQLiteDatabase(storage: .file(path: "db.sqlite"))
-    let sqlite = try SQLiteDatabase(storage: .memory)
+    let sqlite = try SQLiteDatabase(storage: .file(path: "db.sqlite"))
+    //let sqlite = try SQLiteDatabase(storage: .memory)
     //print("Database path: \(sqlite.storage)")
     
     /// Register the configured SQLite database to the database config.
