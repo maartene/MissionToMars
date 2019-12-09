@@ -6,12 +6,13 @@
 //
 
 import Foundation
+import Vapor
 
-struct Improvement {
-    var id: UUID?
+struct Improvement: Content {
+    public var id: UUID?
     
-    let name: String
-    let ownerID: UUID
+    public let name: String
+    public let ownerID: UUID
     
     func update() -> Improvement {
         return self

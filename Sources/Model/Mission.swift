@@ -6,14 +6,24 @@
 //
 
 import Foundation
+import FluentSQLite
+import Vapor
 
-struct Mission {
-    var id: UUID?
+public struct Mission: Content, SQLiteUUIDModel {
+    public var id: UUID?
     
-    let name = "Mission To Mars #\(Int.random(in: 1...1_000_000))"
+    public var missionName: String// = "Mission To Mars"// #\(Int.random(in: 1...1_000_000))"
+    public let owningPlayerID: UUID
     
-    var percentageDone: Double = 0
-    var successChance: Double = 0
+    public var percentageDone: Double = 0
+    public var successChance: Double = 0
+    
+    public init(owningPlayerID: UUID) {
+        self.owningPlayerID = owningPlayerID
+        self.missionName = "Mission To Mars #\(Int.random(in: 1...1_000_000))"
+    }
     
     
 }
+
+extension Mission: Migration { }

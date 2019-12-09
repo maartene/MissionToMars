@@ -6,41 +6,43 @@
 //
 
 import Foundation
+import FluentSQLite
+import Vapor
 
-struct Player {
-    enum PlayerError: Error {
-        case noMissionError
+public struct Player: Content, SQLiteUUIDModel {
+    public enum PlayerError: Error {
+        case noMission
         case insufficientFunds
         case insufficientTechPoints
+        case noSupportedPlayer
+        case userAlreadyExists
     }
     
-    var id: UUID?
+    public var id: UUID?
     
-    let username: String
+    public let username: String
     
-    var ownsMission: Mission?
-    var supportsMission: Mission?
+    public var ownsMissionID: UUID?
+    public var supportsPlayerID: UUID?
     
     // resources
-    var cash: Double = 1000
-    var technologyPoints: Double = 75
+    public private(set) var cash: Double = 1000
+    public private(set) var technologyPoints: Double = 75
     
-    var technologyLevel: Int = 1
+    public private(set) var technologyLevel: Int = 1
     
     //var improvements = [Improvement]()
     
-    func update(ticks: Int = 1) -> Player {
+    public init(username: String) {
+        self.username = username
+    }
+    
+    public func update(ticks: Int = 1) -> Player {
         var updatedPlayer = self
         
         for _ in 0 ..< ticks {
             updatedPlayer.cash += 100
             updatedPlayer.technologyPoints += 3
-            
-            /*let updatedImprovements = improvements.map {
-                $0.update()
-            }
-            
-            updatedPlayer.improvements = updatedImprovements*/
         }
         
         return updatedPlayer
@@ -74,33 +76,28 @@ struct Player {
         return (donatingPlayer, receivingPlayer)
     }
     
-    func investInMission(amount: Double) throws -> Player {
-        guard var changedMission = self.ownsMission else {
-            throw PlayerError.noMissionError
-        }
-        
+    func investInMission(amount: Double, in mission: Mission) throws -> (changedPlayer: Player, changedMission: Mission) {
+        var changedMission = mission
         var changedPlayer = self
-        
-        guard amount <= cash else {
+            
+        guard amount <= self.cash else {
             throw PlayerError.insufficientFunds
         }
         
         changedPlayer.cash -= amount
         
-        let missionPoints = missionPointValue(for: amount)
+        let missionPoints = self.missionPointValue(for: amount)
         print("Adding mission points: \(missionPoints)")
         changedMission.percentageDone += missionPoints
         
-        changedPlayer.ownsMission = changedMission
-        
-        return changedPlayer
+        return (changedPlayer, changedMission)
     }
     
-    var costOfNextTechnologyLevel: Double {
-        40.0 * pow(1.5, technologyLevel).doubleValue
+    public var costOfNextTechnologyLevel: Double {
+        40.0 * NSDecimalNumber(decimal: pow(1.5, technologyLevel)).doubleValue
     }
     
-    func investInNextLevelOfTechnology() throws -> Player {
+    public func investInNextLevelOfTechnology() throws -> Player {
         print("Required tech points for next level: \(costOfNextTechnologyLevel)")
         guard costOfNextTechnologyLevel <= self.technologyPoints else {
             throw PlayerError.insufficientFunds
@@ -114,13 +111,70 @@ struct Player {
         return changedPlayer
     }
     
-    func missionPointValue(for cashAmount: Double) -> Double {
+    public func missionPointValue(for cashAmount: Double) -> Double {
         return cashAmount / Double(1_000_000 - technologyLevel * 100)
     }
 }
 
-extension Decimal {
-    var doubleValue:Double {
-        return NSDecimalNumber(decimal:self).doubleValue
+extension Player: Migration { }
+
+// Database aware actions for Player model
+extension Player {
+    public static func createUser(username: String, on conn: DatabaseConnectable) throws -> Future<Player> {
+        return Player.query(on: conn).filter(\.username, .equal, username).first().flatMap(to: Player.self) { existingUser in
+            if existingUser != nil {
+                throw PlayerError.userAlreadyExists
+            }
+            
+            let player = Player(username: username)
+            
+            return player.save(on: conn)
+        }
+    }
+    
+    func getSupportedMission(on conn: DatabaseConnectable) throws -> Future<Mission?> {
+        guard let missionID = ownsMissionID else {
+            throw PlayerError.noMission
+        }
+        
+        return Mission.find(missionID, on: conn)
+    }
+    
+    func getSupportedPlayer(on conn: DatabaseConnectable) throws -> Future<Player?> {
+        guard let playerID = supportsPlayerID else {
+            throw PlayerError.noSupportedPlayer
+        }
+        
+        return Player.find(playerID, on: conn)
+    }
+    
+    public func donateToSupportedPlayer(cash amount: Double, on conn: DatabaseConnectable) throws -> Future<(donatingPlayer: Player, receivingPlayer: Player)> {
+        return try getSupportedPlayer(on: conn).map(to: (donatingPlayer: Player, receivingPlayer: Player).self) { player in
+            guard let supportedPlayer = player else {
+                throw PlayerError.noSupportedPlayer
+            }
+            
+            return try self.donate(cash: amount, to: supportedPlayer)
+        }
+    }
+    
+    public func donateToSupportedPlayer(techPoints amount: Double, on conn: DatabaseConnectable) throws -> Future<(donatingPlayer: Player, receivingPlayer: Player)> {
+        return try getSupportedPlayer(on: conn).map(to: (donatingPlayer: Player, receivingPlayer: Player).self) { player in
+            guard let supportedPlayer = player else {
+                throw PlayerError.noSupportedPlayer
+            }
+            
+            return try self.donate(techPoints: amount, to: supportedPlayer)
+        }
+    }
+    
+    public func investInMission(amount: Double, on conn: DatabaseConnectable) throws -> Future<(changedPlayer: Player, changedMission: Mission)> {
+        return try getSupportedMission(on: conn).map(to: (changedPlayer: Player, changedMission: Mission).self) { mission in
+            guard let changedMission = mission else {
+                throw PlayerError.noMission
+            }
+            
+            return try self.investInMission(amount: amount, in: changedMission)
+        }
     }
 }

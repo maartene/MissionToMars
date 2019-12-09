@@ -1,4 +1,5 @@
 import Routing
+import Model
 import Vapor
 
 /// Register your application's routes here.
@@ -8,13 +9,13 @@ public func routes(_ router: Router) throws {
     router.get("hello") { req in
         return "Hello, world!"
     }
-    /*
-    router.get("testRoute") { req -> String in
-        let player = Player(username: "empty")
-        let mission = Mission()
-        let improvement = Improvement(id: nil, name: "test", ownerID: UUID())
-        
-        return "empty"
-    }*/
+    
+    router.get("testRoute") { req -> Future<Player> in
+        let player = Player(username: "testUser")
+    
+        return player.create(on: req).map(to: Player.self) { player in
+            return player
+        }
+    }
     
 }
