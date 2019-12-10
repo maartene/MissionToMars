@@ -10,7 +10,7 @@ jobs:
       - run: swift test
   linux:
     docker:
-      - image: norionomura/swift:swift-4.1-branch
+      - image: swift
     steps:
       - checkout
       - run: apt-get update
