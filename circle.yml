@@ -15,6 +15,7 @@ jobs:
       - checkout
       - run: apt-get update
       - run: apt-get install -yq libssl-dev
+      - run: apt-get install -yq zlib1g-dev
       - run: swift build
       - run: swift test
 workflows:
