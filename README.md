@@ -1,4 +1,5 @@
-![Swift 5.1](http://img.shields.io/badge/swift-5.1-orange.svg) ![CircleCI test status](https://img.shields.io/circleci/build/github/maartene/MissionToMars) ![MIT License](http://img.shields.io/badge/license-MIT-brightgreen.svg) 
+![Swift 5.1](http://img.shields.io/badge/swift-5.1-orange.svg) 
+![Vapor v3.3](https://img.shields.io/badge/vapor-3.3-blue) [![CircleCI](https://circleci.com/gh/maartene/MissionToMars.svg?style=shield)](https://circleci.com/gh/maartene/MissionToMars) ![MIT License](http://img.shields.io/badge/license-MIT-brightgreen.svg) 
 
 # Mission To Mars
 Getting to Mars is hard. Very hard. This game aims to become a "hard-scifi" simulation of the challenges to get to Mars.
