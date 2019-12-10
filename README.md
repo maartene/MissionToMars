@@ -1,3 +1,5 @@
+![Swift 5.1](http://img.shields.io/badge/swift-5.1-orange.svg) https://img.shields.io/circleci/build/github/maartene/MissionToMars ![MIT License](http://img.shields.io/badge/license-MIT-brightgreen.svg) 
+
 # Mission To Mars
 Getting to Mars is hard. Very hard. This game aims to become a "hard-scifi" simulation of the challenges to get to Mars.
 * It will require teamwork, as it's not feasible to go there alone;
