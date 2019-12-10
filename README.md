@@ -47,7 +47,8 @@ These structs do not contain any mutable functions. All functions that should ch
 It is your responsibility to take this result, use it and if necesarry persist it.
 
 An example:
-```// assume we have a player "player" and a database connection from a request "req": 
+```
+// assume we have a player "player" and a database connection from a request "req": 
 // this player performs an action:
 let changedPlayer = try player.investInNextLevelOfTechnology()
 // persist changed state due to the action performed
