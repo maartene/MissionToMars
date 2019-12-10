@@ -87,18 +87,22 @@ public struct Player: Content, SQLiteUUIDModel {
         changedPlayer.cash -= amount
         
         let missionPoints = self.missionPointValue(for: amount)
-        print("Adding mission points: \(missionPoints)")
+        //print("Adding mission points: \(missionPoints)")
         changedMission.percentageDone += missionPoints
         
         return (changedPlayer, changedMission)
     }
     
     public var costOfNextTechnologyLevel: Double {
-        40.0 * NSDecimalNumber(decimal: pow(1.5, technologyLevel)).doubleValue
+        40.0 * NSDecimalNumber(decimal: pow(1.6, technologyLevel)).doubleValue
+    }
+    
+    public var technologyMissionPointDiscount: Double {
+        100 * NSDecimalNumber(decimal: pow(1.5, technologyLevel)).doubleValue
     }
     
     public func investInNextLevelOfTechnology() throws -> Player {
-        print("Required tech points for next level: \(costOfNextTechnologyLevel)")
+        //print("Required tech points for next level: \(costOfNextTechnologyLevel)")
         guard costOfNextTechnologyLevel <= self.technologyPoints else {
             throw PlayerError.insufficientFunds
         }
@@ -112,7 +116,7 @@ public struct Player: Content, SQLiteUUIDModel {
     }
     
     public func missionPointValue(for cashAmount: Double) -> Double {
-        return cashAmount / Double(1_000_000 - technologyLevel * 100)
+        return cashAmount / Double(1_000_000 - technologyMissionPointDiscount)
     }
 }
 
