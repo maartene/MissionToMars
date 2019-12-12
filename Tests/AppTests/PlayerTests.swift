@@ -11,10 +11,6 @@ import XCTest
 @testable import Model
 
 final class PlayerTests : XCTestCase {
-    
-    func testNothing() throws {
-        XCTAssert(true)
-    }
 
     func testUpdatePlayer() throws {
         let player = Player(username: "testUser")
@@ -122,7 +118,6 @@ final class PlayerTests : XCTestCase {
     }
     
     static let allTests = [
-        ("testNothing", testNothing),
         ("testUpdatePlayer", testUpdatePlayer),
         ("testDonateCashToPlayer", testDonateCashToPlayer),
         ("testDonateTechnologyToPlayer", testDonateTechnologyToPlayer),

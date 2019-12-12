@@ -33,12 +33,13 @@ Currently the model contains two types:
 
 ### Structure
 The structures contain two parts:
-A "pure struct" (`internal`) part;
-A database/persistance (`public`) aware part.
+* A "pure struct" (`internal`) part;
+* A database/persistance (`public`) aware part.
 The database/persistance functions can be recognised by the `conn: DatabaseConnectable` attribute and return a `Future`.
 
 #### Example:
 ```
+// from Player.swift:
 public func investInMission(amount: Double, on conn: DatabaseConnectable) throws -> Future<(changedPlayer: Player, changedMission: Mission)>
 ```
 This allows a player to invest in a mission. Note:

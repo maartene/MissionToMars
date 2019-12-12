@@ -10,7 +10,30 @@ import FluentSQLite
 import Vapor
 
 public struct Player: Content, SQLiteUUIDModel {
-    public enum PlayerError: Error {
+    public enum PlayerError: Error, Debuggable {
+        public var identifier: String {
+            switch self {
+            case .userAlreadyExists:
+                return "userAlreadyExists"
+            default:
+                return "some other error"
+            }
+            
+        }
+        
+        public var reason: String {
+            switch self {
+            case .userAlreadyExists:
+                return "A user with this username already exists."
+            default:
+                return "some other error"
+            }
+        }
+        
+        
+        
+        
+        
         case noMission
         case insufficientFunds
         case insufficientTechPoints
@@ -124,15 +147,19 @@ extension Player: Migration { }
 
 // Database aware actions for Player model
 extension Player {
-    public static func createUser(username: String, on conn: DatabaseConnectable) throws -> Future<Player> {
-        return Player.query(on: conn).filter(\.username, .equal, username).first().flatMap(to: Player.self) { existingUser in
+    public static func createUser(username: String, on conn: DatabaseConnectable) -> Future<Result<Player, PlayerError>> {
+        return Player.query(on: conn).filter(\.username, .equal, username).first().flatMap(to: Result<Player, PlayerError>.self) { existingUser in
             if existingUser != nil {
-                throw PlayerError.userAlreadyExists
+                return Future.map(on: conn) { () -> Result<Player, PlayerError> in
+                    return .failure(.userAlreadyExists)
+                }
             }
             
             let player = Player(username: username)
             
-            return player.save(on: conn)
+            return player.save(on: conn).map(to: Result<Player, PlayerError>.self) { player in
+                return .success(player)
+            }
         }
     }
     
@@ -152,33 +179,66 @@ extension Player {
         return Player.find(playerID, on: conn)
     }
     
-    public func donateToSupportedPlayer(cash amount: Double, on conn: DatabaseConnectable) throws -> Future<(donatingPlayer: Player, receivingPlayer: Player)> {
-        return try getSupportedPlayer(on: conn).map(to: (donatingPlayer: Player, receivingPlayer: Player).self) { player in
+    public func donateToSupportedPlayer(cash amount: Double, on conn: DatabaseConnectable) throws -> Future<Result<(donatingPlayer: Player, receivingPlayer: Player), Error>> {
+        return try getSupportedPlayer(on: conn).flatMap(to: Result<(donatingPlayer: Player, receivingPlayer: Player), Error>.self) { player in
             guard let supportedPlayer = player else {
-                throw PlayerError.noSupportedPlayer
+                return Future.map(on: conn) {
+                    return .failure(PlayerError.noSupportedPlayer)
+                }
             }
             
-            return try self.donate(cash: amount, to: supportedPlayer)
+            var result: Result<(donatingPlayer: Player, receivingPlayer: Player), Error>
+            do {
+                let donatingResult = try self.donate(cash: amount, to: supportedPlayer)
+                result = .success(donatingResult)
+            } catch {
+                result = .failure(error)
+            }
+            return Future.map(on: conn) { return result }
         }
     }
     
-    public func donateToSupportedPlayer(techPoints amount: Double, on conn: DatabaseConnectable) throws -> Future<(donatingPlayer: Player, receivingPlayer: Player)> {
-        return try getSupportedPlayer(on: conn).map(to: (donatingPlayer: Player, receivingPlayer: Player).self) { player in
+    public func donateToSupportedPlayer(techPoints amount: Double, on conn: DatabaseConnectable) throws -> Future<Result<(donatingPlayer: Player, receivingPlayer: Player), Error>> {
+        return try getSupportedPlayer(on: conn).flatMap(to: Result<(donatingPlayer: Player, receivingPlayer: Player), Error>.self) { player in
             guard let supportedPlayer = player else {
-                throw PlayerError.noSupportedPlayer
+                return Future.map(on: conn) {
+                    return .failure(PlayerError.noSupportedPlayer)
+                }
             }
             
-            return try self.donate(techPoints: amount, to: supportedPlayer)
+            var result: Result<(donatingPlayer: Player, receivingPlayer: Player), Error>
+            do {
+                let donatingResult = try self.donate(techPoints: amount, to: supportedPlayer)
+                result = .success(donatingResult)
+            } catch {
+                result = .failure(error)
+            }
+            return Future.map(on: conn) { return result }
         }
     }
     
-    public func investInMission(amount: Double, on conn: DatabaseConnectable) throws -> Future<(changedPlayer: Player, changedMission: Mission)> {
-        return try getSupportedMission(on: conn).map(to: (changedPlayer: Player, changedMission: Mission).self) { mission in
+    public func investInMission(amount: Double, on conn: DatabaseConnectable) throws -> Future<Result<(changedPlayer: Player, changedMission: Mission), PlayerError>> {
+        return try getSupportedMission(on: conn).flatMap(to: Result<(changedPlayer: Player, changedMission: Mission), PlayerError>.self) { mission in
             guard let changedMission = mission else {
-                throw PlayerError.noMission
+                return Future.map(on: conn) {
+                    return .failure(PlayerError.noMission)
+                }
             }
             
-            return try self.investInMission(amount: amount, in: changedMission)
+            var result: Result<(changedPlayer: Player, changedMission: Mission), PlayerError>
+            do {
+                let investResult = try self.investInMission(amount: amount, in: changedMission)
+                result = .success(investResult)
+            } catch {
+                if let error = error as? PlayerError {
+                    result = .failure(error)
+                } else {
+                    throw error
+                }
+            }
+            return Future.map(on: conn) { return result }
         }
     }
 }
+
+extension Player: Parameter { }

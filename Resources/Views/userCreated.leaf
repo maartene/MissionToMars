@@ -1,0 +1,13 @@
+#set("body") {
+    #if(uuid != "unknown") {
+        <h2>Welcome!</h2>
+        Please remember your unique code: #(uuid)
+    }
+
+    #if(errorMessage != "noError") {
+        <h2>Oh ooh!</h2>
+        #(errorMessage)
+    }
+}
+
+#embed("master")

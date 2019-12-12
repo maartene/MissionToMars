@@ -1,0 +1,27 @@
+#set("body") {
+    <div class="row m-3">
+        <div class="col"></div>
+        <div class="col">
+            <form>
+                <div class="form-group">
+                    <label for="title">Player UUID</label>
+                    <input type="text" class="form-control" id="text" name="playerid" placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"/>
+                </div>
+                <button type="submit" class="btn btn-primary btn-block">Log in</button>
+            </form>
+        </div>
+        <div class="col"></div>
+    </div>
+    <div class="row m-1">
+        <div class="col"></div>
+        <div class="col">&nbsp;</div>
+        <div class="col"></div>
+    </div>
+    <div class="row m-3">
+        <div class="col"></div>
+        <div class="col"><a href="/createCharacter" class="btn btn-success btn-block">Create new character</a></div>
+        <div class="col"></div>
+    </div>
+}
+
+#embed("master")

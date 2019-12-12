@@ -1,6 +1,7 @@
 import Vapor
 import Model
 import FluentSQLite
+import Leaf
 
 /// Called before your application initializes.
 ///
@@ -34,4 +35,14 @@ public func configure(
     migrations.add(model: Player.self, database: .sqlite)
     migrations.add(model: Mission.self, database: .sqlite)
     services.register(migrations)
+    
+    // Configure LEAF
+    try services.register(LeafProvider())
+    config.prefer(LeafRenderer.self, for: ViewRenderer.self)
+    
+    var middlewareConfig = MiddlewareConfig()
+    middlewareConfig.use(FileMiddleware.self)
+    services.register(middlewareConfig)
+    
+    
 }
