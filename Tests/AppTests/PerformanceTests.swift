@@ -59,10 +59,7 @@ final class PerformanceTests: XCTestCase {
             throw PlayerDBTestsHelpersError.appIsNil
         }
         
-        var run = 1
-        measure {
-            try? deleteData()
-            print("Started measured test run: \(run)")
+        print("Started measured test run.")
             _ = try? app.withPooledConnection(to: .sqlite, closure: { conn -> Future<[Player]> in
                 var futures = [Future<Player>]()
                 for i in 0 ..< 1000 {
@@ -78,52 +75,41 @@ final class PerformanceTests: XCTestCase {
                 }
                 return futures.flatten(on: app)
             }).wait()
-            print("Finished measured test run: \(run)")
-            run += 1
-        }
+        print("Finished measured test run.")
     }
     
     func testGame() throws {
-        var run = 1
-        measure {
-            print("Starting testGame run: \(run)")
-            do {
-                var player = Player(username: "testPlayer")
-                player.id = UUID()
-                
-                var mission = Mission(owningPlayerID: player.id!)
-                mission.id = UUID()
-                player.ownsMissionID = mission.id
-                
-                // simulate until mission done (with a maximum of a million steps)
-                let maxSteps = 1_000_000
-                var steps = 0
-                while mission.percentageDone < 100 && steps < maxSteps {
-                    player = player.update()
-                    let investment = try player.investInMission(amount: player.cash, in: mission)
-                    player = investment.changedPlayer
-                    mission = investment.changedMission
-                    
-                    if player.technologyPoints >= player.costOfNextTechnologyLevel {
-                        player = try player.investInNextLevelOfTechnology()
-                    }
-                    
-                    steps += 1
-                }
-                print("Completed running simulation (max steps: \(maxSteps).")
-                if mission.percentageDone >= 100 {
-                    print("Completed mission in \(steps) update steps.")
-                    XCTAssertTrue(true)
-                } else {
-                    print("Failed to complete mission in \(maxSteps) steps.")
-                    XCTAssertTrue(true)
-                }
-                print("Player: \(player) \nMission: \(mission)")
-            } catch {
-                XCTFail("Error occured: \(error)")
+        var player = Player(username: "testPlayer")
+        player.id = UUID()
+        
+        var mission = Mission(owningPlayerID: player.id!)
+        mission.id = UUID()
+        player.ownsMissionID = mission.id
+        
+        // simulate until mission done (with a maximum of a million steps)
+        let maxSteps = 1_000_000
+        var steps = 0
+        while mission.percentageDone < 100 && steps < maxSteps {
+            player = player.update()
+            let investment = try player.investInMission(amount: player.cash, in: mission)
+            player = investment.changedPlayer
+            mission = investment.changedMission
+            
+            if player.technologyPoints >= player.costOfNextTechnologyLevel {
+                player = try player.investInNextLevelOfTechnology()
             }
-            run += 1
+            
+            steps += 1
         }
+        print("Completed running simulation (max steps: \(maxSteps).")
+        if mission.percentageDone >= 100 {
+            print("Completed mission in \(steps) update steps.")
+            XCTAssertTrue(true)
+        } else {
+            print("Failed to complete mission in \(maxSteps) steps.")
+            XCTAssertTrue(true)
+        }
+        print("Player: \(player) \nMission: \(mission)")
     }
     
     // HELPERS
