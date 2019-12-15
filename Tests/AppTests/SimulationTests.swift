@@ -62,5 +62,6 @@ final class SimulationTests : XCTestCase {
         ("testAdvanceSimulationWithLargeEnoughTimeDifference", testAdvanceSimulationWithLargeEnoughTimeDifference),
         ("testSimulationDoesNotAdvanceWithSmallEnoughTimeDifference", testSimulationDoesNotAdvanceWithSmallEnoughTimeDifference),
         ("testAdvanceSimulationMultipleTicks", testAdvanceSimulationMultipleTicks),
+        ("testCallUpdateFunction", testCallUpdateFunction),
     ]
 }

@@ -128,4 +128,10 @@ final class SimulationDBTests : XCTestCase {
             return Future.map(on: conn) { return }
         }).wait()
     }
+    
+    static let allTests = [
+        ("testSaveUpdatedPlayers", testSaveUpdatedPlayers),
+        ("testUpdatePlayersUsingSimulationInDatabase", testUpdatePlayersUsingSimulationInDatabase),
+        ("testCreateSimulationInDatabase", testCreateSimulationInDatabase)
+    ]
 }

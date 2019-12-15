@@ -6,5 +6,8 @@ import XCTest
 XCTMain([
   testCase(AppTests.allTests),
   testCase(PlayerTests.allTests),
-  testCase(PlayerDBTests.allTests)
+  testCase(PlayerDBTests.allTests),
+  testCase(SimulationTests.allTests),
+  // testCase(SimulationDBTests.allTests),
+  testCase(PerformanceTests.allTests),
 ])
