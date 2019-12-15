@@ -1,0 +1,49 @@
+#set("body") {
+    <h2>Welcome #(player.username)!</h2>
+    <div class="container border p-3">
+        <div class="row px-3">
+            <h3>Today</h3>
+        </div>
+        <div class="row">
+            <div class="col">Date: 12-12-2020</div>
+        </div>
+    </div>
+    <div class="container border p-3 mt-3">
+        <div class="row px-3">
+            <h3>Current mission</h3>
+        </div>
+        <div class="row px-3">
+            <div class="col">
+            #if(mission) {
+                <div class="row">#(mission.missionName)</div>
+                <div class="row">Percentage complete: #(mission.percentageDone) Chance of success: #(mission.successChance)</div>
+                <div class="row"><a href="" class="btn btn-success mt-1">Invest in mission</a></div>
+            } else {
+                <div class="col"><a href="" class="btn btn-secondary">Create mission</a></div>
+                <div class="col"><a href="" class="btn btn-secondary">Support a mission</a></div>
+            }
+            </div>
+        </div>
+    </div>
+    <div class="container border p-3 mt-3">
+        <div class="row px-3">
+            <h3>Your corp</h3>
+        </div>
+        <div class="row px-3">
+            <div class="col">
+                <div class="row mb-3  align-items-center">Cash: $#(player.cash)</div>
+                <div class="row align-items-center">Technology level: #(player.technologyLevel)</div>
+                <div class="row align-items-center">Technology points: #(player.technologyPoints) / #(costOfNextTechnologyLevel)
+                    #if(player.technologyPoints > costOfNextTechnologyLevel) {
+                        <a href="" class="btn btn-success btn-sm ml-3">Upgrade tech level</a>
+                    }
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="container p-3 mt-3">
+        #embed("footer")
+    </div>
+}
+
+#embed("master")

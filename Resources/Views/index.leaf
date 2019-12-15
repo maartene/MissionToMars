@@ -2,7 +2,7 @@
     <div class="row m-3">
         <div class="col"></div>
         <div class="col">
-            <form>
+            <form action="/login" method="POST">
                 <div class="form-group">
                     <label for="title">Player UUID</label>
                     <input type="text" class="form-control" id="text" name="playerid" placeholder="XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX"/>

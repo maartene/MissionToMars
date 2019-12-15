@@ -39,24 +39,102 @@ public func routes(_ router: Router) throws {
         }
     }
     
-    router.get("login", String.parameter) { req -> Future<View> in
-        let idString: String = try req.parameters.next()
+    router.post("login") { req -> Response in
+        let idString: String = (try? req.content.syncGet(at: "playerid")) ?? ""
+        
         guard let id = UUID(idString) else {
             print("\(idString) is not a valid user id")
+            return req.redirect(to: "/")
+        }
+        
+        try req.session()["playerID"] = idString
+        return req.redirect(to: "/main")
+    }
+    
+    router.get("main") { req -> Future<View> in
+        struct MainContext: Codable {
+            let player: Player
+            let mission: Mission?
+            let costOfNextTechnologyLevel: Double
+        }
+        
+        guard let id = getPlayerIDFromSession(on: req) else {
             throw Abort(.unauthorized)
         }
         
         return Player.find(id, on: req).flatMap(to: View.self) { player in
             guard let player = player else {
-                print("Could not find user with id: \(idString)")
+                print("Could not find user with id: \(id)")
                 throw Abort(.unauthorized)
             }
-            return try req.view().render("main", ["player": player])
+            
+            // does this player have his/her own mission?
+            if let missionID = player.ownsMissionID {
+                return try player.getSupportedMission(on: req).flatMap(to: View.self) { mission in
+                    guard let mission = mission else {
+                        throw Abort(.notFound, reason: "Mission with id \(missionID) does not exist.")
+                    }
+                    let context = MainContext(player: player, mission: mission, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel)
+                    
+                    return try req.view().render("main", context)
+                }
+            }
+            
+            // this player does not own his/her own mission, perhaps he/she supports the mission of another player?
+            else if let supportedPlayerID = player.supportsPlayerID {
+                return try player.getSupportedPlayer(on: req).flatMap(to: View.self) { supportedPlayer in
+                    guard let supportedPlayer = supportedPlayer else {
+                        throw Abort(.notFound, reason: "Player with id\(supportedPlayerID) does not exist.")
+                    }
+                    
+                    return try supportedPlayer.getSupportedMission(on: req).flatMap(to: View.self) { supportedMission in
+                        guard let supportedMission = supportedMission else {
+                            throw Abort(.notFound, reason: "Mission with id \(supportedPlayer.ownsMissionID) does not exist.")
+                        }
+                        
+                        let context = MainContext(player: player, mission: supportedMission, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel)
+                        
+                        return try req.view().render("main", context)
+                    }
+                }
+            } else {
+                let context = MainContext(player: player, mission: nil, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel)
+            
+                return try req.view().render("main", context)
+            }
         }
+    }
+    
+    router.get("createMission") { req -> Future<Response> in
+        let player = Player(username: "foo")
+        let newMission = Mission(owningPlayerID: player.id!)
+        
+        
+        return newMission.create(on: req).flatMap(to: Response.self) { mission in
+            var changedPlayer = player
+            changedPlayer.ownsMissionID = mission.id
+            
+            return changedPlayer.save(on: req).map(to: Response.self) { player in
+                return req.redirect(to: "/main")
+            }
+        }
+    }
+    
+    router.get("debug", "allUsers") { req -> Future<[Player]> in
+        return Player.query(on: req).all()
     }
     
     router.get() { req in
         return try req.view().render("index")
+    }
+    
+    func getPlayerIDFromSession(on req: Request) -> UUID? {
+        if let session = try? req.session() {
+            if let playerID = session["playerID"] {
+                return UUID(playerID)
+            }
+        }
+        return nil
     }
     
 }

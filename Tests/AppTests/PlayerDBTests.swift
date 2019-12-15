@@ -33,21 +33,28 @@ final class PlayerDBTests : XCTestCase {
             
             try App.boot(app)
             try app.asyncRun().wait()
+            
+            try deleteData()
         } catch {
             fatalError("Failed to launch Vapor server: \(error.localizedDescription)")
         }
     }
     
     override func tearDown() {
+        try? deleteData()
+        try? app.runningServer?.close().wait()
+    }
+
+    func deleteData() throws {
         _ = try? app?.withPooledConnection(to: .sqlite, closure: { conn -> Future<Void> in
             _ = Player.query(on: conn).delete()
             _ = Mission.query(on: conn).delete()
             print("Deleted database entries.")
             return Future.map(on: conn) { return }
         }).wait()
-        try? app.runningServer?.close().wait()
     }
-
+    
+    
     func testCannotCreatePlayerWithExistingUsername() throws {
         _ = try createTestPlayer()
         XCTAssertThrowsError(try createTestPlayer())

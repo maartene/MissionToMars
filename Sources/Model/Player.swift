@@ -163,7 +163,7 @@ extension Player {
         }
     }
     
-    func getSupportedMission(on conn: DatabaseConnectable) throws -> Future<Mission?> {
+    public func getSupportedMission(on conn: DatabaseConnectable) throws -> Future<Mission?> {
         guard let missionID = ownsMissionID else {
             throw PlayerError.noMission
         }
@@ -171,7 +171,7 @@ extension Player {
         return Mission.find(missionID, on: conn)
     }
     
-    func getSupportedPlayer(on conn: DatabaseConnectable) throws -> Future<Player?> {
+    public func getSupportedPlayer(on conn: DatabaseConnectable) throws -> Future<Player?> {
         guard let playerID = supportsPlayerID else {
             throw PlayerError.noSupportedPlayer
         }
