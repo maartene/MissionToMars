@@ -81,41 +81,6 @@ final class PlayerTests : XCTestCase {
         
         XCTAssertThrowsError(try player.investInNextLevelOfTechnology())
     }
-
-    func testGame() throws {
-        var player = Player(username: "testPlayer")
-        player.id = UUID()
-        
-        var mission = Mission(owningPlayerID: player.id!)
-        mission.id = UUID()
-        player.ownsMissionID = mission.id
-        
-        // simulate until mission done (with a maximum of a million steps)
-        let maxSteps = 1_000_000
-        var steps = 0
-        while mission.percentageDone < 100 && steps < maxSteps {
-            player = player.update()
-            let investment = try player.investInMission(amount: player.cash, in: mission)
-            player = investment.changedPlayer
-            mission = investment.changedMission
-            
-            if player.technologyPoints >= player.costOfNextTechnologyLevel {
-                player = try player.investInNextLevelOfTechnology()
-            }
-            
-            steps += 1
-        }
-        print("Completed running simulation (max steps: \(maxSteps).")
-        if mission.percentageDone >= 100 {
-            print("Completed mission in \(steps) update steps.")
-            XCTAssertTrue(true)
-        } else {
-            print("Failed to complete mission in \(maxSteps) steps.")
-            XCTAssertTrue(true)
-        }
-        print("Player: \(player) \nMission: \(mission)")
-        
-    }
     
     static let allTests = [
         ("testUpdatePlayer", testUpdatePlayer),
@@ -125,7 +90,6 @@ final class PlayerTests : XCTestCase {
         ("testCannotDonateMoreTechThanAvailable", testCannotDonateMoreTechThanAvailable),
         ("testInvestInMission", testInvestInMission),
         ("testInvestInTechnology", testInvestInTechnology),
-        ("testCannotInvestMoreThanHasInTechnology", testCannotInvestMoreThanHasInTechnology),
-        ("testGame", testGame),
+        ("testCannotInvestMoreThanHasInTechnology", testCannotInvestMoreThanHasInTechnology)
     ]
 }

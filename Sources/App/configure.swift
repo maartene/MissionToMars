@@ -34,6 +34,7 @@ public func configure(
     var migrations = MigrationConfig()
     migrations.add(model: Player.self, database: .sqlite)
     migrations.add(model: Mission.self, database: .sqlite)
+    migrations.add(model: Simulation.self, database: .sqlite)
     services.register(migrations)
     
     // Configure LEAF

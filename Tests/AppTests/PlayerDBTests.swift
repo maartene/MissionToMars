@@ -47,11 +47,11 @@ final class PlayerDBTests : XCTestCase {
 
     func deleteData() throws {
         _ = try? app?.withPooledConnection(to: .sqlite, closure: { conn -> Future<Void> in
-            _ = Player.query(on: conn).delete()
-            _ = Mission.query(on: conn).delete()
-            print("Deleted database entries.")
-            return Future.map(on: conn) { return }
+            return Player.query(on: conn).delete().map(to: Void.self) { result in
+                return Mission.query(on: conn).delete()
+            }
         }).wait()
+        print("deleted data")
     }
     
     
@@ -158,6 +158,7 @@ final class PlayerDBTests : XCTestCase {
         }
     }
     
+    
     // HELPERS
     enum PlayerDBTestsHelpersError: Error {
         case appIsNil
@@ -208,6 +209,7 @@ final class PlayerDBTests : XCTestCase {
     
     static let allTests = [
         ("testCreatePlayer", testCreatePlayer),
+        ("testCreateMission", testCreateMission),
         ("testCannotCreatePlayerWithExistingUsername", testCannotCreatePlayerWithExistingUsername),
         ("testAddMissionToPlayer", testAddMissionToPlayer),
         ("testInvestInMission", testInvestInMission),
