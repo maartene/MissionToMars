@@ -55,6 +55,7 @@ final class SimulationTests : XCTestCase {
         let update = simulation.update(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60 * 4), players: players)
         
         XCTAssertGreaterThan(update.updatedPlayers[0].cash, players[0].cash, " cash")
+        XCTAssertEqual(update.updatedPlayers[0].id, players[0].id, "Player.id should be the same after update.")
     }
 
     static let allTests = [

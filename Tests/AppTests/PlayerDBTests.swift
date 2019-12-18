@@ -227,5 +227,6 @@ final class PlayerDBTests : XCTestCase {
         ("testInvestInTechnology", testInvestInTechnology),
         ("testDonateCashToPlayer", testDonateCashToPlayer),
         ("testDonateTechToPlayer", testDonateTechToPlayer),
+        ("testSaveUpdatedPlayer", testSaveUpdatedPlayer),
     ]
 }
