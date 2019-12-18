@@ -127,7 +127,7 @@ public struct Player: Content, SQLiteUUIDModel {
     public func investInNextLevelOfTechnology() throws -> Player {
         //print("Required tech points for next level: \(costOfNextTechnologyLevel)")
         guard costOfNextTechnologyLevel <= self.technologyPoints else {
-            throw PlayerError.insufficientFunds
+            throw PlayerError.insufficientTechPoints
         }
         
         var changedPlayer = self
@@ -238,6 +238,13 @@ extension Player {
             }
             return Future.map(on: conn) { return result }
         }
+    }
+    
+    public static func savePlayers(_ players: [Player], on conn: DatabaseConnectable) -> Future<[Player]> {
+        let futures = players.map { player in
+            return player.update(on: conn)
+        }
+        return futures.flatten(on: conn)
     }
 }
 

@@ -70,20 +70,20 @@ final class SimulationDBTests : XCTestCase {
             Player.query(on: conn).all()
             }).wait()
         
-        let simulation = try app!.withPooledConnection(to: .sqlite, closure: { conn -> Future<[Simulation]> in
+        let loadedSimulations = try app!.withPooledConnection(to: .sqlite, closure: { conn -> Future<[Simulation]> in
             return Simulation.query(on: conn).all()
-        }).wait().first!
+        }).wait()
         
-        var updatedPlayers = [Player]()
-        _ = simulation.update(currentDate: Date()) {
-            updatedPlayers = players.map { player in
-                player.update()
-            }
-        }
+        XCTAssertEqual(loadedSimulations.count, 1)
+        let loadedSimulation = loadedSimulations.first!
+        
+        let result = loadedSimulation.update(currentDate: Date(), players: players)
+        XCTAssertEqual(result.updatedSimulation.id, loadedSimulation.id, "UUID should be unchanged after update.")
         
         for i in 0 ..< players.count {
-            XCTAssertGreaterThan(updatedPlayers[i].cash, players[i].cash)
-            XCTAssertGreaterThan(updatedPlayers[i].technologyPoints, players[i].technologyPoints)
+            XCTAssertGreaterThan(result.updatedPlayers[i].cash, players[i].cash)
+            XCTAssertGreaterThan(result.updatedPlayers[i].technologyPoints, players[i].technologyPoints)
+            XCTAssertEqual(result.updatedPlayers[i].id, players[i].id, "uuid for player \(i) should be the same after update.")
         }
     }
     
@@ -96,14 +96,11 @@ final class SimulationDBTests : XCTestCase {
             player.update()
         }
         
-        for player in updatedPlayers {
-            _ = try app!.withPooledConnection(to: .sqlite, closure: { conn -> Future<Void> in
-                player.update(on: conn)
-                return Future.map(on: conn) {
-                    return
-                }
+        _ = try app!.withPooledConnection(to: .sqlite, closure: { conn -> Future<[Player]> in
+            return updatedPlayers.map { player in
+                return player.save(on: conn)
+            }.flatten(on: conn)
             }).wait()
-        }
                 
         let updatedPlayersFromDB = try app!.withPooledConnection(to: .sqlite, closure: { conn -> Future<[Player]> in
         Player.query(on: conn).all()
@@ -115,23 +112,50 @@ final class SimulationDBTests : XCTestCase {
         }
     }
     
+    func testSaveUpdatedSimulation() throws {
+        // load simulation
+        let loadedSimulations = try app!.withPooledConnection(to: .sqlite) { conn in
+            return Simulation.query(on: conn).all()
+        }.wait()
+        
+        XCTAssertEqual(loadedSimulations.count, 1, "There should be only one simulation in the database.")
+        
+        let loadedSimulation = loadedSimulations.first!
+        
+        let result = loadedSimulation.update(currentDate: Date(), players: [])
+        
+        let savedSimulation = try app!.withPooledConnection(to: .sqlite) { conn in
+            return result.updatedSimulation.update(on: conn)
+        }.wait()
+        
+        XCTAssertEqual(loadedSimulation.id, savedSimulation.id, "Simulation id should not change after update/save.")
+        XCTAssertGreaterThan(savedSimulation.tickCount, loadedSimulation.tickCount, "tickCount should increase")
+        XCTAssertGreaterThan(savedSimulation.gameDate, loadedSimulation.gameDate, "time should pass.")
+        XCTAssertGreaterThan(savedSimulation.nextUpdateDate, loadedSimulation.nextUpdateDate, "time should pass.")
+    }
+    
     func setupData() throws {
-        _ = try? app?.withPooledConnection(to: .sqlite, closure: { conn -> Future<Void> in
+        _ = try? app?.withPooledConnection(to: .sqlite, closure: { conn -> Future<String> in
+            var createPlayerFutures = [Future<Result<Player, Player.PlayerError>>]()
             for i in 0 ..< 100 {
-                _ = Player.createUser(username: "testUser\(i)", on: conn)
+                createPlayerFutures.append(Player.createUser(username: "testUser\(i)", on: conn))
             }
             
-            let gameDate = Date().addingTimeInterval(24*60*60*365)
-            let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
-            _ = simulation.create(on: conn)
+            let createPlayersFuture = createPlayerFutures.flatten(on: conn)
             
-            return Future.map(on: conn) { return }
+            return createPlayersFuture.flatMap(to: String.self) { result in
+                let gameDate = Date().addingTimeInterval(24*60*60*365)
+                let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
+                return simulation.create(on: conn).map(to: String.self) { result in
+                    return "Done creating users and simulation." }
+            }
         }).wait()
     }
     
     static let allTests = [
         ("testSaveUpdatedPlayers", testSaveUpdatedPlayers),
         ("testUpdatePlayersUsingSimulationInDatabase", testUpdatePlayersUsingSimulationInDatabase),
-        ("testCreateSimulationInDatabase", testCreateSimulationInDatabase)
+        ("testCreateSimulationInDatabase", testCreateSimulationInDatabase),
+        ("testSaveUpdatedSimulation", testSaveUpdatedSimulation)
     ]
 }
