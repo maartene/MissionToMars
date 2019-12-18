@@ -14,7 +14,7 @@ struct Improvement: Content {
     public let name: String
     public let ownerID: UUID
     
-    func update() -> Improvement {
+    func updateImprovement() -> Improvement {
         return self
     }
 }

@@ -90,7 +90,7 @@ final class PerformanceTests: XCTestCase {
         let maxSteps = 1_000_000
         var steps = 0
         while mission.percentageDone < 100 && steps < maxSteps {
-            player = player.update()
+            player = player.updatePlayer()
             let investment = try player.investInMission(amount: player.cash, in: mission)
             player = investment.changedPlayer
             mission = investment.changedMission

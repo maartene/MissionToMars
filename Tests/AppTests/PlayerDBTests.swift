@@ -69,7 +69,7 @@ final class PlayerDBTests : XCTestCase {
     
     func testSaveUpdatedPlayer() throws {
         let player = try createTestPlayer()
-        let updatedPlayer = player.update()
+        let updatedPlayer = player.updatePlayer()
         let savedPlayer = try app!.withPooledConnection(to: .sqlite) { conn -> Future<Player> in
             return updatedPlayer.save(on: conn)
         }.wait()

@@ -15,7 +15,7 @@ final class PlayerTests : XCTestCase {
     func testUpdatePlayer() throws {
         let player = Player(username: "testUser")
         
-        let updatedPlayer = player.update()
+        let updatedPlayer = player.updatePlayer()
         
         XCTAssertGreaterThan(updatedPlayer.cash, player.cash, " cash")
         XCTAssertGreaterThan(updatedPlayer.technologyPoints, player.technologyPoints, " cash")
