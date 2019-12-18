@@ -74,16 +74,11 @@ final class SimulationDBTests : XCTestCase {
             return Simulation.query(on: conn).all()
         }).wait().first!
         
-        var updatedPlayers = [Player]()
-        _ = simulation.update(currentDate: Date()) {
-            updatedPlayers = players.map { player in
-                player.update()
-            }
-        }
+        let result = simulation.update(currentDate: Date(), players: players)
         
         for i in 0 ..< players.count {
-            XCTAssertGreaterThan(updatedPlayers[i].cash, players[i].cash)
-            XCTAssertGreaterThan(updatedPlayers[i].technologyPoints, players[i].technologyPoints)
+            XCTAssertGreaterThan(result.updatedPlayers[i].cash, players[i].cash)
+            XCTAssertGreaterThan(result.updatedPlayers[i].technologyPoints, players[i].technologyPoints)
         }
     }
     
@@ -96,14 +91,11 @@ final class SimulationDBTests : XCTestCase {
             player.update()
         }
         
-        for player in updatedPlayers {
-            _ = try app!.withPooledConnection(to: .sqlite, closure: { conn -> Future<Void> in
-                player.update(on: conn)
-                return Future.map(on: conn) {
-                    return
-                }
+        _ = try app!.withPooledConnection(to: .sqlite, closure: { conn -> Future<[Player]> in
+            return updatedPlayers.map { player in
+                return player.save(on: conn)
+            }.flatten(on: conn)
             }).wait()
-        }
                 
         let updatedPlayersFromDB = try app!.withPooledConnection(to: .sqlite, closure: { conn -> Future<[Player]> in
         Player.query(on: conn).all()
@@ -113,6 +105,10 @@ final class SimulationDBTests : XCTestCase {
             XCTAssertGreaterThan(updatedPlayersFromDB[i].cash, players[i].cash)
             XCTAssertGreaterThan(updatedPlayersFromDB[i].technologyPoints, players[i].technologyPoints)
         }
+    }
+    
+    func testSaveUpdatedSimulation() throws {
+        
     }
     
     func setupData() throws {

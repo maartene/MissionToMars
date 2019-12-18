@@ -19,6 +19,7 @@ final class PlayerTests : XCTestCase {
         
         XCTAssertGreaterThan(updatedPlayer.cash, player.cash, " cash")
         XCTAssertGreaterThan(updatedPlayer.technologyPoints, player.technologyPoints, " cash")
+        XCTAssertEqual(updatedPlayer.id, player.id, " UUID should be the same")
     }
 
     func testDonateCashToPlayer() throws {

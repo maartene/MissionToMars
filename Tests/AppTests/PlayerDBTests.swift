@@ -63,8 +63,19 @@ final class PlayerDBTests : XCTestCase {
     func testCreatePlayer() throws {
         let player = try createTestPlayer()
         
-        print(player)
+        //print(player)
         XCTAssertNotNil(player.id, " uuid")
+    }
+    
+    func testSaveUpdatedPlayer() throws {
+        let player = try createTestPlayer()
+        let updatedPlayer = player.update()
+        let savedPlayer = try app!.withPooledConnection(to: .sqlite) { conn -> Future<Player> in
+            return updatedPlayer.save(on: conn)
+        }.wait()
+        
+        XCTAssertNotNil(savedPlayer.id, " uuid")
+        XCTAssertEqual(savedPlayer.id, player.id, " uuids should be the same after saving.")
     }
     
     func testCreateMission() throws {

@@ -16,11 +16,12 @@ final class SimulationTests : XCTestCase {
         let gameDate = Date().addingTimeInterval(24*60*60*365)
         
         let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
-        let update = simulation.update(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60), updateAction: nil)
+        let update = simulation.update(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60), players: [])
         
-        XCTAssertGreaterThan(update.tickCount, simulation.tickCount, " ticks")
-        XCTAssertGreaterThan(update.gameDate, simulation.gameDate, " gameDate")
-        XCTAssertGreaterThan(update.nextUpdateDate, simulation.nextUpdateDate, " nextUpdateDate")
+        XCTAssertGreaterThan(update.updatedSimulation.tickCount, simulation.tickCount, " ticks")
+        XCTAssertGreaterThan(update.updatedSimulation.gameDate, simulation.gameDate, " gameDate")
+        XCTAssertGreaterThan(update.updatedSimulation.nextUpdateDate, simulation.nextUpdateDate, " nextUpdateDate")
+        XCTAssertEqual(update.updatedSimulation.id, simulation.id, "after update, UUIDs should be the same.")
     }
     
     func testSimulationDoesNotAdvanceWithSmallEnoughTimeDifference() throws {
@@ -28,11 +29,11 @@ final class SimulationTests : XCTestCase {
         let gameDate = Date().addingTimeInterval(24*60*60*365)
         
         let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60))
-        let update = simulation.update(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 30), updateAction: nil)
+        let update = simulation.update(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 30), players: [])
         
-        XCTAssertEqual(update.tickCount, simulation.tickCount, " ticks")
-        XCTAssertEqual(update.gameDate, simulation.gameDate, " gameDate")
-        XCTAssertEqual(update.nextUpdateDate, simulation.nextUpdateDate, " nextUpdateDate")
+        XCTAssertEqual(update.updatedSimulation.tickCount, simulation.tickCount, " ticks")
+        XCTAssertEqual(update.updatedSimulation.gameDate, simulation.gameDate, " gameDate")
+        XCTAssertEqual(update.updatedSimulation.nextUpdateDate, simulation.nextUpdateDate, " nextUpdateDate")
     }
     
     func testAdvanceSimulationMultipleTicks() throws {
@@ -40,28 +41,26 @@ final class SimulationTests : XCTestCase {
         let gameDate = Date().addingTimeInterval(24*60*60*365)
         
         let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
-        let update = simulation.update(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60 * 4), updateAction: nil)
+        let update = simulation.update(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60 * 4), players: [])
         
-        XCTAssertEqual(update.tickCount, 5, " ticks")
+        XCTAssertEqual(update.updatedSimulation.tickCount, 5, " ticks")
     }
     
-    func testCallUpdateFunction() throws {
+    func testUpdatePlayer() throws {
         // let's assume gamedate is one year from now.
         let gameDate = Date().addingTimeInterval(24*60*60*365)
-        
-        var updateCounter = 0
-        let updateFunction = { updateCounter += 1 }
+        let players = [Player(username: "testUser")]
         
         let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
-        _ = simulation.update(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60 * 4), updateAction: updateFunction)
+        let update = simulation.update(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60 * 4), players: players)
         
-        XCTAssertEqual(updateCounter, 5, " updates")
+        XCTAssertGreaterThan(update.updatedPlayers[0].cash, players[0].cash, " cash")
     }
 
     static let allTests = [
         ("testAdvanceSimulationWithLargeEnoughTimeDifference", testAdvanceSimulationWithLargeEnoughTimeDifference),
         ("testSimulationDoesNotAdvanceWithSmallEnoughTimeDifference", testSimulationDoesNotAdvanceWithSmallEnoughTimeDifference),
         ("testAdvanceSimulationMultipleTicks", testAdvanceSimulationMultipleTicks),
-        ("testCallUpdateFunction", testCallUpdateFunction),
+        ("testUpdatePlayer", testUpdatePlayer),
     ]
 }
