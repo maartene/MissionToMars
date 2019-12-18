@@ -59,7 +59,7 @@ public func routes(_ router: Router) throws {
         return getSimulation(on: req).flatMap(to: View.self) { simulation in
             if simulation.simulationShouldUpdate(currentDate: Date()) {
                 return Player.query(on: req).all().flatMap(to: View.self) { players in
-                    let result = simulation.update(currentDate: Date(), players: players)
+                    let result = simulation.updateSimulation(currentDate: Date(), players: players)
                     assert(simulation.id != nil)
                     assert(result.updatedSimulation.id != nil)
                     assert(simulation.id == result.updatedSimulation.id)

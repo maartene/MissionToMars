@@ -16,7 +16,7 @@ final class SimulationTests : XCTestCase {
         let gameDate = Date().addingTimeInterval(24*60*60*365)
         
         let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
-        let update = simulation.update(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60), players: [])
+        let update = simulation.updateSimulation(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60), players: [])
         
         XCTAssertGreaterThan(update.updatedSimulation.tickCount, simulation.tickCount, " ticks")
         XCTAssertGreaterThan(update.updatedSimulation.gameDate, simulation.gameDate, " gameDate")
@@ -29,7 +29,7 @@ final class SimulationTests : XCTestCase {
         let gameDate = Date().addingTimeInterval(24*60*60*365)
         
         let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60))
-        let update = simulation.update(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 30), players: [])
+        let update = simulation.updateSimulation(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 30), players: [])
         
         XCTAssertEqual(update.updatedSimulation.tickCount, simulation.tickCount, " ticks")
         XCTAssertEqual(update.updatedSimulation.gameDate, simulation.gameDate, " gameDate")
@@ -41,7 +41,7 @@ final class SimulationTests : XCTestCase {
         let gameDate = Date().addingTimeInterval(24*60*60*365)
         
         let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
-        let update = simulation.update(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60 * 4), players: [])
+        let update = simulation.updateSimulation(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60 * 4), players: [])
         
         XCTAssertEqual(update.updatedSimulation.tickCount, 5, " ticks")
     }
@@ -52,7 +52,7 @@ final class SimulationTests : XCTestCase {
         let players = [Player(username: "testUser")]
         
         let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
-        let update = simulation.update(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60 * 4), players: players)
+        let update = simulation.updateSimulation(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60 * 4), players: players)
         
         XCTAssertGreaterThan(update.updatedPlayers[0].cash, players[0].cash, " cash")
         XCTAssertEqual(update.updatedPlayers[0].id, players[0].id, "Player.id should be the same after update.")

@@ -60,7 +60,7 @@ public struct Player: Content, SQLiteUUIDModel {
         self.username = username
     }
     
-    public func update(ticks: Int = 1) -> Player {
+    public func updatePlayer(ticks: Int = 1) -> Player {
         var updatedPlayer = self
         
         for _ in 0 ..< ticks {

@@ -32,7 +32,7 @@ public struct Simulation {
         self.nextUpdateDate = nextUpdateDate
     }
     
-    public func update(currentDate: Date, players: [Player]) -> (updatedSimulation: Simulation, updatedPlayers: [Player]) {
+    public func updateSimulation(currentDate: Date, players: [Player]) -> (updatedSimulation: Simulation, updatedPlayers: [Player]) {
         var updatedSimulation = self
         var updatedPlayers = players
     
@@ -43,7 +43,7 @@ public struct Simulation {
             let tickCount = updatedSimulation.tickCount + 1
             
             updatedPlayers = updatedPlayers.map { player in
-                player.update()
+                player.updatePlayer()
             }
             
             updatedSimulation = Simulation(id: self.id, tickCount: tickCount, gameDate: gameDate, nextUpdateDate: nextUpdateDate)
