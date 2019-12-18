@@ -113,14 +113,25 @@ final class SimulationDBTests : XCTestCase {
     }
     
     func testSaveUpdatedSimulation() throws {
-        /*let simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date())
-        
-        let savedSimulation = try? app.withPooledConnection(to: .sqlite) { conn -> Future<Simulation> in
-            return simulation.create(on: conn)
+        // load simulation
+        let loadedSimulations = try app!.withPooledConnection(to: .sqlite) { conn in
+            return Simulation.query(on: conn).all()
         }.wait()
         
-        XCTAssertNotNil(savedSimulation, "savedSimulation should not be nil.")
-        XCTAssertNotNil(savedSimulation!.id, "savedSimulation should have an id.")*/
+        XCTAssertEqual(loadedSimulations.count, 1, "There should be only one simulation in the database.")
+        
+        let loadedSimulation = loadedSimulations.first!
+        
+        let result = loadedSimulation.update(currentDate: Date(), players: [])
+        
+        let savedSimulation = try app!.withPooledConnection(to: .sqlite) { conn in
+            return result.updatedSimulation.update(on: conn)
+        }.wait()
+        
+        XCTAssertEqual(loadedSimulation.id, savedSimulation.id, "Simulation id should not change after update/save.")
+        XCTAssertGreaterThan(savedSimulation.tickCount, loadedSimulation.tickCount, "tickCount should increase")
+        XCTAssertGreaterThan(savedSimulation.gameDate, loadedSimulation.gameDate, "time should pass.")
+        XCTAssertGreaterThan(savedSimulation.nextUpdateDate, loadedSimulation.nextUpdateDate, "time should pass.")
     }
     
     func setupData() throws {
