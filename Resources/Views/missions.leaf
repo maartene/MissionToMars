@@ -1,0 +1,14 @@
+#set("body") {
+    <h2>Which mission do you want to support?</h2>
+    <div>
+      <ul class="list-group">
+        #for(mission in missions) {
+          <li class="list-group-item">#(mission.missionName)<br/>
+            #(mission.owningPlayerName) <a href="/support/mission/#(mission.id)" class="btn-sm btn-primary">Support this mission</a>
+          </li>
+        } 
+      </ul>
+    </div>
+}
+
+#embed("master")

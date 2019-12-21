@@ -10,35 +10,13 @@ import FluentSQLite
 import Vapor
 
 public struct Player: Content, SQLiteUUIDModel {
-    public enum PlayerError: Error, Debuggable {
-        public var identifier: String {
-            switch self {
-            case .userAlreadyExists:
-                return "userAlreadyExists"
-            default:
-                return "some other error"
-            }
-            
-        }
-        
-        public var reason: String {
-            switch self {
-            case .userAlreadyExists:
-                return "A user with this username already exists."
-            default:
-                return "some other error"
-            }
-        }
-        
-        
-        
-        
-        
+    public enum PlayerError: Error {
         case noMission
         case insufficientFunds
         case insufficientTechPoints
         case noSupportedPlayer
         case userAlreadyExists
+        case userDoesNotExist
     }
     
     public var id: UUID?
