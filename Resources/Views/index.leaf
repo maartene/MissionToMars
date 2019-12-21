@@ -19,7 +19,7 @@
     </div>
     <div class="row m-3">
         <div class="col"></div>
-        <div class="col"><a href="/createCharacter" class="btn btn-success btn-block">Create new character</a></div>
+        <div class="col"><a href="/create/player" class="btn btn-success btn-block">Create new character</a></div>
         <div class="col"></div>
     </div>
 }
