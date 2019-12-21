@@ -10,16 +10,15 @@ Getting to Mars is hard. Very hard. This game aims to become a "hard-scifi" simu
 ## Features
 ### Whats available
 * In the current state, this "game" is only a model with very little simulation;
+* Persistent step-based simulation (where for instance a real-world hour translates to a day in game time);
 * Model is database-backed (currently: SQLite);
-* There is no UI/(restful)API yet. All functionality is validated using automated tests;
+* There is a simple Leaf based UI: completely server-side rendered, no JS/AJAX whatsoever;
 * Stubs for income and research, mission progress and technology (currently just values).
 
 ### What's still to come
 * Actual simulation of building a mission (i.e. work on components);
-* Persistent step-based simulation (where for instance a real-world hour translates to a day in game time);
 * Build improvements to get more cash per day, more value from research, improved production and the possibility to build mission parts;
-* User management and authentication (for now, using the randomly generated UUID for a Player will be enough);
-* Web based UI.
+* User management and authentication (for now, using the randomly generated UUID for a Player will be enough).
 
 ### What won't be here
 * forums, messaging, chat: I assume you bring your own.
