@@ -21,7 +21,33 @@ public func routes(_ router: Router) throws {
         }
     }
     
-    router.get("createCharacter") { req -> Future<View> in
+    router.get("create/player") { req -> Future<View> in
+        return try req.view().render("createPlayer")
+    }
+    
+    router.post("create/player") { req -> Future<View> in
+        struct CreateCharacterContext: Codable {
+            var errorMessage = "noError"
+            var uuid = "unknown"
+        }
+        let username: String = try req.content.syncGet(at: "username")
+        
+        return Player.createUser(username: username, on: req).flatMap(to: View.self) { result in
+            var context = CreateCharacterContext()
+            
+            switch result {
+            case .success(let player):
+                context.uuid = String(player.id!)
+            case .failure(let error):
+                context.errorMessage = error.localizedDescription
+                print(context.errorMessage)
+            }
+            
+            return try req.view().render("userCreated", context)
+        }
+    }
+    
+    /*router.get("createCharacter") { req -> Future<View> in
         struct CreateCharacterContext: Codable {
             var errorMessage = "noError"
             var uuid = "unknown"
@@ -40,7 +66,7 @@ public func routes(_ router: Router) throws {
             
             return try req.view().render("userCreated", context)
         }
-    }
+    }*/
     
     router.post("login") { req -> Response in
         let idString: String = (try? req.content.syncGet(at: "playerid")) ?? ""
@@ -79,19 +105,39 @@ public func routes(_ router: Router) throws {
         }
     }
     
-    router.get("create/mission") { req -> Future<Response> in
-        guard let id = getPlayerIDFromSession(on: req) else {
-            throw Abort(.unauthorized)
-        }
-        
-        return Player.find(id, on: req).flatMap(to: Response.self) { player in
-            guard let player = player else {
-                return Future.map(on: req) { return req.redirect(to: "/")}
+    router.get("edit/mission") { req -> Future<View> in
+        return try getPlayerFromSession(on: req).flatMap(to: View.self) { player in
+            return try player.getSupportedMission(on: req).flatMap(to: View.self) { mission in
+                guard let supportedMission = mission else {
+                    throw Abort(.notFound, reason: "Mission with id \(String(describing: player.ownsMissionID)) not found.")
+                }
+                
+                return try req.view().render("editMission", ["missionName": supportedMission.missionName])
             }
-            
+        }
+    }
+    
+    router.post("edit/mission") { req -> Future<Response> in
+        let newName: String = try req.content.syncGet(at: "missionName")
+        return try getPlayerFromSession(on: req).flatMap(to: Response.self) { player in
+            return try player.getSupportedMission(on: req).flatMap(to: Response.self) { mission in
+                guard var supportedMission = mission else {
+                    throw Abort(.notFound, reason: "Mission with id \(String(describing: player.ownsMissionID)) not found.")
+                }
+                
+                supportedMission.missionName = newName
+                return supportedMission.update(on: req).map(to: Response.self) { savedMission in
+                    return req.redirect(to: "/main")
+                }
+            }
+        }
+    }
+    
+    router.get("create/mission") { req -> Future<Response> in
+        return try getPlayerFromSession(on: req).flatMap(to: Response.self) { player in
             assert(player.id != nil)
             
-            let mission = Mission(owningPlayerID: id)
+            let mission = Mission(owningPlayerID: player.id!)
             return mission.create(on: req).flatMap(to: Response.self) { mission in
                 var updatedPlayer = player
                 updatedPlayer.ownsMissionID = mission.id
@@ -124,21 +170,15 @@ public func routes(_ router: Router) throws {
     }
     
     router.get("support/mission", UUID.parameter) { req -> Future<Response> in
-        guard let id = getPlayerIDFromSession(on: req) else {
-            throw Abort(.unauthorized)
-        }
-        
         let supportedMissionID: UUID = try req.parameters.next()
         
-        return Player.find(id, on: req).flatMap(to: Response.self) { player in
-            guard var updatedPlayer = player else {
-                throw Abort(.unauthorized, reason: "could not find player with id \(id)")
-            }
-            
+        return try getPlayerFromSession(on: req).flatMap(to: Response.self) { player in
             return Mission.find(supportedMissionID, on: req).flatMap(to: Response.self) { mission in
                 guard let supportedMission = mission else {
-                    throw Abort(.notFound, reason: "Could not find mission with id \(id)")
+                    throw Abort(.notFound, reason: "Could not find mission with id \(supportedMissionID)")
                 }
+                
+                var updatedPlayer = player
                 
                 updatedPlayer.supportsPlayerID = supportedMission.owningPlayerID
                 return updatedPlayer.update(on: req).map(to: Response.self) { savedPlayer in
@@ -214,14 +254,7 @@ public func routes(_ router: Router) throws {
     }
      
     router.get("upgrade/techLevel") { req -> Future<Response> in
-        guard let id = getPlayerIDFromSession(on: req) else {
-            throw Abort(.unauthorized, reason: "No user session found.")
-        }
-        
-        return Player.find(id, on: req).flatMap(to: Response.self) { player in
-            guard let player = player else {
-                throw Abort(.unauthorized, reason: "No user with id \(id) found in database.")
-            }
+        return try getPlayerFromSession(on: req).flatMap(to: Response.self) { player in
             do {
                 let changedPlayer = try player.investInNextLevelOfTechnology()
                 return changedPlayer.save(on: req).map(to: Response.self) { savedPlayer in
@@ -326,7 +359,7 @@ public func routes(_ router: Router) throws {
                     
                     return try supportedPlayer.getSupportedMission(on: req).flatMap(to: View.self) { supportedMission in
                         guard let supportedMission = supportedMission else {
-                            throw Abort(.notFound, reason: "Mission with id \(supportedPlayer.ownsMissionID) does not exist.")
+                            throw Abort(.notFound, reason: "Mission with id \(String(describing: supportedPlayer.ownsMissionID)) does not exist.")
                         }
                         
                         let context = MainContext(player: player, mission: supportedMission, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, gameDate: simulation.gameDateString, errorMessage: errorMessage)
@@ -339,6 +372,19 @@ public func routes(_ router: Router) throws {
             
                 return try req.view().render("main", context)
             }
+        }
+    }
+    
+    func getPlayerFromSession(on req: Request) throws -> Future<Player> {
+        guard let id = getPlayerIDFromSession(on: req) else {
+            throw Abort(.unauthorized)
+        }
+        
+        return Player.find(id, on: req).map(to: Player.self) { player in
+            guard let player = player else {
+                throw Abort(.unauthorized)
+            }
+            return player
         }
     }
 }

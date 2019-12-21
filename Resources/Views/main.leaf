@@ -20,10 +20,10 @@
         <div class="row px-3">
             <div class="col">
             #if(mission) {
-                <div class="row">#(mission.missionName)</div>
+                <div class="row">#(mission.missionName)#if(player.ownsMissionID) {&nbsp;&nbsp;<a href="/edit/mission" class="btn-sm btn-warning" >Rename mission</a>}</div>
                 <div class="row">Percentage complete: #(mission.percentageDone) Chance of success: #(mission.successChance)</div>
-                #if(player.ownsMissionID) {<div class="row"><a href="/invest/in/mission" class="btn btn-success mt-1">Invest in mission</a></div>}
-                #if(player.supportsPlayerID) {<div class="row"><a href="/donate/to/supportedPlayer" class="btn btn-success mt-1">Donate to mission owner</a></div>}
+                #if(player.ownsMissionID) {<div class="row"><a href="/invest/in/mission" class="btn btn-success mt-1 #if(1000 > player.cash) { disabled }">Invest in mission</a></div>}
+                #if(player.supportsPlayerID) {<div class="row"><a href="/donate/to/supportedPlayer" class="btn btn-success mt-1 #if(1000 > player.cash) { disabled }">Donate to mission owner</a></div>}
             } else {
                 <div class="col"><a href="/create/mission" class="btn btn-secondary">Create mission</a></div>
                 <div class="col"><a href="/support/mission" class="btn btn-secondary" onClick="showMissions">Support a mission</a></div>
@@ -40,9 +40,7 @@
                 <div class="row mb-3  align-items-center">Cash: $#(player.cash)</div>
                 <div class="row align-items-center">Technology level: #(player.technologyLevel)</div>
                 <div class="row align-items-center">Technology points: #(player.technologyPoints) / #(costOfNextTechnologyLevel)
-                    #if(player.technologyPoints > costOfNextTechnologyLevel) {
-                        <a href="/upgrade/techLevel" class="btn btn-success btn-sm ml-3">Upgrade tech level</a>
-                    }
+                    <a href="/upgrade/techLevel" class="btn btn-success btn-sm ml-3 #if(costOfNextTechnologyLevel > player.technologyPoints) { disabled }">Upgrade tech level</a>
                 </div>
             </div>
         </div>
@@ -50,9 +48,6 @@
     <div class="container p-3 mt-3">
         #embed("footer")
     </div>
-    <script>
-        
-    </script>
 }
 
 #embed("master")
