@@ -27,3 +27,15 @@ public struct Mission: Content, SQLiteUUIDModel {
 }
 
 extension Mission: Migration { }
+
+extension Mission {
+    public func getOwningPlayer(on conn: DatabaseConnectable) throws -> Future<Player> {
+        return Player.find(owningPlayerID, on: conn).map(to: Player.self) { player in
+            guard let player = player else {
+                throw Player.PlayerError.userDoesNotExist
+            }
+            
+            return player
+        }
+    }
+}

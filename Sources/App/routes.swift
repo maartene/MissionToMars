@@ -6,6 +6,9 @@ import Vapor
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/structure/#routesswift)
 public func routes(_ router: Router) throws {
+    
+    var errorMessages = [UUID: String?]()
+    
     router.get("hello") { req in
         return "Hello, world!"
     }
@@ -24,7 +27,7 @@ public func routes(_ router: Router) throws {
             var uuid = "unknown"
         }
         
-        return Player.createUser(username: "testUser", on: req).flatMap(to: View.self) { result in
+        return Player.createUser(username: "testUser3", on: req).flatMap(to: View.self) { result in
             var context = CreateCharacterContext()
             
             switch result {
@@ -76,17 +79,136 @@ public func routes(_ router: Router) throws {
         }
     }
     
-    router.get("createMission") { req -> Future<Response> in
-        let player = Player(username: "foo")
-        let newMission = Mission(owningPlayerID: player.id!)
+    router.get("create/mission") { req -> Future<Response> in
+        guard let id = getPlayerIDFromSession(on: req) else {
+            throw Abort(.unauthorized)
+        }
         
-        
-        return newMission.create(on: req).flatMap(to: Response.self) { mission in
-            var changedPlayer = player
-            changedPlayer.ownsMissionID = mission.id
+        return Player.find(id, on: req).flatMap(to: Response.self) { player in
+            guard let player = player else {
+                return Future.map(on: req) { return req.redirect(to: "/")}
+            }
             
-            return changedPlayer.save(on: req).map(to: Response.self) { player in
-                return req.redirect(to: "/main")
+            assert(player.id != nil)
+            
+            let mission = Mission(owningPlayerID: id)
+            return mission.create(on: req).flatMap(to: Response.self) { mission in
+                var updatedPlayer = player
+                updatedPlayer.ownsMissionID = mission.id
+                return updatedPlayer.save(on: req).map(to: Response.self) { updatedPlayer in
+                    return req.redirect(to: "/main")
+                }
+            }
+        }
+    }
+    
+    router.get("support/mission") { req -> Future<View> in
+        guard let id = getPlayerIDFromSession(on: req) else {
+            throw Abort(.unauthorized)
+        }
+        
+        return Mission.query(on: req).all().flatMap(to: View.self) { missions in
+            let playerFutures = try missions.map { mission in
+                return try mission.getOwningPlayer(on: req)
+            }
+            let playerFuture = playerFutures.flatten(on: req)
+            
+            return playerFuture.flatMap(to: View.self) { players in
+                var mcs = [MissionContext]()
+                for i in 0 ..< players.count {
+                    mcs.append(MissionContext(id: missions[i].id!, missionName: missions[i].missionName, percentageDone: missions[i].percentageDone, successChance: missions[i].successChance, owningPlayerName: players[i].username))
+                }
+                return try req.view().render("missions", ["missions": mcs])
+            }
+        }
+    }
+    
+    router.get("support/mission", UUID.parameter) { req -> Future<Response> in
+        guard let id = getPlayerIDFromSession(on: req) else {
+            throw Abort(.unauthorized)
+        }
+        
+        let supportedMissionID: UUID = try req.parameters.next()
+        
+        return Player.find(id, on: req).flatMap(to: Response.self) { player in
+            guard var updatedPlayer = player else {
+                throw Abort(.unauthorized, reason: "could not find player with id \(id)")
+            }
+            
+            return Mission.find(supportedMissionID, on: req).flatMap(to: Response.self) { mission in
+                guard let supportedMission = mission else {
+                    throw Abort(.notFound, reason: "Could not find mission with id \(id)")
+                }
+                
+                updatedPlayer.supportsPlayerID = supportedMission.owningPlayerID
+                return updatedPlayer.update(on: req).map(to: Response.self) { savedPlayer in
+                    return req.redirect(to: "/main")
+                }
+            }
+        }
+    }
+    
+    router.get("donate/to/supportedPlayer") { req -> Future<Response> in
+        guard let id = getPlayerIDFromSession(on: req) else {
+            throw Abort(.unauthorized)
+        }
+        
+        return Player.find(id, on: req).flatMap(to: Response.self) { player in
+            guard var changedPlayer = player else {
+                return Future.map(on: req) { return req.redirect(to: "/")}
+            }
+            
+            return try changedPlayer.donateToSupportedPlayer(cash: 1000, on: req).flatMap(to: Response.self) { result in
+                switch result {
+                case .success(let result):
+                    return result.donatingPlayer.update(on: req).flatMap(to: Response.self) { updatedDonatingPlayer in
+                        return result.receivingPlayer.update(on: req).map(to: Response.self) { updatedReceivingPlayer in
+                            return req.redirect(to: "/main")
+                        }
+                    }
+                case .failure(let error):
+                    if let playerError = error as? Player.PlayerError {
+                        if playerError == .insufficientFunds {
+                            errorMessages[changedPlayer.id!] = "Insufficient funds to donate."
+                            return Future.map(on: req) { return req.redirect(to: "/main") }
+                        } else {
+                            throw error
+                        }
+                    } else {
+                        throw error
+                    }
+                }
+            }
+        }
+    }
+    
+    router.get("invest/in/mission") { req -> Future<Response> in
+        guard let id = getPlayerIDFromSession(on: req) else {
+            throw Abort(.unauthorized)
+        }
+        
+        return Player.find(id, on: req).flatMap(to: Response.self) { player in
+            guard let player = player else {
+                return Future.map(on: req) { return req.redirect(to: "/")}
+            }
+            
+            return try player.investInMission(amount: 1000, on: req).flatMap(to: Response.self) { result in
+                switch result {
+                case .success(let result):
+                    return result.changedMission.update(on: req).flatMap(to: Response.self) { mission in
+                        return result.changedPlayer.update(on: req).map(to: Response.self) { updatedPlayer in
+                            return req.redirect(to: "/main")
+                        }
+                    }
+                case.failure(let error):
+                    switch error {
+                    case .insufficientFunds:
+                        errorMessages[player.id!] = "Insufficient funds to invest."
+                        return Future.map(on: req) { return req.redirect(to: "/main") }
+                    default:
+                        throw error
+                    }
+                }
             }
         }
     }
@@ -171,6 +293,7 @@ public func routes(_ router: Router) throws {
             let costOfNextTechnologyLevel: Double
             let simulation: Simulation
             let gameDate: String
+            let errorMessage: String?
         }
         
         return Player.find(id, on: req).flatMap(to: View.self) { player in
@@ -179,15 +302,16 @@ public func routes(_ router: Router) throws {
                 throw Abort(.unauthorized)
             }
             
-            
-            
+            let errorMessage = errorMessages[id] ?? nil
+            errorMessages.removeValue(forKey: id)
+ 
             // does this player have his/her own mission?
             if let missionID = player.ownsMissionID {
                 return try player.getSupportedMission(on: req).flatMap(to: View.self) { mission in
                     guard let mission = mission else {
                         throw Abort(.notFound, reason: "Mission with id \(missionID) does not exist.")
                     }
-                    let context = MainContext(player: player, mission: mission, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, gameDate: simulation.gameDateString)
+                    let context = MainContext(player: player, mission: mission, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, gameDate: simulation.gameDateString, errorMessage: errorMessage)
                     
                     return try req.view().render("main", context)
                 }
@@ -205,16 +329,24 @@ public func routes(_ router: Router) throws {
                             throw Abort(.notFound, reason: "Mission with id \(supportedPlayer.ownsMissionID) does not exist.")
                         }
                         
-                        let context = MainContext(player: player, mission: supportedMission, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, gameDate: simulation.gameDateString)
+                        let context = MainContext(player: player, mission: supportedMission, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, gameDate: simulation.gameDateString, errorMessage: errorMessage)
                         
                         return try req.view().render("main", context)
                     }
                 }
             } else {
-                let context = MainContext(player: player, mission: nil, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, gameDate: simulation.gameDateString)
+                let context = MainContext(player: player, mission: nil, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, gameDate: simulation.gameDateString, errorMessage: errorMessage)
             
                 return try req.view().render("main", context)
             }
         }
     }
+}
+
+struct MissionContext: Content {
+    let id: UUID
+    let missionName: String
+    let percentageDone: Double
+    let successChance: Double
+    let owningPlayerName: String
 }

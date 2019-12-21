@@ -1,5 +1,10 @@
 #set("body") {
     <h2>Welcome #(player.username)!</h2>
+    #if(errorMessage) {
+        <div class="container border p-3 mb-3 bg-warning rounded">
+            <h4 class="text-center">#(errorMessage)</h4>
+        </div> 
+    }
     <div class="container border p-3">
         <div class="row px-3">
             <h3>Today</h3>
@@ -17,10 +22,11 @@
             #if(mission) {
                 <div class="row">#(mission.missionName)</div>
                 <div class="row">Percentage complete: #(mission.percentageDone) Chance of success: #(mission.successChance)</div>
-                <div class="row"><a href="" class="btn btn-success mt-1">Invest in mission</a></div>
+                #if(player.ownsMissionID) {<div class="row"><a href="/invest/in/mission" class="btn btn-success mt-1">Invest in mission</a></div>}
+                #if(player.supportsPlayerID) {<div class="row"><a href="/donate/to/supportedPlayer" class="btn btn-success mt-1">Donate to mission owner</a></div>}
             } else {
-                <div class="col"><a href="" class="btn btn-secondary">Create mission</a></div>
-                <div class="col"><a href="" class="btn btn-secondary">Support a mission</a></div>
+                <div class="col"><a href="/create/mission" class="btn btn-secondary">Create mission</a></div>
+                <div class="col"><a href="/support/mission" class="btn btn-secondary" onClick="showMissions">Support a mission</a></div>
             }
             </div>
         </div>
@@ -44,6 +50,9 @@
     <div class="container p-3 mt-3">
         #embed("footer")
     </div>
+    <script>
+        
+    </script>
 }
 
 #embed("master")
