@@ -60,3 +60,7 @@ let savedPlayer = try changedPlayer.save(on: req)
 
 ## Contact details
 Need to contact me? Drop an email at maarten@thedreamweb.eu or twitter at [@maarten_engels](https://twitter.com/maarten_engels)
+
+
+## Embedded media
+Favicon is based on a Mars image from NASA. Apart from being a very esthetically pleasing image, it also shows Gale Crater: a possible Mars landing site. Original file:  https://www.nasa.gov/mission_pages/msl/multimedia/pia14293-amended.html 
