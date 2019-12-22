@@ -7,16 +7,16 @@
 
 import Foundation
 
-struct Stage {
-    static let allStages = [
+public struct Stage {
+    public static let allStages = [
         Stage(level: 1, name: "Orbital Sattelite", description: "The first step in your Mars mission will be to send an orbital satellite to Mars. This will prove your capability in reaching Mars, as well as provide valuable information from the Mars surface. In later stages, you will be able to use the satellite for communicating with the surface.", components: [Component.getComponentByName(.Rocket_S)!, Component.getComponentByName(.MissionControl)!, Component.getComponentByName(.Satellite)!])
     ]
     
-    enum StageError: Error {
+    public enum StageError: Error {
         case invalidStageLevel
     }
     
-    static func getStageByLevel(_ level: Int) throws -> Stage {
+    public static func getStageByLevel(_ level: Int) throws -> Stage {
         guard let stage = allStages.first(where: {s in s.level == level }) else {
             throw StageError.invalidStageLevel
         }
@@ -24,18 +24,18 @@ struct Stage {
         return stage
     }
     
-    let level: Int
-    let name: String
-    let description: String
-    var components: [Component]
+    public let level: Int
+    public let name: String
+    public let description: String
+    public private(set) var components: [Component]
     
-    var completedComponents: [Component] {
+    public var completedComponents: [Component] {
         return components.filter { component in
             component.percentageCompleted >= 100.0
         }
     }
     
-    func updateStage(ticks: Int = 1) -> Stage {
+    public func updateStage(ticks: Int = 1) -> Stage {
         let updatedComponents = self.components.map { component in
             component.updateComponent(ticks: ticks)
         }
