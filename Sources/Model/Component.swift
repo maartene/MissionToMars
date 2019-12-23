@@ -7,7 +7,7 @@
 
 import Foundation
 
-public struct Component {
+public struct Component: Equatable {
     
     public enum ShortName: String, CaseIterable {
         case Rocket_S
@@ -29,6 +29,10 @@ public struct Component {
         return allComponents.first(where: { c in c.shortName == shortName })
     }
     
+    public static func == (lhs: Component, rhs: Component) -> Bool {
+        return lhs.shortName == rhs.shortName
+    }
+    
     let shortName: ShortName
     let name: String
     let description: String
@@ -45,7 +49,9 @@ public struct Component {
     
     public func updateComponent(ticks: Int = 1) -> Component {
         var updatedComponent = self
-        updatedComponent.percentageCompleted += 100.0 * Double(ticks) / Double(buildTime)
+        if buildStartedOn != nil {
+            updatedComponent.percentageCompleted += 100.0 * Double(ticks) / Double(buildTime)
+        }
         return updatedComponent
     }
 }

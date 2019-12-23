@@ -26,7 +26,7 @@ final class ComponentTests : XCTestCase {
         }
     }
     
-    func testUpdateShouldAdvancePercentageComplete() throws {
+    func testUpdateShouldNotAdvancePercentageComplete() throws {
         guard let component = Component.getComponentByName(.Satellite) else {
             XCTFail("Component should not be nil.")
             return
@@ -35,7 +35,7 @@ final class ComponentTests : XCTestCase {
         
         let updatedComponent = component.updateComponent()
         
-        XCTAssertGreaterThan(updatedComponent.percentageCompleted, component.percentageCompleted, "The component should have a higher percentageCompleted value after calling update.")
+        XCTAssertEqual(updatedComponent.percentageCompleted, component.percentageCompleted, "The component should not be advanced if build has not yet started.")
         
     }
     
@@ -46,7 +46,8 @@ final class ComponentTests : XCTestCase {
         }
         
         let numberOfTicksRequired = component.buildTime
-        let updatedComponent = component.updateComponent(ticks: numberOfTicksRequired)
+        let buildStartedComponent = component.startBuild(startDate: Date())
+        let updatedComponent = buildStartedComponent.updateComponent(ticks: numberOfTicksRequired)
         
         XCTAssertGreaterThanOrEqual(updatedComponent.percentageCompleted, 100.0, "Component should be done by now.")
     }
@@ -54,7 +55,7 @@ final class ComponentTests : XCTestCase {
     static let allTests = [
         ("testStartBuildComponent", testStartBuildComponent),
         ("testGetComponentByName", testGetComponentByName),
-        ("testUpdateShouldAdvancePercentageComplete", testUpdateShouldAdvancePercentageComplete),
+        ("testUpdateShouldAdvancePercentageComplete", testUpdateShouldNotAdvancePercentageComplete),
         ("testComponentShouldComplete", testComponentShouldComplete),
     ]
 }

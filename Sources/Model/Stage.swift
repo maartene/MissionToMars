@@ -29,6 +29,22 @@ public struct Stage {
     public let description: String
     public private(set) var components: [Component]
     
+    public var uncompletedComponents: [Component] {
+        return components.filter { component in component.percentageCompleted < 100 }
+    }
+    
+    public var currentlyBuildingComponent: Component? {
+        return uncompletedComponents.first { component in component.buildStartedOn != nil }
+    }
+    
+    public var percentageComplete: Double {
+        var sum = 0.0
+        for component in components {
+            sum += component.percentageCompleted
+        }
+        return sum / Double(components.count)
+    }
+    
     public var completedComponents: [Component] {
         return components.filter { component in
             component.percentageCompleted >= 100.0
@@ -42,6 +58,24 @@ public struct Stage {
         
         var updatedStage = self
         updatedStage.components = updatedComponents
+        return updatedStage
+    }
+    
+    public func startBuildingComponent(_ component: Component, buildDate: Date) -> Stage {
+        var updatedStage = self
+        
+        guard uncompletedComponents.contains(component) else {
+            return self
+        }
+        
+        var updatedComponents = components
+        
+        if let componentIndex = updatedComponents.firstIndex(of: component) {
+            updatedComponents[componentIndex] = component.startBuild(startDate: buildDate)
+        }
+         
+        updatedStage.components = updatedComponents
+        
         return updatedStage
     }
 }

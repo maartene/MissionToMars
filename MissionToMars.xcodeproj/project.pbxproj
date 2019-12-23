@@ -21,6 +21,7 @@
 /* End PBXAggregateTarget section */
 
 /* Begin PBXBuildFile section */
+		DE23866823B016C80061EE06 /* StageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE23866723B016C80061EE06 /* StageTests.swift */; };
 		DEC8D0B923B008A500782292 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC8D0B723B0087C00782292 /* Constants.swift */; };
 		OBJ_1000 /* NIOPriorityQueue.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "swift-nio::NIOPriorityQueue::Product" /* NIOPriorityQueue.framework */; };
 		OBJ_1001 /* NIOConcurrencyHelpers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "swift-nio::NIOConcurrencyHelpers::Product" /* NIOConcurrencyHelpers.framework */; };
@@ -5609,6 +5610,7 @@
 		"Crypto::CCryptoOpenSSL::Product" /* CCryptoOpenSSL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = CCryptoOpenSSL.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Crypto::Crypto::Product" /* Crypto.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Crypto.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Crypto::Random::Product" /* Random.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Random.framework; sourceTree = BUILT_PRODUCTS_DIR; };
+		DE23866723B016C80061EE06 /* StageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StageTests.swift; sourceTree = "<group>"; };
 		DEC8D0B723B0087C00782292 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		"DatabaseKit::DatabaseKit::Product" /* DatabaseKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = DatabaseKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Fluent::Fluent::Product" /* Fluent.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Fluent.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -7603,6 +7605,7 @@
 				OBJ_27 /* PlayerTests.swift */,
 				OBJ_28 /* SimulationDBTests.swift */,
 				OBJ_29 /* SimulationTests.swift */,
+				DE23866723B016C80061EE06 /* StageTests.swift */,
 			);
 			name = AppTests;
 			path = Tests/AppTests;
@@ -8398,7 +8401,7 @@
 			path = include;
 			sourceTree = "<group>";
 		};
-		OBJ_5 /*  */ = {
+		OBJ_5 = {
 			isa = PBXGroup;
 			children = (
 				OBJ_6 /* Package.swift */,
@@ -8414,7 +8417,6 @@
 				OBJ_949 /* README.md */,
 				OBJ_950 /* circle.yml */,
 			);
-			name = "";
 			sourceTree = "<group>";
 		};
 		OBJ_501 /* NIOOpenSSL */ = {
@@ -11380,7 +11382,7 @@
 			knownRegions = (
 				en,
 			);
-			mainGroup = OBJ_5 /*  */;
+			mainGroup = OBJ_5;
 			productRefGroup = OBJ_895 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
@@ -11466,6 +11468,7 @@
 			files = (
 				OBJ_1100 /* AppTests.swift in Sources */,
 				OBJ_1101 /* ComponentTests.swift in Sources */,
+				DE23866823B016C80061EE06 /* StageTests.swift in Sources */,
 				OBJ_1102 /* PerformanceTests.swift in Sources */,
 				OBJ_1103 /* PlayerDBTests.swift in Sources */,
 				OBJ_1104 /* PlayerTests.swift in Sources */,

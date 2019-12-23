@@ -11,4 +11,5 @@ XCTMain([
   testCase(SimulationDBTests.allTests),
   testCase(PerformanceTests.allTests),
   testCase(ComponentTests.allTests),
+  testCase(StageTests.allTests),
 ])
