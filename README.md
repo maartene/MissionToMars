@@ -13,10 +13,11 @@ Getting to Mars is hard. Very hard. This game aims to become a "hard-scifi" simu
 * Persistent step-based simulation (where for instance a real-world hour translates to a day in game time);
 * Model is database-backed (currently: SQLite);
 * There is a simple Leaf based UI: completely server-side rendered, no JS/AJAX whatsoever;
-* Stubs for income and research, mission progress and technology (currently just values).
+* Mission stages and components;
+* Stubs for income and research.
 
 ### What's still to come
-* Actual simulation of building a mission (i.e. work on components);
+* Incorporate flight time;
 * Build improvements to get more cash per day, more value from research, improved production and the possibility to build mission parts;
 * User management and authentication (for now, using the randomly generated UUID for a Player will be enough).
 
@@ -28,7 +29,8 @@ This game is built on the Vapor Server-side Swift framework.
 The actual simulation/model is in the `Sources/Model` folder. To reference it's types, use `import Model`
 Currently the model contains two types:
 1. A `Player` struct
-2. A `Mission` struct
+2. A `Mission` struct (Mission has sub-structures for `Stages` and ``Components`, but these are not database aware, just plain strucs.)
+3. A `Simulation` struct
 
 ### Structure
 The structures contain two parts:
@@ -39,11 +41,11 @@ The database/persistance functions can be recognised by the `conn: DatabaseConne
 #### Example:
 ```
 // from Player.swift:
-public func investInMission(amount: Double, on conn: DatabaseConnectable) throws -> Future<(changedPlayer: Player, changedMission: Mission)>
+public func getSupportedMission(on conn: DatabaseConnectable) throws -> Future<Mission?>
 ```
-This allows a player to invest in a mission. Note:
+This allows to get the supported mission for a player (if one exists)
 * this requires an associated mission (i.e. `ownsMissionID` cannot be `nil` and a `Mission` with this ID needs to exist in the database.). The function throws an error if this condition is not met;
-* the function returns a tuple with the changed player and changed mission. It does not mutate the player and mission directly.
+* the function returns a Future with an optional Mission. If a mission exists, it is returned, `nil` otherwise.
 
 ### Usage
 These structs do not contain any mutable functions. All functions that should change the state of the game return a copy of the struct (including any others that might be changed) with the changes applied. 
@@ -57,6 +59,30 @@ let changedPlayer = try player.investInNextLevelOfTechnology()
 // persist changed state due to the action performed
 let savedPlayer = try changedPlayer.save(on: req)
 ```
+
+### Simulation.swift
+The `Simulation` struct only contains meta data about the Simulation: when it should update (in real time), how often it was updates and the "game date": a fictional date representing in game time. 
+
+It also contains an updateSimulation function that takes care of updating data elements in the game. This function performs enough updates to compensate for the actual time that passed since the last simulation update, the current time and the length of a simulation "tick". Note that other data elements are passed as parameters to the function, they are not members of the Simulation itself.
+
+```
+ public func updateSimulation(currentDate: Date, players: [Player], missions: [Mission]) -> (updatedSimulation: Simulation, updatedPlayers: [Player], updatedMissions: [Mission])
+```
+
+There should only be one simulation in the database at any time. To prevent unnecessary database lookups, the simulation ID (as it is known in the database) is cashed as a global variable: `Simulation.GLOBAL_SIMULATION_ID`.
+
+## Architecture - UI
+The UI is Leaf based. The most important Leaf view is `main.leaf` (called from `\main`). This shows the game dashboard, but also performs the following tasks:
+1. Calling `/main` checks  whether enough real time has passed to update the simulation;
+2. If the simulation needs to update, all players and missions are also updated;
+3. It checks whether the mission for the current player (either owning or supporting) is complete. If so, the "Win screen" is shown;
+4. There is an `errorMessages` dictionary ([UUID: String?]), you can use to show an error message to players. See `donate/to/supportedPlayer` route in `routes.swift` for an exmaple.
+
+## Debug features
+The game provides some debug features:
+* There a routes specifically intented for debug functionality. These need to be deleted for production work (or otherwise disabled);
+* The main debug solution is lowering the time between ticks (i.e. to less than a second) to get through the game quicker;
+* Off course, the regular xcode debug features can be used.
 
 ## Contact details
 Need to contact me? Drop an email at maarten@thedreamweb.eu or twitter at [@maarten_engels](https://twitter.com/maarten_engels)
