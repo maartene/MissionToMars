@@ -84,20 +84,38 @@ final class PerformanceTests: XCTestCase {
         
         var mission = Mission(owningPlayerID: player.id!)
         mission.id = UUID()
-        let component = mission.currentStage.components.first!
+        var component = mission.currentStage.components.first!
         player.ownsMissionID = mission.id
         
         // simulate until mission done (with a maximum of a million steps)
         let maxSteps = 100_000
         var steps = 0
-        while mission.currentStage.currentlyBuildingComponent?.percentageCompleted ?? 0 < 100 && steps < maxSteps {
+        while mission.missionComplete == false && steps < maxSteps {
             player = player.updatePlayer()
             mission = mission.updateMission()
             
-            if player.cash >= component.cost {
+            if player.cash >= component.cost && mission.currentStage.currentlyBuildingComponent == nil {
                 let investment = try player.investInComponent(component, in: mission, date: Date())
                 player = investment.changedPlayer
                 mission = investment.changedMission
+            }
+            
+            if mission.currentStage.components.first(where: {c in c == component})!.percentageCompleted >= 100.0 {
+                    if mission.currentStage.unstartedComponents.count > 0 {
+                        component = mission.currentStage.unstartedComponents.first!
+                        print("Now starting on: \(component.name)")
+                    } else {
+                        do {
+                            mission = try mission.goToNextStage()
+                            print("Now on stage: \(mission.currentStageLevel)")
+                            if mission.currentStage.unstartedComponents.count > 0 {
+                                component = mission.currentStage.unstartedComponents.first!
+                                print("Now starting on: \(component.name)")
+                            }
+                        } catch {
+                            break
+                        }
+                    }
             }
             
             if player.technologyPoints >= player.costOfNextTechnologyLevel {
@@ -107,6 +125,7 @@ final class PerformanceTests: XCTestCase {
             steps += 1
         }
         print("Completed running simulation (max steps: \(maxSteps).")
+        print("Got this far: \(mission.percentageDone)")
         if mission.percentageDone >= 100 {
             print("Completed mission in \(steps) update steps.")
             XCTAssertTrue(true)
@@ -114,7 +133,7 @@ final class PerformanceTests: XCTestCase {
             print("Failed to complete mission in \(maxSteps) steps.")
             XCTAssertTrue(true)
         }
-        print("Player: \(player) \nMission: \(mission)")
+        print("Player: \(player)")
     }
     
     // HELPERS

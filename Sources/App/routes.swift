@@ -278,7 +278,7 @@ public func routes(_ router: Router) throws {
         return Player.query(on: req).all().flatMap(to: [Player].self) { players in
             let richPlayers = players.map { player -> Player in
                 var changedPlayer = player
-                changedPlayer.debug_setCash(2_000_000_000)
+                changedPlayer.debug_setCash(10_000_000_000)
                 return changedPlayer
             }
             
