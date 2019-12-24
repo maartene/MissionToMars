@@ -80,5 +80,6 @@ final class SimulationTests : XCTestCase {
         ("testSimulationDoesNotAdvanceWithSmallEnoughTimeDifference", testSimulationDoesNotAdvanceWithSmallEnoughTimeDifference),
         ("testAdvanceSimulationMultipleTicks", testAdvanceSimulationMultipleTicks),
         ("testUpdatePlayer", testUpdatePlayer),
+        ("testUpdateMission", testUpdateMission),
     ]
 }
