@@ -1,5 +1,5 @@
 #set("body") {
-  <h2>Rename mission</h2>
+  <h2>Create player</h2>
 <div>
   <form action="/create/player" method="POST">
     <div class="form-group">

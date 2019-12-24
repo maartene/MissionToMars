@@ -42,8 +42,8 @@ public struct Player: Content, SQLiteUUIDModel {
         var updatedPlayer = self
         
         for _ in 0 ..< ticks {
-            updatedPlayer.cash += 100
-            updatedPlayer.technologyPoints += 3
+            updatedPlayer.cash += 5_000 * NSDecimalNumber(decimal: pow(1.5, technologyLevel)).doubleValue
+            updatedPlayer.technologyPoints += 7
         }
         
         return updatedPlayer
@@ -77,29 +77,26 @@ public struct Player: Content, SQLiteUUIDModel {
         return (donatingPlayer, receivingPlayer)
     }
     
-    func investInMission(amount: Double, in mission: Mission) throws -> (changedPlayer: Player, changedMission: Mission) {
-        var changedMission = mission
-        var changedPlayer = self
-            
-        guard amount <= self.cash else {
+    func investInComponent(_ component: Component, in mission: Mission, date: Date) throws -> (changedPlayer: Player, changedMission: Mission) {
+        var updatedPlayer = self
+        var updatedMission = mission
+        
+        guard mission.currentStage.unstartedComponents.contains(component) else {
+            return (updatedPlayer, updatedMission)
+        }
+        
+        guard cash >= component.cost else {
             throw PlayerError.insufficientFunds
         }
         
-        changedPlayer.cash -= amount
+        updatedMission = try updatedMission.startBuildingInStage(component, buildDate: date)
+        updatedPlayer.cash -= component.cost
         
-        let missionPoints = self.missionPointValue(for: amount)
-        //print("Adding mission points: \(missionPoints)")
-        changedMission.percentageDone += missionPoints
-        
-        return (changedPlayer, changedMission)
+        return (updatedPlayer, updatedMission)
     }
     
     public var costOfNextTechnologyLevel: Double {
         40.0 * NSDecimalNumber(decimal: pow(1.6, technologyLevel)).doubleValue
-    }
-    
-    public var technologyMissionPointDiscount: Double {
-        100 * NSDecimalNumber(decimal: pow(1.5, technologyLevel)).doubleValue
     }
     
     public func investInNextLevelOfTechnology() throws -> Player {
@@ -116,8 +113,8 @@ public struct Player: Content, SQLiteUUIDModel {
         return changedPlayer
     }
     
-    public func missionPointValue(for cashAmount: Double) -> Double {
-        return cashAmount / Double(1_000_000 - technologyMissionPointDiscount)
+    mutating public func debug_setCash(_ amount: Double) {
+        self.cash = amount
     }
 }
 
@@ -195,7 +192,7 @@ extension Player {
         }
     }
     
-    public func investInMission(amount: Double, on conn: DatabaseConnectable) throws -> Future<Result<(changedPlayer: Player, changedMission: Mission), PlayerError>> {
+    public func investInComponent(_ component: Component, on conn: DatabaseConnectable, date: Date) throws -> Future<Result<(changedPlayer: Player, changedMission: Mission), PlayerError>> {
         return try getSupportedMission(on: conn).flatMap(to: Result<(changedPlayer: Player, changedMission: Mission), PlayerError>.self) { mission in
             guard let changedMission = mission else {
                 return Future.map(on: conn) {
@@ -205,7 +202,7 @@ extension Player {
             
             var result: Result<(changedPlayer: Player, changedMission: Mission), PlayerError>
             do {
-                let investResult = try self.investInMission(amount: amount, in: changedMission)
+                let investResult = try self.investInComponent(component, in: changedMission, date: date)
                 result = .success(investResult)
             } catch {
                 if let error = error as? PlayerError {

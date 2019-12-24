@@ -10,19 +10,33 @@
             <h3>Today</h3>
         </div>
         <div class="row">
-            <div class="col">Date: #(gameDate) (#(simulation.tickCount))</div>
+            <div class="col">Date: #date(simulation.gameDate) (#(simulation.tickCount))</div>
         </div>
     </div>
     <div class="container border p-3 mt-3">
         <div class="row px-3">
-            <h3>Current mission</h3>
+            <h3>Current mission: #(mission.missionName)#if(player.ownsMissionID) {&nbsp;&nbsp;<a href="/edit/mission" class="btn btn-sm btn-warning" >Rename mission</a>}</h3>
         </div>
         <div class="row px-3">
             <div class="col">
             #if(mission) {
-                <div class="row">#(mission.missionName)#if(player.ownsMissionID) {&nbsp;&nbsp;<a href="/edit/mission" class="btn-sm btn-warning" >Rename mission</a>}</div>
-                <div class="row">Percentage complete: #(mission.percentageDone) Chance of success: #(mission.successChance)</div>
-                #if(player.ownsMissionID) {<div class="row"><a href="/invest/in/mission" class="btn btn-success mt-1 #if(1000 > player.cash) { disabled }">Invest in mission</a></div>}
+                <div class="row mb-2"></div>
+                <div class="container p-3 bg-info">
+                    <div class="row m-2"><h4>Current stage: #(currentStage.name) (#(currentStage.level) / 5)</h4></div>
+                    <div class="row m-2">#(currentStage.description)</div>
+                    <div class="row m-2"><ul class="list-group">
+                        #for(component in currentStage.components) { 
+                            <li class="list-group-item">
+                                <b>#(component.name)</b> #(component.description)<br/>
+                                Cost: #cash(component.cost) - Build time: #(component.buildTime) days.
+                                <br />
+                                #if(component.buildStartedOn) { Build started on: #date(component.buildStartedOn) #decimal(component.percentageCompleted)% complete. } else {
+                                    #if(player.ownsMissionID) {<a href="/build/component/#(component.shortName)" class="btn btn-sm btn-primary #if(component.cost > player.cash) {disabled}">Start build</a>}
+                                }
+                            </li> }
+                        </ul></div>
+                        #if(currentStageComplete == true) { <div class="row m-2"><a href="/advance/stage" class="btn btn-light mt-1">Advance to the next stage</a></div> }
+                </div>
                 #if(player.supportsPlayerID) {<div class="row"><a href="/donate/to/supportedPlayer" class="btn btn-success mt-1 #if(1000 > player.cash) { disabled }">Donate to mission owner</a></div>}
             } else {
                 <div class="col"><a href="/create/mission" class="btn btn-secondary">Create mission</a></div>
@@ -37,7 +51,7 @@
         </div>
         <div class="row px-3">
             <div class="col">
-                <div class="row mb-3  align-items-center">Cash: $#(player.cash)</div>
+                <div class="row mb-3  align-items-center">Cash: $#cash(player.cash)</div>
                 <div class="row align-items-center">Technology level: #(player.technologyLevel)</div>
                 <div class="row align-items-center">Technology points: #(player.technologyPoints) / #(costOfNextTechnologyLevel)
                     <a href="/upgrade/techLevel" class="btn btn-success btn-sm ml-3 #if(costOfNextTechnologyLevel > player.technologyPoints) { disabled }">Upgrade tech level</a>

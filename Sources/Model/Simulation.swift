@@ -18,13 +18,6 @@ public struct Simulation {
     public let gameDate: Date
     public let nextUpdateDate: Date
     
-    public var gameDateString: String {
-        let formatter = DateFormatter()
-        formatter.setLocalizedDateFormatFromTemplate("dMMMMyyyy")
-        //print("gameDate: \(gameDate) gameDateString \(formatter.string(from: gameDate))")
-        return formatter.string(from: gameDate)
-    }
-    
     public init(id: UUID? = nil, tickCount: Int, gameDate: Date, nextUpdateDate: Date) {
         self.id = id
         self.tickCount = tickCount
@@ -32,13 +25,15 @@ public struct Simulation {
         self.nextUpdateDate = nextUpdateDate
     }
     
-    public func updateSimulation(currentDate: Date, players: [Player]) -> (updatedSimulation: Simulation, updatedPlayers: [Player]) {
+    public func updateSimulation(currentDate: Date, players: [Player], missions: [Mission]) -> (updatedSimulation: Simulation, updatedPlayers: [Player], updatedMissions: [Mission]) {
         var updatedSimulation = self
         var updatedPlayers = players
+        var updatedMissions = missions
     
         while updatedSimulation.simulationShouldUpdate(currentDate: currentDate) {
             //print("updating \(result)")
             let nextUpdateDate = updatedSimulation.nextUpdateDate.addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60)
+            //let nextUpdateDate = updatedSimulation.nextUpdateDate.addingTimeInterval(0.01)
             let gameDate = updatedSimulation.gameDate.addingTimeInterval(24*60*60)
             let tickCount = updatedSimulation.tickCount + 1
             
@@ -46,10 +41,14 @@ public struct Simulation {
                 player.updatePlayer()
             }
             
+            updatedMissions = updatedMissions.map { mission in
+                mission.updateMission()
+            }
+            
             updatedSimulation = Simulation(id: self.id, tickCount: tickCount, gameDate: gameDate, nextUpdateDate: nextUpdateDate)
         }
         
-        return (updatedSimulation, updatedPlayers)
+        return (updatedSimulation, updatedPlayers, updatedMissions)
     }
     
     public func simulationShouldUpdate(currentDate: Date) -> Bool {

@@ -8,6 +8,8 @@ XCTMain([
   testCase(PlayerTests.allTests),
   testCase(PlayerDBTests.allTests),
   testCase(SimulationTests.allTests),
-  // testCase(SimulationDBTests.allTests),
+  testCase(SimulationDBTests.allTests),
   testCase(PerformanceTests.allTests),
+  testCase(ComponentTests.allTests),
+  testCase(StageTests.allTests),
 ])

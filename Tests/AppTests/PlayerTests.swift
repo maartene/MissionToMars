@@ -56,15 +56,6 @@ final class PlayerTests : XCTestCase {
         XCTAssertThrowsError(try givingPlayer.donate(techPoints: givingPlayer.technologyPoints + 1, to: receivingPlayer))
     }
 
-    func testInvestInMission() throws {
-        var player = Player(username: "testUser")
-        let mission = Mission(owningPlayerID: UUID())
-        player.ownsMissionID = mission.id
-        let result = try player.investInMission(amount: player.cash - 1, in: mission)
-        XCTAssertLessThan(result.changedPlayer.cash, player.cash, " cash")
-        XCTAssertGreaterThan(result.changedMission.percentageDone, mission.percentageDone, " % done")
-    }
-
     func testInvestInTechnology() throws {
         let player = Player(username: "testUser")
         let changedPlayer = try player.investInNextLevelOfTechnology()
@@ -89,7 +80,6 @@ final class PlayerTests : XCTestCase {
         ("testDonateTechnologyToPlayer", testDonateTechnologyToPlayer),
         ("testCannotDonateMoreCashThanAvailable", testCannotDonateMoreCashThanAvailable),
         ("testCannotDonateMoreTechThanAvailable", testCannotDonateMoreTechThanAvailable),
-        ("testInvestInMission", testInvestInMission),
         ("testInvestInTechnology", testInvestInTechnology),
         ("testCannotInvestMoreThanHasInTechnology", testCannotInvestMoreThanHasInTechnology)
     ]

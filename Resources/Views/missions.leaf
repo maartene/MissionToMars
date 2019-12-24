@@ -8,6 +8,7 @@
           </li>
         } 
       </ul>
+      <a href="/main" class="btn btn-secondary">Back</a>
     </div>
 }
 

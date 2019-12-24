@@ -95,24 +95,6 @@ final class PlayerDBTests : XCTestCase {
         XCTAssertEqual(result.savedMission.owningPlayerID, result.savedPlayer.id)
     }
     
-    func testInvestInMission() throws {
-        let playerMissionCombo = try createTestPlayerWithMission()
-        
-        let result = try app?.withPooledConnection(to: .sqlite, closure: { conn -> Future<Result<(changedPlayer: Player, changedMission: Mission), Player.PlayerError>> in
-            return try playerMissionCombo.savedPlayer.investInMission(amount: playerMissionCombo.savedPlayer.cash - 1, on: conn)
-            }).wait()
-        
-        XCTAssertNotNil(result, " result should not be nil.")
-        
-        switch result! {
-        case .failure(let error):
-            XCTFail("InvestInMission test failed with error: \(error)")
-        case .success(let investResult):
-            XCTAssertLessThan(investResult.changedPlayer.cash, playerMissionCombo.savedPlayer.cash, " cash")
-            XCTAssertGreaterThan(investResult.changedMission.percentageDone, playerMissionCombo.savedMission.percentageDone, " % done")
-        }
-    }
-    
     func testInvestInTechnology() throws {
         let player = try createTestPlayer()
         let changedPlayer = try player.investInNextLevelOfTechnology()
@@ -169,6 +151,30 @@ final class PlayerDBTests : XCTestCase {
         }
     }
     
+    func testBuildComponent() throws {
+        let playerMissionCombo = try createTestPlayerWithMission()
+        let player = playerMissionCombo.savedPlayer
+        let mission = playerMissionCombo.savedMission
+        
+        let component = mission.currentStage.components.first!
+        
+        XCTAssertGreaterThanOrEqual(player.cash, component.cost, "cash")
+        
+        let result = try app?.withPooledConnection(to: .sqlite) { conn -> Future<Result<(changedPlayer: Player, changedMission: Mission), Player.PlayerError>> in
+            return try player.investInComponent(component, on: conn, date: Date())
+        }.wait()
+        
+        XCTAssertNotNil(result, "result should not be nil")
+        switch result! {
+        case .failure(let error):
+            XCTFail("Received a failure from test \(error)")
+        case .success(let buildResult):
+            XCTAssertNotNil(buildResult.changedMission.currentStage.currentlyBuildingComponent, "Should now be building something.")
+            XCTAssertLessThan(buildResult.changedPlayer.cash, player.cash, "cash")
+        }
+        
+    }
+    
     
     // HELPERS
     enum PlayerDBTestsHelpersError: Error {
@@ -210,6 +216,8 @@ final class PlayerDBTests : XCTestCase {
         var player = try createTestPlayer()
         let mission = try createTestMission(for: player.id!).wait()
         
+        player.debug_setCash(mission.currentStage.unstartedComponents[0].cost)
+        
         player.ownsMissionID = mission.id
         let savedPlayer = try app.withPooledConnection(to: .sqlite, closure: { conn -> Future<Player> in
             return player.save(on: conn)
@@ -223,10 +231,10 @@ final class PlayerDBTests : XCTestCase {
         ("testCreateMission", testCreateMission),
         ("testCannotCreatePlayerWithExistingUsername", testCannotCreatePlayerWithExistingUsername),
         ("testAddMissionToPlayer", testAddMissionToPlayer),
-        ("testInvestInMission", testInvestInMission),
         ("testInvestInTechnology", testInvestInTechnology),
         ("testDonateCashToPlayer", testDonateCashToPlayer),
         ("testDonateTechToPlayer", testDonateTechToPlayer),
         ("testSaveUpdatedPlayer", testSaveUpdatedPlayer),
+        ("testBuildComponent", testBuildComponent)
     ]
 }
