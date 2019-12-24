@@ -92,6 +92,8 @@ final class PerformanceTests: XCTestCase {
         var steps = 0
         while mission.currentStage.currentlyBuildingComponent?.percentageCompleted ?? 0 < 100 && steps < maxSteps {
             player = player.updatePlayer()
+            mission = mission.updateMission()
+            
             if player.cash >= component.cost {
                 let investment = try player.investInComponent(component, in: mission, date: Date())
                 player = investment.changedPlayer

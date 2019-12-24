@@ -92,4 +92,8 @@ public struct Stage: Equatable, Codable {
         
         return updatedStage
     }
+    
+    public var stageComplete: Bool {
+        return uncompletedComponents.count == 0
+    }
 }

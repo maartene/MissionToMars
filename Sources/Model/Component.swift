@@ -57,6 +57,11 @@ public struct Component: Equatable, Codable {
         if buildStartedOn != nil {
             updatedComponent.percentageCompleted += 100.0 * Double(ticks) / Double(buildTime)
         }
+        
+        if updatedComponent.percentageCompleted > 100.0 {
+            updatedComponent.percentageCompleted = 100.0
+        }
+        
         return updatedComponent
     }
 }

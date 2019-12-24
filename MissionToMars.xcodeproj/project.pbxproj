@@ -24,6 +24,7 @@
 		DE23866823B016C80061EE06 /* StageTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE23866723B016C80061EE06 /* StageTests.swift */; };
 		DE538B4F23B212F5005FDC49 /* LeafDateTag.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE538B4E23B212F5005FDC49 /* LeafDateTag.swift */; };
 		DE538B5123B23141005FDC49 /* LeafDecimalTag.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE538B5023B23141005FDC49 /* LeafDecimalTag.swift */; };
+		DE538B5323B26E87005FDC49 /* LeafCashFormatter.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE538B5223B26E87005FDC49 /* LeafCashFormatter.swift */; };
 		DEC8D0B923B008A500782292 /* Constants.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEC8D0B723B0087C00782292 /* Constants.swift */; };
 		OBJ_1000 /* NIOPriorityQueue.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "swift-nio::NIOPriorityQueue::Product" /* NIOPriorityQueue.framework */; };
 		OBJ_1001 /* NIOConcurrencyHelpers.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "swift-nio::NIOConcurrencyHelpers::Product" /* NIOConcurrencyHelpers.framework */; };
@@ -5615,6 +5616,7 @@
 		DE23866723B016C80061EE06 /* StageTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = StageTests.swift; sourceTree = "<group>"; };
 		DE538B4E23B212F5005FDC49 /* LeafDateTag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeafDateTag.swift; sourceTree = "<group>"; };
 		DE538B5023B23141005FDC49 /* LeafDecimalTag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeafDecimalTag.swift; sourceTree = "<group>"; };
+		DE538B5223B26E87005FDC49 /* LeafCashFormatter.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeafCashFormatter.swift; sourceTree = "<group>"; };
 		DEC8D0B723B0087C00782292 /* Constants.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Constants.swift; sourceTree = "<group>"; };
 		"DatabaseKit::DatabaseKit::Product" /* DatabaseKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = DatabaseKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Fluent::Fluent::Product" /* Fluent.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Fluent.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -7316,6 +7318,7 @@
 			children = (
 				DE538B4E23B212F5005FDC49 /* LeafDateTag.swift */,
 				DE538B5023B23141005FDC49 /* LeafDecimalTag.swift */,
+				DE538B5223B26E87005FDC49 /* LeafCashFormatter.swift */,
 			);
 			path = Controllers;
 			sourceTree = "<group>";
@@ -12648,6 +12651,7 @@
 				OBJ_957 /* configure.swift in Sources */,
 				DE538B4F23B212F5005FDC49 /* LeafDateTag.swift in Sources */,
 				OBJ_958 /* routes.swift in Sources */,
+				DE538B5323B26E87005FDC49 /* LeafCashFormatter.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

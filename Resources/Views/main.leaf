@@ -28,11 +28,14 @@
                         #for(component in currentStage.components) { 
                             <li class="list-group-item">
                                 <b>#(component.name)</b> #(component.description)<br/>
+                                Cost: #cash(component.cost) - Build time: #(component.buildTime) days.
+                                <br />
                                 #if(component.buildStartedOn) { Build started on: #date(component.buildStartedOn) #decimal(component.percentageCompleted)% complete. } else {
                                     #if(player.ownsMissionID) {<a href="/build/component/#(component.shortName)" class="btn btn-sm btn-primary #if(component.cost > player.cash) {disabled}">Start build</a>}
                                 }
                             </li> }
                         </ul></div>
+                        #if(currentStageComplete == true) { <div class="row m-2"><a href="/advance/stage" class="btn btn-light mt-1">Advance to the next stage</a></div> }
                 </div>
                 #if(player.supportsPlayerID) {<div class="row"><a href="/donate/to/supportedPlayer" class="btn btn-success mt-1 #if(1000 > player.cash) { disabled }">Donate to mission owner</a></div>}
             } else {
@@ -48,7 +51,7 @@
         </div>
         <div class="row px-3">
             <div class="col">
-                <div class="row mb-3  align-items-center">Cash: $#(player.cash)</div>
+                <div class="row mb-3  align-items-center">Cash: $#cash(player.cash)</div>
                 <div class="row align-items-center">Technology level: #(player.technologyLevel)</div>
                 <div class="row align-items-center">Technology points: #(player.technologyPoints) / #(costOfNextTechnologyLevel)
                     <a href="/upgrade/techLevel" class="btn btn-success btn-sm ml-3 #if(costOfNextTechnologyLevel > player.technologyPoints) { disabled }">Upgrade tech level</a>

@@ -254,6 +254,22 @@ public func routes(_ router: Router) throws {
         }
     }
     
+    router.get("advance/stage") { req -> Future<Response> in
+        return try getPlayerFromSession(on: req).flatMap(to: Response.self) { player in
+            return try player.getSupportedMission(on: req).flatMap(to: Response.self) { mission in
+                guard let mission = mission else {
+                    throw Abort(.badRequest, reason: "No mission found for player.")
+                }
+                
+                let advancedMission = try mission.goToNextStage()
+                
+                return advancedMission.save(on: req).map(to: Response.self) { savedMission in
+                    return req.redirect(to: "/main")
+                }
+            }
+        }
+    }
+    
     router.get("debug", "allUsers") { req -> Future<[Player]> in
         return Player.query(on: req).all()
     }
@@ -262,7 +278,7 @@ public func routes(_ router: Router) throws {
         return Player.query(on: req).all().flatMap(to: [Player].self) { players in
             let richPlayers = players.map { player -> Player in
                 var changedPlayer = player
-                changedPlayer.debug_setCash(1_000_000_000)
+                changedPlayer.debug_setCash(2_000_000_000)
                 return changedPlayer
             }
             
@@ -322,6 +338,7 @@ public func routes(_ router: Router) throws {
             let costOfNextTechnologyLevel: Double
             let simulation: Simulation
             let errorMessage: String?
+            let currentStageComplete: Bool
         }
         
         return Player.find(id, on: req).flatMap(to: View.self) { player in
@@ -339,7 +356,12 @@ public func routes(_ router: Router) throws {
                     guard let mission = mission else {
                         throw Abort(.notFound, reason: "Mission with id \(missionID) does not exist.")
                     }
-                    let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponent: mission.currentStage.currentlyBuildingComponent, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, errorMessage: errorMessage)
+                    
+                    if mission.missionComplete {
+                        return try req.view().render("win")
+                    }
+                    
+                    let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponent: mission.currentStage.currentlyBuildingComponent, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, errorMessage: errorMessage, currentStageComplete: mission.currentStage.stageComplete)
                     
                     return try req.view().render("main", context)
                 }
@@ -357,13 +379,17 @@ public func routes(_ router: Router) throws {
                             throw Abort(.notFound, reason: "Mission with id \(String(describing: supportedPlayer.ownsMissionID)) does not exist.")
                         }
                         
-                        let context = MainContext(player: player, mission: supportedMission, currentStage: supportedMission.currentStage, currentBuildingComponent: supportedMission.currentStage.currentlyBuildingComponent, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, errorMessage: errorMessage)
+                        if supportedMission.missionComplete {
+                            return try req.view().render("win")
+                        }
+                        
+                        let context = MainContext(player: player, mission: supportedMission, currentStage: supportedMission.currentStage, currentBuildingComponent: supportedMission.currentStage.currentlyBuildingComponent, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, errorMessage: errorMessage, currentStageComplete: supportedMission.currentStage.stageComplete)
                         
                         return try req.view().render("main", context)
                     }
                 }
             } else {
-                let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponent: nil ,costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, errorMessage: errorMessage)
+                let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponent: nil ,costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, errorMessage: errorMessage, currentStageComplete: false)
             
                 return try req.view().render("main", context)
             }

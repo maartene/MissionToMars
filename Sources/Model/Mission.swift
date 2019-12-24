@@ -10,6 +10,10 @@ import FluentSQLite
 import Vapor
 
 public struct Mission: Content, SQLiteUUIDModel {
+    public enum MissionError: Error {
+        case uncompletedComponents
+    }
+    
     public var id: UUID?
     
     public var missionName: String// = "Mission To Mars"// #\(Int.random(in: 1...1_000_000))"
@@ -62,6 +66,27 @@ public struct Mission: Content, SQLiteUUIDModel {
         updatedMission.stages = updatedStages
         
         return updatedMission
+    }
+    
+    public func goToNextStage() throws -> Mission {
+        var updatedMission = self
+        
+        guard currentStage.uncompletedComponents.count == 0 else {
+            throw MissionError.uncompletedComponents
+        }
+        
+        updatedMission.currentStageLevel += 1
+        
+        if updatedMission.currentStageLevel > Stage.allStages.count {
+            print("You won the game!")
+            updatedMission.currentStageLevel = Stage.allStages.count
+        }
+        
+        return updatedMission
+    }
+    
+    public var missionComplete: Bool {
+        return currentStageLevel == Stage.allStages.count && currentStage.uncompletedComponents.count == 0
     }
 }
 
