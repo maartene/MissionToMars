@@ -95,24 +95,6 @@ final class PlayerDBTests : XCTestCase {
         XCTAssertEqual(result.savedMission.owningPlayerID, result.savedPlayer.id)
     }
     
-    /*func testInvestInMission() throws {
-        let playerMissionCombo = try createTestPlayerWithMission()
-        
-        let result = try app?.withPooledConnection(to: .sqlite, closure: { conn -> Future<Result<(changedPlayer: Player, changedMission: Mission), Player.PlayerError>> in
-            return try playerMissionCombo.savedPlayer.investInMission(amount: playerMissionCombo.savedPlayer.cash - 1, on: conn)
-            }).wait()
-        
-        XCTAssertNotNil(result, " result should not be nil.")
-        
-        switch result! {
-        case .failure(let error):
-            XCTFail("InvestInMission test failed with error: \(error)")
-        case .success(let investResult):
-            XCTAssertLessThan(investResult.changedPlayer.cash, playerMissionCombo.savedPlayer.cash, " cash")
-            XCTAssertGreaterThan(investResult.changedMission.percentageDone, playerMissionCombo.savedMission.percentageDone, " % done")
-        }
-    }*/
-    
     func testInvestInTechnology() throws {
         let player = try createTestPlayer()
         let changedPlayer = try player.investInNextLevelOfTechnology()
@@ -249,7 +231,6 @@ final class PlayerDBTests : XCTestCase {
         ("testCreateMission", testCreateMission),
         ("testCannotCreatePlayerWithExistingUsername", testCannotCreatePlayerWithExistingUsername),
         ("testAddMissionToPlayer", testAddMissionToPlayer),
-        //("testInvestInMission", testInvestInMission),
         ("testInvestInTechnology", testInvestInTechnology),
         ("testDonateCashToPlayer", testDonateCashToPlayer),
         ("testDonateTechToPlayer", testDonateTechToPlayer),

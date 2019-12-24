@@ -47,27 +47,6 @@ public func routes(_ router: Router) throws {
         }
     }
     
-    /*router.get("createCharacter") { req -> Future<View> in
-        struct CreateCharacterContext: Codable {
-            var errorMessage = "noError"
-            var uuid = "unknown"
-        }
-        
-        return Player.createUser(username: "testUser3", on: req).flatMap(to: View.self) { result in
-            var context = CreateCharacterContext()
-            
-            switch result {
-            case .success(let player):
-                context.uuid = String(player.id!)
-            case .failure(let error):
-                context.errorMessage = error.localizedDescription
-                print(context.errorMessage)
-            }
-            
-            return try req.view().render("userCreated", context)
-        }
-    }*/
-    
     router.post("login") { req -> Response in
         let idString: String = (try? req.content.syncGet(at: "playerid")) ?? ""
         
@@ -255,37 +234,6 @@ public func routes(_ router: Router) throws {
         }
         
     }
-    
-    /*router.get("invest/in/mission") { req -> Future<Response> in
-        guard let id = getPlayerIDFromSession(on: req) else {
-            throw Abort(.unauthorized)
-        }
-        
-        return Player.find(id, on: req).flatMap(to: Response.self) { player in
-            guard let player = player else {
-                return Future.map(on: req) { return req.redirect(to: "/")}
-            }
-            
-            return try player.investInMission(amount: 1000, on: req).flatMap(to: Response.self) { result in
-                switch result {
-                case .success(let result):
-                    return result.changedMission.update(on: req).flatMap(to: Response.self) { mission in
-                        return result.changedPlayer.update(on: req).map(to: Response.self) { updatedPlayer in
-                            return req.redirect(to: "/main")
-                        }
-                    }
-                case.failure(let error):
-                    switch error {
-                    case .insufficientFunds:
-                        errorMessages[player.id!] = "Insufficient funds to invest."
-                        return Future.map(on: req) { return req.redirect(to: "/main") }
-                    default:
-                        throw error
-                    }
-                }
-            }
-        }
-    }*/
      
     router.get("upgrade/techLevel") { req -> Future<Response> in
         return try getPlayerFromSession(on: req).flatMap(to: Response.self) { player in

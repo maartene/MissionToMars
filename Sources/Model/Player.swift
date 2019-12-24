@@ -42,8 +42,8 @@ public struct Player: Content, SQLiteUUIDModel {
         var updatedPlayer = self
         
         for _ in 0 ..< ticks {
-            updatedPlayer.cash += 100
-            updatedPlayer.technologyPoints += 3
+            updatedPlayer.cash += 5_000 * NSDecimalNumber(decimal: pow(1.5, technologyLevel)).doubleValue
+            updatedPlayer.technologyPoints += 7
         }
         
         return updatedPlayer
@@ -95,30 +95,9 @@ public struct Player: Content, SQLiteUUIDModel {
         return (updatedPlayer, updatedMission)
     }
     
-    /*func investInMission(amount: Double, in mission: Mission) throws -> (changedPlayer: Player, changedMission: Mission) {
-        var changedMission = mission
-        var changedPlayer = self
-            
-        guard amount <= self.cash else {
-            throw PlayerError.insufficientFunds
-        }
-        
-        changedPlayer.cash -= amount
-        
-        let missionPoints = self.missionPointValue(for: amount)
-        //print("Adding mission points: \(missionPoints)")
-        //changedMission.percentageDone += missionPoints
-        
-        return (changedPlayer, changedMission)
-    }*/
-    
     public var costOfNextTechnologyLevel: Double {
         40.0 * NSDecimalNumber(decimal: pow(1.6, technologyLevel)).doubleValue
     }
-    
-    /*public var technologyMissionPointDiscount: Double {
-        100 * NSDecimalNumber(decimal: pow(1.5, technologyLevel)).doubleValue
-    }*/
     
     public func investInNextLevelOfTechnology() throws -> Player {
         //print("Required tech points for next level: \(costOfNextTechnologyLevel)")
@@ -133,10 +112,6 @@ public struct Player: Content, SQLiteUUIDModel {
         
         return changedPlayer
     }
-    
-    /*public func missionPointValue(for cashAmount: Double) -> Double {
-        return cashAmount / Double(1_000_000 - technologyMissionPointDiscount)
-    }*/
     
     mutating public func debug_setCash(_ amount: Double) {
         self.cash = amount
@@ -216,29 +191,6 @@ extension Player {
             return Future.map(on: conn) { return result }
         }
     }
-    
-    /*public func investInMission(amount: Double, on conn: DatabaseConnectable) throws -> Future<Result<(changedPlayer: Player, changedMission: Mission), PlayerError>> {
-        return try getSupportedMission(on: conn).flatMap(to: Result<(changedPlayer: Player, changedMission: Mission), PlayerError>.self) { mission in
-            guard let changedMission = mission else {
-                return Future.map(on: conn) {
-                    return .failure(PlayerError.noMission)
-                }
-            }
-            
-            var result: Result<(changedPlayer: Player, changedMission: Mission), PlayerError>
-            do {
-                let investResult = try self.investInMission(amount: amount, in: changedMission)
-                result = .success(investResult)
-            } catch {
-                if let error = error as? PlayerError {
-                    result = .failure(error)
-                } else {
-                    throw error
-                }
-            }
-            return Future.map(on: conn) { return result }
-        }
-    }*/
     
     public func investInComponent(_ component: Component, on conn: DatabaseConnectable, date: Date) throws -> Future<Result<(changedPlayer: Player, changedMission: Mission), PlayerError>> {
         return try getSupportedMission(on: conn).flatMap(to: Result<(changedPlayer: Player, changedMission: Mission), PlayerError>.self) { mission in

@@ -28,7 +28,7 @@
                         #for(component in currentStage.components) { 
                             <li class="list-group-item">
                                 <b>#(component.name)</b> #(component.description)<br/>
-                                #if(component.buildStartedOn) { Build started on: #date(component.buildStartedOn) #(component.percentageCompleted)% complete. } else {
+                                #if(component.buildStartedOn) { Build started on: #date(component.buildStartedOn) #decimal(component.percentageCompleted)% complete. } else {
                                     #if(player.ownsMissionID) {<a href="/build/component/#(component.shortName)" class="btn btn-sm btn-primary #if(component.cost > player.cash) {disabled}">Start build</a>}
                                 }
                             </li> }

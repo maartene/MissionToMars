@@ -16,7 +16,7 @@ public final class DateTag: TagRenderer {
             if let dateDouble = tag.parameters[0].double {
                 let date = Date(timeIntervalSince1970: dateDouble)
                 let formatter = DateFormatter()
-                formatter.setLocalizedDateFormatFromTemplate("dMMMMyyyy")
+                formatter.setLocalizedDateFormatFromTemplate("MMMMdyyyy")
                 //print("gameDate: \(gameDate) gameDateString \(formatter.string(from: gameDate))")
                 return .string(formatter.string(from: date))
             } else {

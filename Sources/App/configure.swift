@@ -43,6 +43,7 @@ public func configure(
     // Configure custom tags
     var tags = LeafTagConfig.default()
     tags.use(DateTag(), as: "date")
+    tags.use(DecimalTag(), as: "decimal")
     services.register(tags)
 
     // Register middleware (file serving and sessions)
