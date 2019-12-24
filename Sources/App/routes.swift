@@ -137,7 +137,8 @@ public func routes(_ router: Router) throws {
         }
         
         return Mission.query(on: req).all().flatMap(to: View.self) { missions in
-            let playerFutures = try missions.map { mission in
+            let unfinishedMissions = missions.filter { mission in mission.missionComplete == false }
+            let playerFutures = try unfinishedMissions.map { mission in
                 return try mission.getOwningPlayer(on: req)
             }
             let playerFuture = playerFutures.flatten(on: req)
@@ -159,6 +160,11 @@ public func routes(_ router: Router) throws {
             return Mission.find(supportedMissionID, on: req).flatMap(to: Response.self) { mission in
                 guard let supportedMission = mission else {
                     throw Abort(.notFound, reason: "Could not find mission with id \(supportedMissionID)")
+                }
+                
+                guard supportedMission.missionComplete == false else {
+                    errorMessages[player.id!] = "You cannot support a mission that is already complete."
+                    return Future.map(on: req) { return req.redirect(to: "/main") }
                 }
                 
                 var updatedPlayer = player
