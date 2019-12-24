@@ -88,7 +88,7 @@ final class PerformanceTests: XCTestCase {
         player.ownsMissionID = mission.id
         
         // simulate until mission done (with a maximum of a million steps)
-        let maxSteps = 1_000_000
+        let maxSteps = 100_000
         var steps = 0
         while mission.currentStage.currentlyBuildingComponent?.percentageCompleted ?? 0 < 100 && steps < maxSteps {
             player = player.updatePlayer()

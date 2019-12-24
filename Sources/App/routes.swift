@@ -88,13 +88,17 @@ public func routes(_ router: Router) throws {
         return getSimulation(on: req).flatMap(to: View.self) { simulation in
             if simulation.simulationShouldUpdate(currentDate: Date()) {
                 return Player.query(on: req).all().flatMap(to: View.self) { players in
-                    let result = simulation.updateSimulation(currentDate: Date(), players: players)
-                    assert(simulation.id != nil)
-                    assert(result.updatedSimulation.id != nil)
-                    assert(simulation.id == result.updatedSimulation.id)
-                    return result.updatedSimulation.update(on: req).flatMap(to: View.self) { savedSimulation in
-                        return Player.savePlayers(result.updatedPlayers, on: req).flatMap(to: View.self) { players in
-                            return getMainViewForPlayer(with: id, simulation: savedSimulation, on: req)
+                    return Mission.query(on: req).all().flatMap(to: View.self) { missions in
+                        let result = simulation.updateSimulation(currentDate: Date(), players: players, missions: missions)
+                        assert(simulation.id != nil)
+                        assert(result.updatedSimulation.id != nil)
+                        assert(simulation.id == result.updatedSimulation.id)
+                        return result.updatedSimulation.update(on: req).flatMap(to: View.self) { savedSimulation in
+                            return Player.savePlayers(result.updatedPlayers, on: req).flatMap(to: View.self) { players in
+                                return Mission.saveMissions(result.updatedMissions, on: req).flatMap(to: View.self) { missions in
+                                    return getMainViewForPlayer(with: id, simulation: savedSimulation, on: req)
+                                }
+                            }
                         }
                     }
                 }
@@ -350,7 +354,7 @@ public func routes(_ router: Router) throws {
                 } else {
                     // create a new simulation
                     print("Creating new simulation.")
-                    let gameDate = Date().addingTimeInterval(SECONDS_IN_YEAR)
+                    let gameDate = Date().addingTimeInterval(Double(SECONDS_IN_YEAR))
                     let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
                     return simulation.create(on: req).map(to: Simulation.self) { sim in
                         Simulation.GLOBAL_SIMULATION_ID = sim.id!
@@ -369,7 +373,6 @@ public func routes(_ router: Router) throws {
             let currentBuildingComponent: Component?
             let costOfNextTechnologyLevel: Double
             let simulation: Simulation
-            let gameDate: String
             let errorMessage: String?
         }
         
@@ -388,7 +391,7 @@ public func routes(_ router: Router) throws {
                     guard let mission = mission else {
                         throw Abort(.notFound, reason: "Mission with id \(missionID) does not exist.")
                     }
-                    let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponent: mission.currentStage.currentlyBuildingComponent, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, gameDate: simulation.gameDateString, errorMessage: errorMessage)
+                    let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponent: mission.currentStage.currentlyBuildingComponent, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, errorMessage: errorMessage)
                     
                     return try req.view().render("main", context)
                 }
@@ -406,13 +409,13 @@ public func routes(_ router: Router) throws {
                             throw Abort(.notFound, reason: "Mission with id \(String(describing: supportedPlayer.ownsMissionID)) does not exist.")
                         }
                         
-                        let context = MainContext(player: player, mission: supportedMission, currentStage: supportedMission.currentStage, currentBuildingComponent: supportedMission.currentStage.currentlyBuildingComponent, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, gameDate: simulation.gameDateString, errorMessage: errorMessage)
+                        let context = MainContext(player: player, mission: supportedMission, currentStage: supportedMission.currentStage, currentBuildingComponent: supportedMission.currentStage.currentlyBuildingComponent, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, errorMessage: errorMessage)
                         
                         return try req.view().render("main", context)
                     }
                 }
             } else {
-                let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponent: nil ,costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, gameDate: simulation.gameDateString, errorMessage: errorMessage)
+                let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponent: nil ,costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, errorMessage: errorMessage)
             
                 return try req.view().render("main", context)
             }

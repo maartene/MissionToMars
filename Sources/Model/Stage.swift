@@ -19,6 +19,7 @@ public struct Stage: Equatable, Codable {
     public enum StageError: Error {
         case invalidStageLevel
         case componentNotInStage
+        case alreadyBuildingComponent
     }
     
     public static func getStageByLevel(_ level: Int) throws -> Stage {
@@ -72,6 +73,10 @@ public struct Stage: Equatable, Codable {
     
     public func startBuildingComponent(_ component: Component, buildDate: Date) throws -> Stage {
         var updatedStage = self
+        
+        guard currentlyBuildingComponent == nil else {
+            throw StageError.alreadyBuildingComponent
+        }
         
         guard components.contains(component) else {
             throw StageError.componentNotInStage

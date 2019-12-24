@@ -77,7 +77,7 @@ final class SimulationDBTests : XCTestCase {
         XCTAssertEqual(loadedSimulations.count, 1)
         let loadedSimulation = loadedSimulations.first!
         
-        let result = loadedSimulation.updateSimulation(currentDate: Date(), players: players)
+        let result = loadedSimulation.updateSimulation(currentDate: Date(), players: players, missions: [])
         XCTAssertEqual(result.updatedSimulation.id, loadedSimulation.id, "UUID should be unchanged after update.")
         
         for i in 0 ..< players.count {
@@ -122,7 +122,7 @@ final class SimulationDBTests : XCTestCase {
         
         let loadedSimulation = loadedSimulations.first!
         
-        let result = loadedSimulation.updateSimulation(currentDate: Date(), players: [])
+        let result = loadedSimulation.updateSimulation(currentDate: Date(), players: [], missions: [])
         
         let savedSimulation = try app!.withPooledConnection(to: .sqlite) { conn in
             return result.updatedSimulation.update(on: conn)

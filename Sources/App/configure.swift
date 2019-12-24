@@ -40,7 +40,11 @@ public func configure(
     // Configure LEAF
     try services.register(LeafProvider())
     config.prefer(LeafRenderer.self, for: ViewRenderer.self)
-    
+    // Configure custom tags
+    var tags = LeafTagConfig.default()
+    tags.use(DateTag(), as: "date")
+    services.register(tags)
+
     // Register middleware (file serving and sessions)
     var middlewares = MiddlewareConfig() // Create _empty_ middleware config
     middlewares.use(FileMiddleware.self) // Serves files from `Public/` directory

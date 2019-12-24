@@ -51,11 +51,30 @@ public struct Mission: Content, SQLiteUUIDModel {
         changedMission.stages = changedStages
         return changedMission
     }
+    
+    public func updateMission(ticks: Int = 1) -> Mission {
+        var updatedMission = self
+        
+        let updatedStages = stages.map { stage in
+            stage.updateStage(ticks: ticks)
+        }
+        
+        updatedMission.stages = updatedStages
+        
+        return updatedMission
+    }
 }
 
 extension Mission: Migration { }
 
 extension Mission {
+    public static func saveMissions(_ missions: [Mission], on conn: DatabaseConnectable) -> Future<[Mission]> {
+        let futures = missions.map { mission in
+            return mission.update(on: conn)
+        }
+        return futures.flatten(on: conn)
+    }
+        
     public func getOwningPlayer(on conn: DatabaseConnectable) throws -> Future<Player> {
         return Player.find(owningPlayerID, on: conn).map(to: Player.self) { player in
             guard let player = player else {

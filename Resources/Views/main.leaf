@@ -10,7 +10,7 @@
             <h3>Today</h3>
         </div>
         <div class="row">
-            <div class="col">Date: #(gameDate) (#(simulation.tickCount))</div>
+            <div class="col">Date: #date(simulation.gameDate) (#(simulation.tickCount))</div>
         </div>
     </div>
     <div class="container border p-3 mt-3">
@@ -28,7 +28,7 @@
                         #for(component in currentStage.components) { 
                             <li class="list-group-item">
                                 <b>#(component.name)</b> #(component.description)<br/>
-                                #if(component.buildStartedOn) { Build started on: #(component.buildStartedOn) #(component.percentageCompleted)% complete. } else {
+                                #if(component.buildStartedOn) { Build started on: #date(component.buildStartedOn) #(component.percentageCompleted)% complete. } else {
                                     #if(player.ownsMissionID) {<a href="/build/component/#(component.shortName)" class="btn btn-sm btn-primary #if(component.cost > player.cash) {disabled}">Start build</a>}
                                 }
                             </li> }
