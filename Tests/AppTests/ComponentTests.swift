@@ -16,7 +16,7 @@ final class ComponentTests : XCTestCase {
     func testStartBuildComponent() throws {
         let component = Component(shortName: .Satellite, name: "testComponent", description: "", cost: 1, buildTime: 1)
         XCTAssertNil(component.buildStartedOn)
-        let buildingComponent = component.startBuild(startDate: Date())
+        let buildingComponent = try component.startBuild(startDate: Date())
         XCTAssertNotNil(buildingComponent.buildStartedOn)
     }
     
@@ -46,7 +46,7 @@ final class ComponentTests : XCTestCase {
         }
         
         let numberOfTicksRequired = component.buildTime
-        let buildStartedComponent = component.startBuild(startDate: Date())
+        let buildStartedComponent = try component.startBuild(startDate: Date())
         let updatedComponent = buildStartedComponent.updateComponent(ticks: numberOfTicksRequired)
         
         XCTAssertGreaterThanOrEqual(updatedComponent.percentageCompleted, 100.0, "Component should be done by now.")

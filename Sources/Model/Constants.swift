@@ -7,4 +7,4 @@
 
 import Foundation
 
-let SECONDS_IN_YEAR = 365*24*60*60
+public let SECONDS_IN_YEAR = 365*24*60*60

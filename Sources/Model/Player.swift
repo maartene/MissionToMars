@@ -81,7 +81,7 @@ public struct Player: Content, SQLiteUUIDModel {
         var updatedPlayer = self
         var updatedMission = mission
         
-        guard mission.currentStage.uncompletedComponents.contains(component) else {
+        guard mission.currentStage.unstartedComponents.contains(component) else {
             return (updatedPlayer, updatedMission)
         }
         
@@ -138,7 +138,7 @@ public struct Player: Content, SQLiteUUIDModel {
         return cashAmount / Double(1_000_000 - technologyMissionPointDiscount)
     }*/
     
-    mutating func debug_setCash(_ amount: Double) {
+    mutating public func debug_setCash(_ amount: Double) {
         self.cash = amount
     }
 }

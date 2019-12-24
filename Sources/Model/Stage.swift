@@ -9,7 +9,7 @@ import Foundation
 
 public struct Stage: Equatable, Codable {
     public static let allStages = [
-        Stage(level: 1, name: "Orbital Sattelite", description: "The first step in your Mars mission will be to send an orbital satellite to Mars. This will prove your capability in reaching Mars, as well as provide valuable information from the Mars surface. In later stages, you will be able to use the satellite for communicating with the surface.", components: [Component.getComponentByName(.Rocket_S)!, Component.getComponentByName(.MissionControl)!, Component.getComponentByName(.Satellite)!])
+        Stage(level: 1, name: "Orbital Satellite", description: "The first step in your Mars mission will be to send an orbital satellite to Mars. This will prove your capability in reaching Mars, as well as provide valuable information from the Mars surface. In later stages, you will be able to use the satellite for communicating with the surface.", components: [Component.getComponentByName(.Rocket_S)!, Component.getComponentByName(.MissionControl)!, Component.getComponentByName(.Satellite)!])
     ]
     
     public static func == (lhs: Stage, rhs: Stage) -> Bool {
@@ -18,6 +18,7 @@ public struct Stage: Equatable, Codable {
     
     public enum StageError: Error {
         case invalidStageLevel
+        case componentNotInStage
     }
     
     public static func getStageByLevel(_ level: Int) throws -> Stage {
@@ -69,17 +70,17 @@ public struct Stage: Equatable, Codable {
         return updatedStage
     }
     
-    public func startBuildingComponent(_ component: Component, buildDate: Date) -> Stage {
+    public func startBuildingComponent(_ component: Component, buildDate: Date) throws -> Stage {
         var updatedStage = self
         
-        guard unstartedComponents.contains(component) else {
-            return self
+        guard components.contains(component) else {
+            throw StageError.componentNotInStage
         }
         
         var updatedComponents = components
         
         if let componentIndex = updatedComponents.firstIndex(of: component) {
-            updatedComponents[componentIndex] = component.startBuild(startDate: buildDate)
+            updatedComponents[componentIndex] = try component.startBuild(startDate: buildDate)
         }
          
         updatedStage.components = updatedComponents

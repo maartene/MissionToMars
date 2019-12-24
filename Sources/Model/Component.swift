@@ -17,6 +17,7 @@ public struct Component: Equatable, Codable {
     
     public enum ComponentError: Error {
         case unknownShortName
+        case componentAlreadyBeingBuilt
     }
     
     public static let allComponents = [
@@ -33,17 +34,21 @@ public struct Component: Equatable, Codable {
         return lhs.shortName == rhs.shortName
     }
     
-    let shortName: ShortName
-    let name: String
-    let description: String
-    let cost: Double
-    let buildTime: Int // in days/ticks
+    public let shortName: ShortName
+    public let name: String
+    public let description: String
+    public let cost: Double
+    public let buildTime: Int // in days/ticks
     public private(set) var buildStartedOn: Date?
     public private(set) var percentageCompleted: Double = 0
     
-    public func startBuild(startDate: Date) -> Component {
+    public func startBuild(startDate: Date) throws -> Component {
+        guard buildStartedOn == nil else {
+            throw ComponentError.componentAlreadyBeingBuilt
+        }
+        
         var startedBuiltComponent = self
-        startedBuiltComponent.buildStartedOn = Date()
+        startedBuiltComponent.buildStartedOn = startDate
         return startedBuiltComponent
     }
     

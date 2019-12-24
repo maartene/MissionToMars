@@ -41,7 +41,7 @@ class StageTests: XCTestCase {
         XCTAssertEqual(0, stage.completedComponents.count, "No components should be completed yet.")
         XCTAssertNil(stage.currentlyBuildingComponent, "No component should be building.")
         
-        let changedStage = stage.startBuildingComponent(stage.components.randomElement()!, buildDate: Date())
+        let changedStage = try stage.startBuildingComponent(stage.components.randomElement()!, buildDate: Date())
         
         XCTAssertNotNil(changedStage.currentlyBuildingComponent, "A component should be building.")
         
@@ -54,7 +54,7 @@ class StageTests: XCTestCase {
         XCTAssertNil(stage.currentlyBuildingComponent, "No component should be building.")
         
         let componentToBuild = stage.components.randomElement()!
-        let changedStage = stage.startBuildingComponent(componentToBuild, buildDate: Date())
+        let changedStage = try stage.startBuildingComponent(componentToBuild, buildDate: Date())
         let updatedStage = changedStage.updateStage(ticks: changedStage.currentlyBuildingComponent?.buildTime ?? 0)
         XCTAssertNil(updatedStage.currentlyBuildingComponent, "A component should not be building.")
         XCTAssertEqual(1, updatedStage.completedComponents.count, "One component should be completed.")

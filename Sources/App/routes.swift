@@ -222,6 +222,36 @@ public func routes(_ router: Router) throws {
         }
     }
     
+    router.get("build/component", String.parameter) { req -> Future<Response> in
+        let shortNameString: String = try req.parameters.next()
+        
+        guard let shortName = Component.ShortName.init(rawValue: shortNameString) else {
+            throw Abort(.badRequest, reason: "\(shortNameString) is not a valid component shortname.")
+        }
+        
+        guard let component = Component.getComponentByName(shortName) else {
+            throw Abort(.notFound, reason: "No component with shortName \(shortName) found.")
+        }
+        
+        return getSimulation(on: req).flatMap(to: Response.self) { simulation in
+            return try getPlayerFromSession(on: req).flatMap(to: Response.self) { player in
+                return try player.investInComponent(component, on: req, date: simulation.gameDate).flatMap(to: Response.self) { result in
+                    switch result {
+                    case .failure(let error):
+                        throw error
+                    case .success(let investmentResult):
+                        return investmentResult.changedPlayer.save(on: req).flatMap(to: Response.self) { savedPlayer in
+                            return investmentResult.changedMission.save(on: req).map(to: Response.self) { savedMission in
+                                return req.redirect(to: "/main")
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+    }
+    
     /*router.get("invest/in/mission") { req -> Future<Response> in
         guard let id = getPlayerIDFromSession(on: req) else {
             throw Abort(.unauthorized)
@@ -276,6 +306,18 @@ public func routes(_ router: Router) throws {
         return Player.query(on: req).all()
     }
     
+    router.post("debug", "cash") { req -> Future<[Player]> in
+        return Player.query(on: req).all().flatMap(to: [Player].self) { players in
+            let richPlayers = players.map { player -> Player in
+                var changedPlayer = player
+                changedPlayer.debug_setCash(1_000_000_000)
+                return changedPlayer
+            }
+            
+            return Player.savePlayers(richPlayers, on: req)
+        }
+    }
+    
     router.get() { req in
         return try req.view().render("index")
     }
@@ -295,7 +337,7 @@ public func routes(_ router: Router) throws {
                 guard let simulation = sim else {
                     throw Abort(.notFound, reason: "Simulation with ID \(simulationID) not found in database.")
                 }
-                print("Loaded simulation from database.")
+                // print("Loaded simulation from database.")
                 return simulation
             }
         } else {
@@ -308,7 +350,7 @@ public func routes(_ router: Router) throws {
                 } else {
                     // create a new simulation
                     print("Creating new simulation.")
-                    let gameDate = Date().addingTimeInterval(24*60*60*365)
+                    let gameDate = Date().addingTimeInterval(SECONDS_IN_YEAR)
                     let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
                     return simulation.create(on: req).map(to: Simulation.self) { sim in
                         Simulation.GLOBAL_SIMULATION_ID = sim.id!
@@ -323,6 +365,8 @@ public func routes(_ router: Router) throws {
         struct MainContext: Codable {
             let player: Player
             let mission: Mission?
+            let currentStage: Stage?
+            let currentBuildingComponent: Component?
             let costOfNextTechnologyLevel: Double
             let simulation: Simulation
             let gameDate: String
@@ -344,7 +388,7 @@ public func routes(_ router: Router) throws {
                     guard let mission = mission else {
                         throw Abort(.notFound, reason: "Mission with id \(missionID) does not exist.")
                     }
-                    let context = MainContext(player: player, mission: mission, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, gameDate: simulation.gameDateString, errorMessage: errorMessage)
+                    let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponent: mission.currentStage.currentlyBuildingComponent, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, gameDate: simulation.gameDateString, errorMessage: errorMessage)
                     
                     return try req.view().render("main", context)
                 }
@@ -362,13 +406,13 @@ public func routes(_ router: Router) throws {
                             throw Abort(.notFound, reason: "Mission with id \(String(describing: supportedPlayer.ownsMissionID)) does not exist.")
                         }
                         
-                        let context = MainContext(player: player, mission: supportedMission, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, gameDate: simulation.gameDateString, errorMessage: errorMessage)
+                        let context = MainContext(player: player, mission: supportedMission, currentStage: supportedMission.currentStage, currentBuildingComponent: supportedMission.currentStage.currentlyBuildingComponent, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, gameDate: simulation.gameDateString, errorMessage: errorMessage)
                         
                         return try req.view().render("main", context)
                     }
                 }
             } else {
-                let context = MainContext(player: player, mission: nil, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, gameDate: simulation.gameDateString, errorMessage: errorMessage)
+                let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponent: nil ,costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, gameDate: simulation.gameDateString, errorMessage: errorMessage)
             
                 return try req.view().render("main", context)
             }
