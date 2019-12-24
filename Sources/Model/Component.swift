@@ -7,9 +7,9 @@
 
 import Foundation
 
-public struct Component: Equatable {
+public struct Component: Equatable, Codable {
     
-    public enum ShortName: String, CaseIterable {
+    public enum ShortName: String, CaseIterable, Codable {
         case Rocket_S
         case MissionControl
         case Satellite

@@ -84,16 +84,19 @@ final class PerformanceTests: XCTestCase {
         
         var mission = Mission(owningPlayerID: player.id!)
         mission.id = UUID()
+        let component = mission.currentStage.components.first!
         player.ownsMissionID = mission.id
         
         // simulate until mission done (with a maximum of a million steps)
         let maxSteps = 1_000_000
         var steps = 0
-        while mission.percentageDone < 100 && steps < maxSteps {
+        while mission.currentStage.currentlyBuildingComponent?.percentageCompleted ?? 0 < 100 && steps < maxSteps {
             player = player.updatePlayer()
-            let investment = try player.investInMission(amount: player.cash, in: mission)
-            player = investment.changedPlayer
-            mission = investment.changedMission
+            if player.cash >= component.cost {
+                let investment = try player.investInComponent(component, in: mission, date: Date())
+                player = investment.changedPlayer
+                mission = investment.changedMission
+            }
             
             if player.technologyPoints >= player.costOfNextTechnologyLevel {
                 player = try player.investInNextLevelOfTechnology()

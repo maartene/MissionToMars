@@ -7,10 +7,14 @@
 
 import Foundation
 
-public struct Stage {
+public struct Stage: Equatable, Codable {
     public static let allStages = [
         Stage(level: 1, name: "Orbital Sattelite", description: "The first step in your Mars mission will be to send an orbital satellite to Mars. This will prove your capability in reaching Mars, as well as provide valuable information from the Mars surface. In later stages, you will be able to use the satellite for communicating with the surface.", components: [Component.getComponentByName(.Rocket_S)!, Component.getComponentByName(.MissionControl)!, Component.getComponentByName(.Satellite)!])
     ]
+    
+    public static func == (lhs: Stage, rhs: Stage) -> Bool {
+        return lhs.level == rhs.level
+    }
     
     public enum StageError: Error {
         case invalidStageLevel
@@ -35,6 +39,10 @@ public struct Stage {
     
     public var currentlyBuildingComponent: Component? {
         return uncompletedComponents.first { component in component.buildStartedOn != nil }
+    }
+    
+    public var unstartedComponents: [Component] {
+        return uncompletedComponents.filter { component in component.buildStartedOn == nil }
     }
     
     public var percentageComplete: Double {
@@ -64,7 +72,7 @@ public struct Stage {
     public func startBuildingComponent(_ component: Component, buildDate: Date) -> Stage {
         var updatedStage = self
         
-        guard uncompletedComponents.contains(component) else {
+        guard unstartedComponents.contains(component) else {
             return self
         }
         

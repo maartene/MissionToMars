@@ -77,7 +77,25 @@ public struct Player: Content, SQLiteUUIDModel {
         return (donatingPlayer, receivingPlayer)
     }
     
-    func investInMission(amount: Double, in mission: Mission) throws -> (changedPlayer: Player, changedMission: Mission) {
+    func investInComponent(_ component: Component, in mission: Mission, date: Date) throws -> (changedPlayer: Player, changedMission: Mission) {
+        var updatedPlayer = self
+        var updatedMission = mission
+        
+        guard mission.currentStage.uncompletedComponents.contains(component) else {
+            return (updatedPlayer, updatedMission)
+        }
+        
+        guard cash >= component.cost else {
+            throw PlayerError.insufficientFunds
+        }
+        
+        updatedMission = try updatedMission.startBuildingInStage(component, buildDate: date)
+        updatedPlayer.cash -= component.cost
+        
+        return (updatedPlayer, updatedMission)
+    }
+    
+    /*func investInMission(amount: Double, in mission: Mission) throws -> (changedPlayer: Player, changedMission: Mission) {
         var changedMission = mission
         var changedPlayer = self
             
@@ -89,18 +107,18 @@ public struct Player: Content, SQLiteUUIDModel {
         
         let missionPoints = self.missionPointValue(for: amount)
         //print("Adding mission points: \(missionPoints)")
-        changedMission.percentageDone += missionPoints
+        //changedMission.percentageDone += missionPoints
         
         return (changedPlayer, changedMission)
-    }
+    }*/
     
     public var costOfNextTechnologyLevel: Double {
         40.0 * NSDecimalNumber(decimal: pow(1.6, technologyLevel)).doubleValue
     }
     
-    public var technologyMissionPointDiscount: Double {
+    /*public var technologyMissionPointDiscount: Double {
         100 * NSDecimalNumber(decimal: pow(1.5, technologyLevel)).doubleValue
-    }
+    }*/
     
     public func investInNextLevelOfTechnology() throws -> Player {
         //print("Required tech points for next level: \(costOfNextTechnologyLevel)")
@@ -116,8 +134,12 @@ public struct Player: Content, SQLiteUUIDModel {
         return changedPlayer
     }
     
-    public func missionPointValue(for cashAmount: Double) -> Double {
+    /*public func missionPointValue(for cashAmount: Double) -> Double {
         return cashAmount / Double(1_000_000 - technologyMissionPointDiscount)
+    }*/
+    
+    mutating func debug_setCash(_ amount: Double) {
+        self.cash = amount
     }
 }
 
@@ -195,7 +217,7 @@ extension Player {
         }
     }
     
-    public func investInMission(amount: Double, on conn: DatabaseConnectable) throws -> Future<Result<(changedPlayer: Player, changedMission: Mission), PlayerError>> {
+    /*public func investInMission(amount: Double, on conn: DatabaseConnectable) throws -> Future<Result<(changedPlayer: Player, changedMission: Mission), PlayerError>> {
         return try getSupportedMission(on: conn).flatMap(to: Result<(changedPlayer: Player, changedMission: Mission), PlayerError>.self) { mission in
             guard let changedMission = mission else {
                 return Future.map(on: conn) {
@@ -206,6 +228,29 @@ extension Player {
             var result: Result<(changedPlayer: Player, changedMission: Mission), PlayerError>
             do {
                 let investResult = try self.investInMission(amount: amount, in: changedMission)
+                result = .success(investResult)
+            } catch {
+                if let error = error as? PlayerError {
+                    result = .failure(error)
+                } else {
+                    throw error
+                }
+            }
+            return Future.map(on: conn) { return result }
+        }
+    }*/
+    
+    public func investInComponent(_ component: Component, on conn: DatabaseConnectable, date: Date) throws -> Future<Result<(changedPlayer: Player, changedMission: Mission), PlayerError>> {
+        return try getSupportedMission(on: conn).flatMap(to: Result<(changedPlayer: Player, changedMission: Mission), PlayerError>.self) { mission in
+            guard let changedMission = mission else {
+                return Future.map(on: conn) {
+                    return .failure(PlayerError.noMission)
+                }
+            }
+            
+            var result: Result<(changedPlayer: Player, changedMission: Mission), PlayerError>
+            do {
+                let investResult = try self.investInComponent(component, in: changedMission, date: date)
                 result = .success(investResult)
             } catch {
                 if let error = error as? PlayerError {

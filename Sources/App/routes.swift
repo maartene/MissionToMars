@@ -222,7 +222,7 @@ public func routes(_ router: Router) throws {
         }
     }
     
-    router.get("invest/in/mission") { req -> Future<Response> in
+    /*router.get("invest/in/mission") { req -> Future<Response> in
         guard let id = getPlayerIDFromSession(on: req) else {
             throw Abort(.unauthorized)
         }
@@ -251,7 +251,7 @@ public func routes(_ router: Router) throws {
                 }
             }
         }
-    }
+    }*/
      
     router.get("upgrade/techLevel") { req -> Future<Response> in
         return try getPlayerFromSession(on: req).flatMap(to: Response.self) { player in
