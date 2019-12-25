@@ -96,7 +96,7 @@ public struct Player: Content, SQLiteUUIDModel {
     }
     
     public var costOfNextTechnologyLevel: Double {
-        40.0 * myPow(base: 1.6, exponent: technologyLevel)
+        return 40.0 * myPow(base: 1.6, exponent: technologyLevel)
     }
     
     public func investInNextLevelOfTechnology() throws -> Player {
