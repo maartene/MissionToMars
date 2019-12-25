@@ -42,7 +42,7 @@ public struct Player: Content, SQLiteUUIDModel {
         var updatedPlayer = self
         
         for _ in 0 ..< ticks {
-            updatedPlayer.cash += 5_000 * NSDecimalNumber(decimal: pow(1.5, technologyLevel)).doubleValue
+            updatedPlayer.cash += 5_000.0 * myPow(base: 1.5, exponent: technologyLevel)
             updatedPlayer.technologyPoints += 7
         }
         
@@ -96,7 +96,7 @@ public struct Player: Content, SQLiteUUIDModel {
     }
     
     public var costOfNextTechnologyLevel: Double {
-        40.0 * NSDecimalNumber(decimal: pow(1.6, technologyLevel)).doubleValue
+        40.0 * myPow(base: 1.6, exponent: technologyLevel)
     }
     
     public func investInNextLevelOfTechnology() throws -> Player {
@@ -224,3 +224,11 @@ extension Player {
 }
 
 extension Player: Parameter { }
+
+func myPow(base: Double, exponent: Int) -> Double {
+    var result = 1.0
+    for _ in 0 ..< exponent {
+        result *= base
+    }
+    return result
+}
