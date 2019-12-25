@@ -6331,7 +6331,6 @@
 		OBJ_944 /* Resources */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Resources; sourceTree = SOURCE_ROOT; };
 		OBJ_945 /* Public */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Public; sourceTree = SOURCE_ROOT; };
 		OBJ_946 /* LICENSE */ = {isa = PBXFileReference; lastKnownFileType = text; path = LICENSE; sourceTree = "<group>"; };
-		OBJ_947 /* db.sqlite */ = {isa = PBXFileReference; lastKnownFileType = file; path = db.sqlite; sourceTree = "<group>"; };
 		OBJ_948 /* cloud.yml */ = {isa = PBXFileReference; lastKnownFileType = text.yaml; path = cloud.yml; sourceTree = "<group>"; };
 		OBJ_949 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 		OBJ_95 /* Deprecated.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Deprecated.swift; sourceTree = "<group>"; };
@@ -8428,7 +8427,6 @@
 				OBJ_944 /* Resources */,
 				OBJ_945 /* Public */,
 				OBJ_946 /* LICENSE */,
-				OBJ_947 /* db.sqlite */,
 				OBJ_948 /* cloud.yml */,
 				OBJ_949 /* README.md */,
 				OBJ_950 /* circle.yml */,
