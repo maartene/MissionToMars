@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import FluentSQLite
+import FluentPostgreSQL
 import Vapor
 
 public struct Simulation {
@@ -58,5 +58,5 @@ public struct Simulation {
 }
 
 extension Simulation: Content { }
-extension Simulation: SQLiteUUIDModel { }
+extension Simulation: PostgreSQLUUIDModel { }
 extension Simulation: Migration { }

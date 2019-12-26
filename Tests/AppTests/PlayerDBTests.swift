@@ -46,7 +46,7 @@ final class PlayerDBTests : XCTestCase {
     }
 
     func deleteData() throws {
-        _ = try? app?.withPooledConnection(to: .sqlite, closure: { conn -> Future<Void> in
+        _ = try? app?.withPooledConnection(to: .psql, closure: { conn -> Future<Void> in
             return Player.query(on: conn).delete().map(to: Void.self) { result in
                 return Mission.query(on: conn).delete()
             }
@@ -70,7 +70,7 @@ final class PlayerDBTests : XCTestCase {
     func testSaveUpdatedPlayer() throws {
         let player = try createTestPlayer()
         let updatedPlayer = player.updatePlayer()
-        let savedPlayer = try app!.withPooledConnection(to: .sqlite) { conn -> Future<Player> in
+        let savedPlayer = try app!.withPooledConnection(to: .psql) { conn -> Future<Player> in
             return updatedPlayer.save(on: conn)
         }.wait()
         
@@ -98,7 +98,7 @@ final class PlayerDBTests : XCTestCase {
     func testInvestInTechnology() throws {
         let player = try createTestPlayer()
         let changedPlayer = try player.investInNextLevelOfTechnology()
-        let savedPlayer = try app?.withPooledConnection(to: .sqlite, closure: { conn -> Future<Player> in
+        let savedPlayer = try app?.withPooledConnection(to: .psql, closure: { conn -> Future<Player> in
             return changedPlayer.save(on: conn)
         }).wait()
         
@@ -117,7 +117,7 @@ final class PlayerDBTests : XCTestCase {
         
         player1.supportsPlayerID = player2.id
         
-        let result = try app?.withPooledConnection(to: .sqlite, closure: { conn -> Future<Result<(donatingPlayer: Player, receivingPlayer: Player), Error>> in
+        let result = try app?.withPooledConnection(to: .psql, closure: { conn -> Future<Result<(donatingPlayer: Player, receivingPlayer: Player), Error>> in
             return try player1.donateToSupportedPlayer(cash: player1.cash - 1, on: conn)
         }).wait()
         
@@ -137,7 +137,7 @@ final class PlayerDBTests : XCTestCase {
         
         player1.supportsPlayerID = player2.id
         
-        let result = try app?.withPooledConnection(to: .sqlite, closure: { conn -> Future<Result<(donatingPlayer: Player, receivingPlayer: Player), Error>> in
+        let result = try app?.withPooledConnection(to: .psql, closure: { conn -> Future<Result<(donatingPlayer: Player, receivingPlayer: Player), Error>> in
             return try player1.donateToSupportedPlayer(techPoints: player1.technologyPoints - 1, on: conn)
         }).wait()
         
@@ -160,7 +160,7 @@ final class PlayerDBTests : XCTestCase {
         
         XCTAssertGreaterThanOrEqual(player.cash, component.cost, "cash")
         
-        let result = try app?.withPooledConnection(to: .sqlite) { conn -> Future<Result<(changedPlayer: Player, changedMission: Mission), Player.PlayerError>> in
+        let result = try app?.withPooledConnection(to: .psql) { conn -> Future<Result<(changedPlayer: Player, changedMission: Mission), Player.PlayerError>> in
             return try player.investInComponent(component, on: conn, date: Date())
         }.wait()
         
@@ -186,7 +186,7 @@ final class PlayerDBTests : XCTestCase {
             throw PlayerDBTestsHelpersError.appIsNil
         }
         
-        return try app.withPooledConnection(to: .sqlite, closure: { conn -> Future<Result<Player, Player.PlayerError>> in
+        return try app.withPooledConnection(to: .psql, closure: { conn -> Future<Result<Player, Player.PlayerError>> in
             return Player.createUser(username: username, on: conn)
             }).map(to: Player.self) { result in
                 switch result {
@@ -203,7 +203,7 @@ final class PlayerDBTests : XCTestCase {
             throw PlayerDBTestsHelpersError.appIsNil
         }
         
-        return app.withPooledConnection(to: .sqlite, closure: { conn -> Future<Mission> in
+        return app.withPooledConnection(to: .psql, closure: { conn -> Future<Mission> in
             return Mission(owningPlayerID: owningPlayerID).create(on: conn)
         })
     }
@@ -219,7 +219,7 @@ final class PlayerDBTests : XCTestCase {
         player.debug_setCash(mission.currentStage.unstartedComponents[0].cost)
         
         player.ownsMissionID = mission.id
-        let savedPlayer = try app.withPooledConnection(to: .sqlite, closure: { conn -> Future<Player> in
+        let savedPlayer = try app.withPooledConnection(to: .psql, closure: { conn -> Future<Player> in
             return player.save(on: conn)
         }).wait()
         
