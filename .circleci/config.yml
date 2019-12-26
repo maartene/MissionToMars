@@ -1,0 +1,36 @@
+version: 2
+
+jobs:
+  build:
+    docker:
+      - image: swift
+        environment:
+          POSTGRES_USER: foo
+          POSTGRES_DB: missiontomarsdb
+          DB_HOSTNAME: localhost
+          PORT: 5432
+      - image: postgres
+        environment:
+          POSTGRES_USER: foo
+          POSTGRES_PASSWORD: bar
+          POSTGRES_DB: missiontomarsdb
+    steps:
+      - checkout
+      - run: apt-get update -qq
+      - run: apt-get install -yq libssl-dev pkg-config wget
+      - run: apt-get install -yq zlib1g-dev
+      - run: apt-get install -y postgresql-client || true
+      - run:
+          name: install dockerize
+          command: wget https://github.com/jwilder/dockerize/releases/download/$DOCKERIZE_VERSION/dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && tar -C /usr/local/bin -xzvf dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz && rm dockerize-linux-amd64-$DOCKERIZE_VERSION.tar.gz
+          environment:
+            DOCKERIZE_VERSION: v0.3.0
+      - run:
+          name: Wait for db
+          command: dockerize -wait tcp://localhost:5432 -timeout 1m
+      - run: 
+          name: Compile code
+          command: swift build
+      - run: 
+          name: Run unit tests
+          command: swift test

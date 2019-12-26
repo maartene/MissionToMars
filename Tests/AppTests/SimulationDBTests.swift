@@ -47,7 +47,7 @@ final class SimulationDBTests : XCTestCase {
     }
 
     func deleteData() throws {
-        _ = try? app?.withPooledConnection(to: .sqlite, closure: { conn -> Future<Void> in
+        _ = try? app?.withPooledConnection(to: .psql, closure: { conn -> Future<Void> in
             return Player.query(on: conn).delete().map(to: Void.self) {
                 return Mission.query(on: conn).delete().map(to: Void.self) {
                     return Simulation.query(on: conn).delete()
@@ -58,7 +58,7 @@ final class SimulationDBTests : XCTestCase {
     }
     
     func testCreateSimulationInDatabase() throws {
-        let simulation = try? app?.withPooledConnection(to: .sqlite, closure: { conn -> Future<[Simulation]> in
+        let simulation = try? app?.withPooledConnection(to: .psql, closure: { conn -> Future<[Simulation]> in
             return Simulation.query(on: conn).all()
         }).wait().first
         print(String(describing: simulation))
@@ -66,11 +66,11 @@ final class SimulationDBTests : XCTestCase {
     }
     
     func testUpdatePlayersUsingSimulationInDatabase() throws {
-        let players = try app!.withPooledConnection(to: .sqlite, closure: { conn -> Future<[Player]> in
+        let players = try app!.withPooledConnection(to: .psql, closure: { conn -> Future<[Player]> in
             Player.query(on: conn).all()
             }).wait()
         
-        let loadedSimulations = try app!.withPooledConnection(to: .sqlite, closure: { conn -> Future<[Simulation]> in
+        let loadedSimulations = try app!.withPooledConnection(to: .psql, closure: { conn -> Future<[Simulation]> in
             return Simulation.query(on: conn).all()
         }).wait()
         
@@ -88,7 +88,7 @@ final class SimulationDBTests : XCTestCase {
     }
     
     func testSaveUpdatedPlayers() throws {
-        let players = try app!.withPooledConnection(to: .sqlite, closure: { conn -> Future<[Player]> in
+        let players = try app!.withPooledConnection(to: .psql, closure: { conn -> Future<[Player]> in
         Player.query(on: conn).all()
         }).wait()
         
@@ -96,13 +96,13 @@ final class SimulationDBTests : XCTestCase {
             player.updatePlayer()
         }
         
-        _ = try app!.withPooledConnection(to: .sqlite, closure: { conn -> Future<[Player]> in
+        _ = try app!.withPooledConnection(to: .psql, closure: { conn -> Future<[Player]> in
             return updatedPlayers.map { player in
                 return player.save(on: conn)
             }.flatten(on: conn)
             }).wait()
                 
-        let updatedPlayersFromDB = try app!.withPooledConnection(to: .sqlite, closure: { conn -> Future<[Player]> in
+        let updatedPlayersFromDB = try app!.withPooledConnection(to: .psql, closure: { conn -> Future<[Player]> in
         Player.query(on: conn).all()
         }).wait()
         
@@ -114,7 +114,7 @@ final class SimulationDBTests : XCTestCase {
     
     func testSaveUpdatedSimulation() throws {
         // load simulation
-        let loadedSimulations = try app!.withPooledConnection(to: .sqlite) { conn in
+        let loadedSimulations = try app!.withPooledConnection(to: .psql) { conn in
             return Simulation.query(on: conn).all()
         }.wait()
         
@@ -124,7 +124,7 @@ final class SimulationDBTests : XCTestCase {
         
         let result = loadedSimulation.updateSimulation(currentDate: Date(), players: [], missions: [])
         
-        let savedSimulation = try app!.withPooledConnection(to: .sqlite) { conn in
+        let savedSimulation = try app!.withPooledConnection(to: .psql) { conn in
             return result.updatedSimulation.update(on: conn)
         }.wait()
         
@@ -135,7 +135,7 @@ final class SimulationDBTests : XCTestCase {
     }
     
     func setupData() throws {
-        _ = try? app?.withPooledConnection(to: .sqlite, closure: { conn -> Future<String> in
+        _ = try? app?.withPooledConnection(to: .psql, closure: { conn -> Future<String> in
             var createPlayerFutures = [Future<Result<Player, Player.PlayerError>>]()
             for i in 0 ..< 100 {
                 createPlayerFutures.append(Player.createUser(username: "testUser\(i)", on: conn))

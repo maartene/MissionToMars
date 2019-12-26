@@ -1,6 +1,6 @@
 import Vapor
 import Model
-import FluentSQLite
+import FluentPostgreSQL
 import Leaf
 
 /// Called before your application initializes.
@@ -18,23 +18,30 @@ public func configure(
     
     // Configure the rest of your application here
     // Register providers first
-    try services.register(FluentSQLiteProvider())
+    try services.register(FluentPostgreSQLProvider())
     
-    // Configure a SQLite database
-    let sqlite = try SQLiteDatabase(storage: .file(path: "db.sqlite"))
+    let db_hostname = Environment.get("DB_HOSTNAME") ?? "localhost"
+    let db_port = Int(Environment.get("PORT") ?? "5432") ?? 5432
+    let db_user = Environment.get("POSTGRES_USER") ?? "vapor"
+    var db_password = Environment.get("POSTGRES_PASSWORD")
+    let db_db = Environment.get("POSTGRES_DB") ?? "missiontomarsdb"
+    
+    // Configure a PostgreSQL database
+    let psqlConfig = PostgreSQLDatabaseConfig(hostname: db_hostname, port: db_port, username: db_user, database: db_db, password: db_password, transport: .cleartext)
+    let psql = PostgreSQLDatabase(config: psqlConfig)
     //let sqlite = try SQLiteDatabase(storage: .memory)
     //print("Database path: \(sqlite.storage)")
     
-    /// Register the configured SQLite database to the database config.
+    /// Register the configured PostgreSQL database to the database config.
     var databases = DatabasesConfig()
-    databases.add(database: sqlite, as: .sqlite)
+    databases.add(database: psql, as: .psql)
     services.register(databases)
     
     // Configure migrations
     var migrations = MigrationConfig()
-    migrations.add(model: Player.self, database: .sqlite)
-    migrations.add(model: Mission.self, database: .sqlite)
-    migrations.add(model: Simulation.self, database: .sqlite)
+    migrations.add(model: Player.self, database: .psql)
+    migrations.add(model: Mission.self, database: .psql)
+    migrations.add(model: Simulation.self, database: .psql)
     services.register(migrations)
     
     // Configure LEAF

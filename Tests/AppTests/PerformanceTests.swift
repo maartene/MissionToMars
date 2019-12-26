@@ -46,7 +46,7 @@ final class PerformanceTests: XCTestCase {
     }
 
     func deleteData() throws {
-        _ = try? app?.withPooledConnection(to: .sqlite, closure: { conn -> Future<Void> in
+        _ = try? app?.withPooledConnection(to: .psql, closure: { conn -> Future<Void> in
             return Player.query(on: conn).delete().map(to: Void.self) { result in
                 return Mission.query(on: conn).delete()
             }
@@ -60,7 +60,7 @@ final class PerformanceTests: XCTestCase {
         }
         
         print("Started measured test run.")
-        _ = try? app.withPooledConnection(to: .sqlite, closure: { conn -> Future<[Player]> in
+        _ = try? app.withPooledConnection(to: .psql, closure: { conn -> Future<[Player]> in
             var futures = [Future<Player>]()
             for i in 0 ..< 1000 {
                 let playerFuture = Player.createUser(username: "testUser\(i)", on: conn).map(to: Player.self) { result in

@@ -11,15 +11,29 @@ do {
     
     try App.configure(&config, &env, &services)
     
-    let app = try Application(
-        config: config,
-        environment: env,
-        services: services
-    )
+    var app: Application?
+    var launched = false
+    var tryCounter = 0
     
-    try App.boot(app)
+    while launched == false && tryCounter < 20 {
+        do {
+            app = try Application(
+                config: config,
+                environment: env,
+                services: services
+            )
+            launched = true
+        } catch {
+            print(error)
+            print("Try \(tryCounter) - trying again in 5 seconds.")
+            tryCounter += 1
+            sleep(5)
+        }
+    }
     
-    try app.run()
+    try App.boot(app!)
+    
+    try app!.run()
 } catch {
     print(error)
     exit(1)
