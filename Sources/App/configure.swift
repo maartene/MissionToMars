@@ -23,11 +23,18 @@ public func configure(
     let db_hostname = Environment.get("DB_HOSTNAME") ?? "localhost"
     let db_port = Int(Environment.get("PORT") ?? "5432") ?? 5432
     let db_user = Environment.get("POSTGRES_USER") ?? "vapor"
-    var db_password = Environment.get("POSTGRES_PASSWORD")
+    let db_password = Environment.get("POSTGRES_PASSWORD")
     let db_db = Environment.get("POSTGRES_DB") ?? "missiontomarsdb"
     
-    // Configure a PostgreSQL database
-    let psqlConfig = PostgreSQLDatabaseConfig(hostname: db_hostname, port: db_port, username: db_user, database: db_db, password: db_password, transport: .cleartext)
+    let psqlConfig: PostgreSQLDatabaseConfig
+    if (Environment.get("POSTGRES_TLS") ?? "yes") == "yes" {
+        // Configure a PostgreSQL database
+        psqlConfig = PostgreSQLDatabaseConfig(hostname: db_hostname, port: db_port, username: db_user, database: db_db, password: db_password, transport: .unverifiedTLS)
+    } else {
+        // Configure a PostgreSQL database
+        psqlConfig = PostgreSQLDatabaseConfig(hostname: db_hostname, port: db_port, username: db_user, database: db_db, password: db_password, transport: .cleartext)
+    }
+    
     let psql = PostgreSQLDatabase(config: psqlConfig)
     //let sqlite = try SQLiteDatabase(storage: .memory)
     //print("Database path: \(sqlite.storage)")

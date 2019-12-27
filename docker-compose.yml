@@ -12,6 +12,7 @@ services:
         dockerfile: Dockerfile
     image: m2m:0.0.1
     environment:
+        POSTGRES_TLS: disable
         POSTGRES_USER: foofoo
         POSTGRES_PASSWORD: baz
         POSTGRES_DB: missiontomarsdb

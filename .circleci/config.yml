@@ -5,6 +5,7 @@ jobs:
     docker:
       - image: swift
         environment:
+          POSTGRES_TLS: disable
           POSTGRES_USER: foo
           POSTGRES_DB: missiontomarsdb
           DB_HOSTNAME: localhost
