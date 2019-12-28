@@ -6,10 +6,10 @@
 //
 
 import Foundation
-import FluentPostgreSQL
+import FluentSQLite
 import Vapor
 
-public struct Player: Content, PostgreSQLUUIDModel {
+public struct Player: Content, SQLiteUUIDModel {
     public enum PlayerError: Error {
         case noMission
         case insufficientFunds
