@@ -69,3 +69,6 @@ fastlane/test_output
 
 # databases
 *.sqlite
+
+* Build artifacts
+Run
