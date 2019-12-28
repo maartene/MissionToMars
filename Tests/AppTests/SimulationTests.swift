@@ -74,12 +74,37 @@ final class SimulationTests : XCTestCase {
         XCTAssertGreaterThan(updatedMission.currentStage.currentlyBuildingComponent?.percentageCompleted ?? 0, mission.currentStage.currentlyBuildingComponent?.percentageCompleted ?? 0)
         
     }
+    
+    func testUpdateAdvancesPlayerImprovementBuildProgress() throws {
+        let gameDate = Date().addingTimeInterval(Double(SECONDS_IN_YEAR))
+        let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
+        
+        let player = Player(username: "testUser")
+        let improvement = Improvement.getImprovementByName(.Mill)!
+        let buildingPlayer = try player.startBuildImprovement(improvement, startDate: gameDate)
+        
+        let updateResult = simulation.updateSimulation(currentDate: Date(), players: [buildingPlayer], missions: [])
+        XCTAssertGreaterThan(updateResult.updatedPlayers[0].improvements.last!.percentageCompleted, buildingPlayer.improvements.last!.percentageCompleted, "%")
+    }
+    
+    func testUpdateTriggersImprovementEffectInPlayer() throws {
+        let gameDate = Date().addingTimeInterval(Double(SECONDS_IN_YEAR))
+        let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
+        
+        let player = Player(username: "testUser")
+        let extraCash = player.cashPerTick
+        
+        let updateResult = simulation.updateSimulation(currentDate: Date(), players: [player], missions: [])
+        XCTAssertGreaterThan(updateResult.updatedPlayers[0].cash, player.cash + extraCash, " cash")
+    }
 
     static let allTests = [
         ("testAdvanceSimulationWithLargeEnoughTimeDifference", testAdvanceSimulationWithLargeEnoughTimeDifference),
         ("testSimulationDoesNotAdvanceWithSmallEnoughTimeDifference", testSimulationDoesNotAdvanceWithSmallEnoughTimeDifference),
         ("testAdvanceSimulationMultipleTicks", testAdvanceSimulationMultipleTicks),
         ("testUpdatePlayer", testUpdatePlayer),
+        ("testUpdateMission", testUpdateMission),
+        ("testUpdateAdvancesPlayerImprovementBuildProgress", testUpdateAdvancesPlayerImprovementBuildProgress),
         ("testUpdateMission", testUpdateMission),
     ]
 }
