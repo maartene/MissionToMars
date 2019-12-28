@@ -42,11 +42,21 @@ public struct Player: Content, SQLiteUUIDModel {
         var updatedPlayer = self
         
         for _ in 0 ..< ticks {
-            updatedPlayer.cash += 5_000.0 * myPow(base: 1.5, exponent: technologyLevel)
+            updatedPlayer.cash += cashPerTick
             updatedPlayer.technologyPoints += 7
         }
         
         return updatedPlayer
+    }
+    
+    public var cashPerTick: Double {
+        return 5_000.0 * myPow(base: 1.5, exponent: technologyLevel)
+    }
+    
+    func extraIncome(amount: Double) -> Player {
+        var changedPlayer = self
+        changedPlayer.cash += amount
+        return changedPlayer
     }
     
     func donate(cash amount: Double, to player: Player) throws -> (donatingPlayer: Player, receivingPlayer: Player) {

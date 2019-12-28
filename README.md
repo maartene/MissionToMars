@@ -7,6 +7,9 @@ Getting to Mars is hard. Very hard. This game aims to become a "hard-scifi" simu
 * It's business only, the assumption being that in the end it requires the will and the funds to get there more than anything else;
 * Whether you spend your funds on improving technology, supporting other players, building improvements is up to you.
 
+## Playable version online
+You can play a playable build of version 0.0.1 on https://mission2mars.space 
+
 ## Features
 ### Whats available
 * In the current state, this "game" is only a model with very little simulation;
@@ -87,6 +90,6 @@ The game provides some debug features:
 ## Contact details
 Need to contact me? Drop an email at maarten@thedreamweb.eu or twitter at [@maarten_engels](https://twitter.com/maarten_engels)
 
-
-## Embedded media
-Favicon is based on a Mars image from NASA. Apart from being a very esthetically pleasing image, it also shows Gale Crater: a possible Mars landing site. Original file:  https://www.nasa.gov/mission_pages/msl/multimedia/pia14293-amended.html 
+## Licensed assets & embedded media
+* Paul Hudson's "vapor-clean" template is the basis of this product. You can find it here. https://github.com/twostraws/vapor-clean . Also, his book was/is invuluable if you want to take Vapor development further: https://www.hackingwithswift.com/store/server-side-swift  
+* Favicon is based on a Mars image from NASA. Apart from being a very esthetically pleasing image, it also shows Gale Crater: a possible Mars landing site. Original file:  https://www.nasa.gov/mission_pages/msl/multimedia/pia14293-amended.html 

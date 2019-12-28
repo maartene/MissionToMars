@@ -53,7 +53,7 @@
             <div class="col">
                 <div class="row mb-3  align-items-center">Cash: $#cash(player.cash)</div>
                 <div class="row align-items-center">Technology level: #(player.technologyLevel)</div>
-                <div class="row align-items-center">Technology points: #(player.technologyPoints) / #(costOfNextTechnologyLevel)
+                <div class="row align-items-center">Technology points: #dec0(player.technologyPoints) / #dec0(costOfNextTechnologyLevel)
                     <a href="/upgrade/techLevel" class="btn btn-success btn-sm ml-3 #if(costOfNextTechnologyLevel > player.technologyPoints) { disabled }">Upgrade tech level</a>
                 </div>
             </div>
