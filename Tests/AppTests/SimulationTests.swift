@@ -105,6 +105,6 @@ final class SimulationTests : XCTestCase {
         ("testUpdatePlayer", testUpdatePlayer),
         ("testUpdateMission", testUpdateMission),
         ("testUpdateAdvancesPlayerImprovementBuildProgress", testUpdateAdvancesPlayerImprovementBuildProgress),
-        ("testUpdateMission", testUpdateMission),
+        ("testUpdateTriggersImprovementEffectInPlayer", testUpdateTriggersImprovementEffectInPlayer),
     ]
 }
