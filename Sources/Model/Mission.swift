@@ -6,10 +6,10 @@
 //
 
 import Foundation
-import FluentPostgreSQL
+import FluentSQLite
 import Vapor
 
-public struct Mission: Content, PostgreSQLUUIDModel {
+public struct Mission: Content, SQLiteUUIDModel {
     public enum MissionError: Error {
         case uncompletedComponents
     }
