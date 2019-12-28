@@ -251,7 +251,7 @@ public func routes(_ router: Router) throws {
             } catch {
                 switch error {
                 case Player.PlayerError.insufficientTechPoints:
-                    print("Insufficient funds to upgrade.")
+                    errorMessages[player.id!] = "Insufficient funds to upgrade."
                     return Future.map(on: req) { return req.redirect(to: "/main") }
                 default:
                     throw error
@@ -275,6 +275,33 @@ public func routes(_ router: Router) throws {
             }
         }
     }
+    
+    router.get("build/improvements") { req -> Future<Response> in
+        return try getPlayerFromSession(on: req).flatMap(to: Response.self) {
+            player in
+            let improvement = Improvement.getImprovementByName(.Mill)!
+            
+            do {
+                
+                let buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
+                return buildingPlayer.save(on: req).map(to: Response.self) { savedPlayer in
+                    return req.redirect(to: "/main")
+                }
+            } catch {
+                switch error {
+                case Player.PlayerError.playerAlreadyHasImprovement:
+                    errorMessages[player.id!] = "You can have only one \(improvement.name)."
+                case Player.PlayerError.insufficientTechPoints:
+                    errorMessages[player.id!] = "Insufficient funds to build \(improvement.name)."
+                    return Future.map(on: req) { return req.redirect(to: "/main") }
+                default:
+                    throw error
+                }
+                return Future.map(on: req) { return req.redirect(to: "/main") }
+            }
+        }
+    }
+    
     
     router.get("debug", "allUsers") { req -> Future<[Player]> in
         return Player.query(on: req).all()

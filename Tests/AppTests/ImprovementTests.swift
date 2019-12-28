@@ -76,11 +76,43 @@ final class ImprovementTests : XCTestCase {
         return completedImprovement
     }
     
+    func testTechFirmShouldIncreaseIncomeAndTechPoints() throws {
+        let player = Player(username: "testUser")
+        assert(player.improvements.count > 0)
+        assert(player.improvements[0].shortName == .TechConsultancy)
+        
+        let updatedPlayer = player.improvements[0].applyEffectForOwner(player: player)
+        
+        XCTAssertGreaterThan(updatedPlayer.cash, player.cash, " cash")
+        XCTAssertGreaterThan(updatedPlayer.technologyPoints, player.technologyPoints, " tech points")
+    }
+    
+    func testUpdateOfPlayerImprovesBuildProgress() throws {
+        var player = Player(username: "testUser")
+        let improvement = Improvement.getImprovementByName(.Factory)!
+        player.debug_setCash(improvement.cost)
+        
+        let buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
+        let updatedPlayer = buildingPlayer.updatePlayer()
+        XCTAssertGreaterThan(updatedPlayer.improvements.last!.percentageCompleted, buildingPlayer.improvements.last!.percentageCompleted, "Improvement building progress should increase after update.")
+    }
+    
+    func testUpdateOfPlayerTriggersImprovementEffect() throws {
+        let player = Player(username: "testUser")
+        let playerWouldGetCash = player.cashPerTick
+        
+        let updatedPlayer = player.updatePlayer()
+        XCTAssertGreaterThan(updatedPlayer.cash, player.cash + playerWouldGetCash , "Cash")
+    }
+    
     static let allTests = [
         ("testStartBuildImprovement", testStartBuildImprovement),
         ("testGetImprovementByName", testGetImprovementByName),
         ("testUpdateShouldNotAdvancePercentageComplete", testUpdateShouldNotAdvancePercentageComplete),
         ("testImprovementShouldComplete", testImprovementShouldComplete),
+        ("testFactoryShouldIncreaseIncome", testFactoryShouldIncreaseIncome),
+        ("testUpdateOfPlayerImprovesBuildProgress", testUpdateOfPlayerImprovesBuildProgress),
+        ("testUpdateOfPlayerTriggersImprovementEffect", testUpdateOfPlayerTriggersImprovementEffect),
     ]
 
 }

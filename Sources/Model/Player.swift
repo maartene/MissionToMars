@@ -17,6 +17,7 @@ public struct Player: Content, SQLiteUUIDModel {
         case noSupportedPlayer
         case userAlreadyExists
         case userDoesNotExist
+        case playerAlreadyHasImprovement
     }
     
     public var id: UUID?
@@ -32,10 +33,17 @@ public struct Player: Content, SQLiteUUIDModel {
     
     public private(set) var technologyLevel: Int = 1
     
-    //var improvements = [Improvement]()
+    public private(set) var improvements: [Improvement]
     
     public init(username: String) {
         self.username = username
+        self.improvements = []
+        
+        let techConsultancy = Improvement.getImprovementByName(.TechConsultancy)!
+        if let completedConsultancy = try? techConsultancy.startBuild(startDate: Date()).updateImprovement(ticks: techConsultancy.buildTime) {
+            assert(completedConsultancy.isCompleted, "Your starting tech consultancy firm should be complete.")
+            self.improvements = [completedConsultancy]
+        }
     }
     
     public func updatePlayer(ticks: Int = 1) -> Player {
@@ -44,6 +52,14 @@ public struct Player: Content, SQLiteUUIDModel {
         for _ in 0 ..< ticks {
             updatedPlayer.cash += cashPerTick
             updatedPlayer.technologyPoints += 7
+            
+            let updatedImprovements = updatedPlayer.improvements.map { improvement in
+                return improvement.updateImprovement()}
+            updatedPlayer.improvements = updatedImprovements
+            
+            for improvement in updatedPlayer.improvements {
+                updatedPlayer = improvement.applyEffectForOwner(player: updatedPlayer)
+            }
         }
         
         return updatedPlayer
@@ -56,6 +72,12 @@ public struct Player: Content, SQLiteUUIDModel {
     func extraIncome(amount: Double) -> Player {
         var changedPlayer = self
         changedPlayer.cash += amount
+        return changedPlayer
+    }
+    
+    func extraTech(amount: Double) -> Player {
+        var changedPlayer = self
+        changedPlayer.technologyPoints += amount
         return changedPlayer
     }
     
@@ -119,6 +141,26 @@ public struct Player: Content, SQLiteUUIDModel {
         
         changedPlayer.technologyPoints -= costOfNextTechnologyLevel
         changedPlayer.technologyLevel += 1
+        
+        return changedPlayer
+    }
+    
+    public func startBuildImprovement(_ improvement: Improvement, startDate: Date) throws -> Player {
+        guard improvements.contains(improvement) == false else {
+            throw PlayerError.playerAlreadyHasImprovement
+        }
+        
+        guard cash >= improvement.cost else {
+            throw PlayerError.insufficientFunds
+        }
+        
+        let buildingImprovement = try improvement.startBuild(startDate: startDate)
+        
+        var changedPlayer = self
+        
+        changedPlayer.improvements.append(buildingImprovement)
+        assert(improvement.percentageCompleted == 0)
+        changedPlayer.cash -= improvement.cost
         
         return changedPlayer
     }

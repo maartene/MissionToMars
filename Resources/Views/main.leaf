@@ -57,6 +57,15 @@
                     <a href="/upgrade/techLevel" class="btn btn-success btn-sm ml-3 #if(costOfNextTechnologyLevel > player.technologyPoints) { disabled }">Upgrade tech level</a>
                 </div>
             </div>
+            <div class="col">
+                <h4>Improvements</h4>
+                <ul class="list-group">
+                #for(improvement in player.improvements) {
+                    <li class="list-group-item"><b>#(improvement.name)</b> #(improvement.description) #if(improvement.percentageComplete < 100) { #(improvement.percentageComplete) }</li>
+                }
+                </ul>
+                <a href="/build/improvements" class="btn btn-primary">Build improvements</a>
+            </div>
         </div>
     </div>
     <div class="container p-3 mt-3">

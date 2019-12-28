@@ -8,13 +8,26 @@
 import Foundation
 import Vapor
 
-struct Improvement: Codable, Equatable {
+public struct Improvement: Codable, Equatable {
     public enum ImprovementError: Error {
         case componentAlreadyBeingBuilt
         
     }
     
-    static let allImprovements = [Improvement(shortName: .Factory, name: "Factory", description: "Some factory", cost: 1_000_000, buildTime: 365 / 6)
+    public enum ShortName: Int, CaseIterable, Codable {
+        case TechConsultancy
+        case Factory
+        case Mill
+        case Mine
+        case Mouse
+    }
+    
+    public static let allImprovements = [
+        Improvement(shortName: .TechConsultancy, name: "Technology Consultancy firm", description: "This firm is the bread and butter of your company. It keeps you 'in the black' while you pertake in the mission and pursue other endeavors.\nCreates both extra technologypoints (+1), as well as a little extra income (+500). You start with this.", cost: 1_000_000, buildTime: 365 / 6),
+        Improvement(shortName: .Factory, name: "Factory", description: "Some factory", cost: 1_000_000, buildTime: 365 / 6),
+        Improvement(shortName: .Mill, name: "Factory 2", description: "Some factory", cost: 1_000, buildTime: 365 / 6),
+        Improvement(shortName: .Mine, name: "Factory 3", description: "Some factory", cost: 10_000, buildTime: 365 / 6),
+        Improvement(shortName: .Mouse, name: "Factory 4", description: "Some factory", cost: 100_000, buildTime: 365 / 6),
     ]
     
     public static func getImprovementByName(_ shortName: ShortName) -> Improvement? {
@@ -25,14 +38,14 @@ struct Improvement: Codable, Equatable {
         return lhs.shortName == rhs.shortName
     }
     
-    public enum ShortName: String, CaseIterable, Codable {
-        case Factory
-    }
-    
     public let shortName: ShortName
     public let name: String
     var updateEffectForPlayer: (Player) -> (Player) {
         switch shortName {
+        case .TechConsultancy:
+            return { player in
+                return player.extraIncome(amount: 500).extraTech(amount: 1)
+            }
             case .Factory:
                 return { player in return player.extraIncome(amount: player.cashPerTick * 0.75) }
             default:
@@ -74,18 +87,16 @@ struct Improvement: Codable, Equatable {
         return changedImprovement
     }
     
-    public func applyEffectForOwner(player: Player, ticks: Int = 1) -> Player {
+    public func applyEffectForOwner(player: Player) -> Player {
         guard isCompleted else {
             print("Improvement \(name) owned by player \(player.username) is not yet complete.")
             return player
         }
         
-        var updatedPlayer = player
-        for _ in 0 ..< ticks {
-            updatedPlayer = updateEffectForPlayer(updatedPlayer)
-        }
-        return updatedPlayer
+        return updateEffectForPlayer(player)
     }
+    
+    
     
     
 }

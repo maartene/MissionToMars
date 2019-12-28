@@ -1,7 +1,8 @@
 #set("body") {
     #if(uuid != "unknown") {
         <h2>Welcome!</h2>
-        Please remember your unique code: #(uuid)
+        <p>Please remember your unique code: #(uuid)</p>
+        <p><a href="/" class="btn btn-success">Login</a></p>
     }
 
     #if(errorMessage != "noError") {

@@ -4,7 +4,7 @@
       <ul class="list-group">
         #for(mission in missions) {
           <li class="list-group-item">#(mission.missionName)<br/>
-            #(mission.owningPlayerName) <a href="/support/mission/#(mission.id)" class="btn-sm btn-primary">Support this mission</a>
+            #(mission.owningPlayerName) <a href="/support/mission/#(mission.id)" class="btn btn-sm btn-primary">Support this mission</a>
           </li>
         } 
       </ul>
