@@ -23,3 +23,17 @@ public final class DecimalTag: TagRenderer {
         }
     }
 }
+
+public final class ZeroDecimalTag: TagRenderer {
+    public func render(tag: TagContext) throws -> EventLoopFuture<TemplateData> {
+        try tag.requireParameterCount(1)
+        
+        return Future.map(on: tag.container) {
+            if let double = tag.parameters[0].double {
+                return .string(String(Int(double)))
+            } else {
+                return .null
+            }
+        }
+    }
+}

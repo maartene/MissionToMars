@@ -48,6 +48,7 @@ public func configure(
     var tags = LeafTagConfig.default()
     tags.use(DateTag(), as: "date")
     tags.use(DecimalTag(), as: "decimal")
+    tags.use(ZeroDecimalTag(), as: "dec0")
     tags.use(CashTag(), as: "cash")
     services.register(tags)
 
