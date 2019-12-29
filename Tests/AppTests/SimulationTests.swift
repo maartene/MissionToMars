@@ -79,8 +79,9 @@ final class SimulationTests : XCTestCase {
         let gameDate = Date().addingTimeInterval(Double(SECONDS_IN_YEAR))
         let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
         
-        let player = Player(username: "testUser")
-        let improvement = Improvement.getImprovementByName(.Mill)!
+        var player = Player(username: "testUser")
+        let improvement = Improvement.getImprovementByName(.SpaceTourism)!
+        player.debug_setCash(improvement.cost)
         let buildingPlayer = try player.startBuildImprovement(improvement, startDate: gameDate)
         
         let updateResult = simulation.updateSimulation(currentDate: Date(), players: [buildingPlayer], missions: [])

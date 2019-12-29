@@ -14,7 +14,7 @@ import XCTest
 
 final class ImprovementTests : XCTestCase {
     func testStartBuildImprovement() throws {
-        let improvement = Improvement(shortName: .Factory, name: "Factory", description: "Test", cost: 200, buildTime: 100)
+        let improvement = Improvement(shortName: .Faculty, name: "Factory", description: "Test", cost: 200, buildTime: 100)
         XCTAssertNil(improvement.buildStartedOn)
         let buildingComponent = try improvement.startBuild(startDate: Date())
         XCTAssertNotNil(buildingComponent.buildStartedOn)
@@ -27,7 +27,7 @@ final class ImprovementTests : XCTestCase {
     }
     
     func testUpdateShouldNotAdvancePercentageComplete() throws {
-        guard let improvement = Improvement.getImprovementByName(.Factory) else {
+        guard let improvement = Improvement.getImprovementByName(.Faculty) else {
             XCTFail("Improvement should not be nil.")
             return
         }
@@ -40,7 +40,7 @@ final class ImprovementTests : XCTestCase {
     }
     
     func testImprovementShouldComplete() throws {
-        guard let improvement = Improvement.getImprovementByName(.Factory) else {
+        guard let improvement = Improvement.getImprovementByName(.SpaceTourism) else {
             XCTFail("Improvement should not be nil.")
             return
         }
@@ -53,7 +53,7 @@ final class ImprovementTests : XCTestCase {
     }
     
     func testFactoryShouldIncreaseIncome() throws {
-        guard let improvement = Improvement.getImprovementByName(.Factory) else {
+        guard let improvement = Improvement.getImprovementByName(.SpaceTourism) else {
             XCTFail("Improvement should not be nil.")
             return
         }
@@ -89,7 +89,7 @@ final class ImprovementTests : XCTestCase {
     
     func testUpdateOfPlayerImprovesBuildProgress() throws {
         var player = Player(username: "testUser")
-        let improvement = Improvement.getImprovementByName(.Factory)!
+        let improvement = Improvement.getImprovementByName(.SpaceTourism)!
         player.debug_setCash(improvement.cost)
         
         let buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
