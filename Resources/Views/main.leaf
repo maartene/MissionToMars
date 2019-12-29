@@ -16,12 +16,13 @@
     <div class="container border p-3 mt-3">
         <div class="row px-3">
             <h3>Current mission: #(mission.missionName)#if(player.ownsMissionID) {&nbsp;&nbsp;<a href="/edit/mission" class="btn btn-sm btn-warning" >Rename mission</a>}</h3>
+            <p class="text-secondary">Finishing the first manned flight to Mars to settle a colony there is the objective of this game. You can choose to create your own mission or support another player. Note: going in alone takes a very long time.</p>
         </div>
         <div class="row px-3">
             <div class="col">
             #if(mission) {
                 <div class="row mb-2"></div>
-                <div class="container p-3 bg-info">
+                <div class="container p-3 bg-info rounded">
                     <div class="row m-2"><h4>Current stage: #(currentStage.name) (#(currentStage.level) / 5)</h4></div>
                     <div class="row m-2">#(currentStage.description)</div>
                     <div class="row m-2"><ul class="list-group">
@@ -47,25 +48,24 @@
     </div>
     <div class="container border p-3 mt-3">
         <div class="row px-3">
-            <h3>Your corp</h3>
+        <div class="col">
+            <div class="row  align-items-center"><h3>Your corp</h3></div>
+            <div class="row mb-3"><p class="text-secondary">Your corporation is your bread and butter. It provides the cash and technology required to partake in missions.</p></div>
+            <div class="row mb-3  align-items-center">Cash: $#cash(player.cash)</div>
+            <div class="row align-items-center">Technology level: #(player.technologyLevel)</div>
+            <div class="row align-items-center">Technology points: #dec0(player.technologyPoints) / #dec0(costOfNextTechnologyLevel)
+                <a href="/upgrade/techLevel" class="btn btn-success btn-sm ml-3 #if(costOfNextTechnologyLevel > player.technologyPoints) { disabled }">Upgrade tech level</a>
+            </div>
         </div>
-        <div class="row px-3">
-            <div class="col">
-                <div class="row mb-3  align-items-center">Cash: $#cash(player.cash)</div>
-                <div class="row align-items-center">Technology level: #(player.technologyLevel)</div>
-                <div class="row align-items-center">Technology points: #dec0(player.technologyPoints) / #dec0(costOfNextTechnologyLevel)
-                    <a href="/upgrade/techLevel" class="btn btn-success btn-sm ml-3 #if(costOfNextTechnologyLevel > player.technologyPoints) { disabled }">Upgrade tech level</a>
-                </div>
-            </div>
-            <div class="col">
-                <h4>Improvements</h4>
-                <ul class="list-group">
-                #for(improvement in player.improvements) {
-                    <li class="list-group-item"><b>#(improvement.name)</b> #(improvement.description) #if(improvement.percentageComplete < 100) { #(improvement.percentageComplete) }</li>
-                }
-                </ul>
-                <a href="/build/improvements" class="btn btn-primary">Build improvements</a>
-            </div>
+        <div class="col">
+            <h4>Improvements</h4>
+            <p class="text-secondary">Improvements have various beneficial effects on your company.</p>
+            <ul class="list-group">
+            #for(improvement in player.improvements) {
+                <li class="list-group-item"><b>#(improvement.name)</b> #(improvement.description) #if(improvement.percentageCompleted < 100) { <br/>Currently building: #(improvement.percentageCompleted)% done. }</li>
+            }
+            </ul>
+            <div class="mt-2"><a href="/build/improvements" class="btn btn-primary">Build improvements</a></div>
         </div>
     </div>
     <div class="container p-3 mt-3">

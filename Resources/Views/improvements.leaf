@@ -1,0 +1,15 @@
+#set("body") {
+    <h2>Which improvement do you wish to build?</h2>
+    <div>
+      <ul class="list-group">
+        #for(improvement in possibleImprovements) {
+          <li class="list-group-item"><b>#(improvement.name)</b> - #(improvement.description)<br/>
+            #cash(improvement.cost) <a href="/build/improvements/#(improvement.shortName)" class="btn btn-sm btn-primary #if(improvement.cost > player.cash) { disabled }">Build this improvement</a>
+          </li>
+        } 
+      </ul>
+      <a href="/main" class="btn btn-secondary">Back</a>
+    </div>
+}
+
+#embed("master")
