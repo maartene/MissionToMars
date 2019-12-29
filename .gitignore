@@ -70,4 +70,5 @@ fastlane/test_output
 # databases
 *.sqlite
 
-* Build artifacts
+# Misc
+Docker_cheatsheet.md
