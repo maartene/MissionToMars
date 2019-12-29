@@ -16,18 +16,14 @@ public struct Improvement: Codable, Equatable {
     
     public enum ShortName: Int, CaseIterable, Codable {
         case TechConsultancy
-        case Factory
-        case Mill
-        case Mine
-        case Mouse
+        case Faculty
+        case SpaceTourism
     }
     
     public static let allImprovements = [
         Improvement(shortName: .TechConsultancy, name: "Technology Consultancy firm", description: "This firm is the bread and butter of your company. It keeps you 'in the black' while you pertake in the mission and pursue other endeavors.\nCreates both extra technologypoints (+1), as well as a little extra income (+500). You start with this.", cost: 1_000_000, buildTime: 365 / 6),
-        Improvement(shortName: .Factory, name: "Factory", description: "Some factory", cost: 1_000_000, buildTime: 365 / 6),
-        Improvement(shortName: .Mill, name: "Factory 2", description: "Some factory", cost: 1_000, buildTime: 365 / 6),
-        Improvement(shortName: .Mine, name: "Factory 3", description: "Some factory", cost: 10_000, buildTime: 365 / 6),
-        Improvement(shortName: .Mouse, name: "Factory 4", description: "Some factory", cost: 100_000, buildTime: 365 / 6),
+        Improvement(shortName: .Faculty, name: "Faculty of Applied Sciences", description: "Buy yourself a faculty on a prestigious University and assure yourself of a steady supply of extra technology points (+5)", cost: 250_000, buildTime: 365 / 12),
+        Improvement(shortName: .SpaceTourism, name: "Space Tourism Agency", description: "Allow the rich the opportunity to look at Earth from Space! As you are piggy backing on your existing technology, this is a very cost effective way of generating some extra income (+1k)", cost: 100_000, buildTime: 365 / 12),
     ]
     
     public static func getImprovementByName(_ shortName: ShortName) -> Improvement? {
@@ -46,10 +42,12 @@ public struct Improvement: Codable, Equatable {
             return { player in
                 return player.extraIncome(amount: 500).extraTech(amount: 1)
             }
-            case .Factory:
-                return { player in return player.extraIncome(amount: player.cashPerTick * 0.75) }
-            default:
-                return { player in return player }
+        case .Faculty:
+            return { player in return player.extraTech(amount: 5) }
+        case .SpaceTourism:
+            return { player in return player.extraIncome(amount: 1000) }
+        default:
+            return { player in return player }
         }
     }
     

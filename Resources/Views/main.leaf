@@ -62,7 +62,7 @@
             <p class="text-secondary">Improvements have various beneficial effects on your company.</p>
             <ul class="list-group">
             #for(improvement in player.improvements) {
-                <li class="list-group-item"><b>#(improvement.name)</b> #(improvement.description) #if(improvement.percentageCompleted < 100) { <br/>Currently building: #(improvement.percentageCompleted)% done. }</li>
+                <li class="list-group-item"><b>#(improvement.name)</b> #(improvement.description) #if(improvement.percentageCompleted < 100) { <br/>Currently building: #decimal(improvement.percentageCompleted)% done. }</li>
             }
             </ul>
             <div class="mt-2"><a href="/build/improvements" class="btn btn-primary">Build improvements</a></div>
