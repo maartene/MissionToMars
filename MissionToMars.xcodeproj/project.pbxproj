@@ -22,6 +22,7 @@
 
 /* Begin PBXBuildFile section */
 		DEA878C123B8EF9E00E5C2F1 /* FrontEndController.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEA878C023B8EF9E00E5C2F1 /* FrontEndController.swift */; };
+		DEA878C423BA945E00E5C2F1 /* Technology.swift in Sources */ = {isa = PBXBuildFile; fileRef = DEA878C323BA945E00E5C2F1 /* Technology.swift */; };
 		OBJ_1000 /* Service.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Service::Service::Product" /* Service.framework */; };
 		OBJ_1001 /* Logging.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Console::Logging::Product" /* Logging.framework */; };
 		OBJ_1002 /* Core.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Core::Core::Product" /* Core.framework */; };
@@ -5592,6 +5593,13 @@
 			remoteGlobalIDString = "swift-nio::CNIOLinux";
 			remoteInfo = CNIOLinux;
 		};
+		DEA878C223B8EF9F00E5C2F1 /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = OBJ_1 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = "MissionToMars::AppTests";
+			remoteInfo = AppTests;
+		};
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
@@ -5609,6 +5617,7 @@
 		"Crypto::Crypto::Product" /* Crypto.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Crypto.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Crypto::Random::Product" /* Random.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Random.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DEA878C023B8EF9E00E5C2F1 /* FrontEndController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FrontEndController.swift; sourceTree = "<group>"; };
+		DEA878C323BA945E00E5C2F1 /* Technology.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Technology.swift; sourceTree = "<group>"; };
 		"DatabaseKit::DatabaseKit::Product" /* DatabaseKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = DatabaseKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Fluent::Fluent::Product" /* Fluent.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Fluent.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Fluent::FluentSQL::Product" /* FluentSQL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = FluentSQL.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -7477,6 +7486,7 @@
 				OBJ_21 /* Player.swift */,
 				OBJ_22 /* Simulation.swift */,
 				OBJ_23 /* Stage.swift */,
+				DEA878C323BA945E00E5C2F1 /* Technology.swift */,
 			);
 			name = Model;
 			path = Sources/Model;
@@ -12654,6 +12664,7 @@
 				OBJ_967 /* configure.swift in Sources */,
 				OBJ_968 /* routes.swift in Sources */,
 				DEA878C123B8EF9E00E5C2F1 /* FrontEndController.swift in Sources */,
+				DEA878C423BA945E00E5C2F1 /* Technology.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -14098,7 +14109,7 @@
 		OBJ_2073 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
 			target = "MissionToMars::AppTests" /* AppTests */;
-			targetProxy = "MissionToMars::AppTests" /* AppTests */;
+			targetProxy = DEA878C223B8EF9F00E5C2F1 /* PBXContainerItemProxy */;
 		};
 		OBJ_2129 /* PBXTargetDependency */ = {
 			isa = PBXTargetDependency;
