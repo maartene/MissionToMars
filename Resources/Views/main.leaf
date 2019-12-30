@@ -22,18 +22,32 @@
             <div class="col">
             #if(mission) {
                 <div class="row mb-2"></div>
-                <div class="container p-3 bg-info rounded">
-                    <div class="row m-2"><h4>Current stage: #(currentStage.name) (#(currentStage.level) / 5)</h4></div>
-                    <div class="row m-2">#(currentStage.description)</div>
+                <div class="container p-3 rounded">
+                    <div class="row m-2">
+                        <h4>Current stage: #(currentStage.name) (#(currentStage.level) / 5)</h4>
+                    </div>
+                    <div class="row m-2 align-items-center">
+                        <div class="col-1"><img src="/images/Stages/#(currentStage.level)-w.png" alt="#(currentStage.name)"/></div>
+                        <div class="col"><p>#(currentStage.description)</p></div>
+                    </div>
                     <div class="row m-2"><ul class="list-group">
                         #for(component in currentStage.components) { 
                             <li class="list-group-item">
-                                <b>#(component.name)</b> #(component.description)<br/>
-                                Cost: #cash(component.cost) - Build time: #(component.buildTime) days.
-                                <br />
-                                #if(component.buildStartedOn) { Build started on: #date(component.buildStartedOn) #decimal(component.percentageCompleted)% complete. } else {
-                                    #if(player.ownsMissionID) {<a href="/build/component/#(component.shortName)" class="btn btn-sm btn-primary #if(component.cost > player.cash) {disabled}">Start build</a>}
-                                }
+                                <div class="row align-items-center">
+                                    <div class="col-1"><img src="/images/Components/#(component.shortName)-w.png" alt="#(component.name)"/></div>
+                                    <div class="col">
+                                        <b>#(component.name)</b> #(component.description)<br/>
+                                        Cost: #cash(component.cost) - Build time: #(component.buildTime) days.
+                                        <br />
+                                        #if(component.buildStartedOn) { Build started on: #date(component.buildStartedOn) 
+                                            <div class="progress">
+                                                <div class="progress-bar" role="progressbar" style="width: #decimal(component.percentageCompleted)%" aria-valuenow="#decimal(improvement.percentageCompleted)" aria-valuemin="0" aria-valuemax="100"></div>
+                                            </div>
+                                            #decimal(component.percentageCompleted)% complete. } else {
+                                            #if(player.ownsMissionID) {<a href="/build/component/#(component.shortName)" class="btn btn-sm btn-primary #if(component.cost > player.cash) {disabled}">Start build</a>}
+                                        }
+                                    </div>
+                                </div>
                             </li> }
                         </ul></div>
                         #if(currentStageComplete == true) { <div class="row m-2"><a href="/advance/stage" class="btn btn-light mt-1">Advance to the next stage</a></div> }
@@ -51,10 +65,22 @@
         <div class="col">
             <div class="row  align-items-center"><h3>Your corp</h3></div>
             <div class="row mb-3"><p class="text-secondary">Your corporation is your bread and butter. It provides the cash and technology required to partake in missions.</p></div>
-            <div class="row mb-3  align-items-center">Cash: $#cash(player.cash)</div>
-            <div class="row align-items-center">Technology level: #(player.technologyLevel)</div>
-            <div class="row align-items-center">Technology points: #dec0(player.technologyPoints) / #dec0(costOfNextTechnologyLevel)
-                <a href="/upgrade/techLevel" class="btn btn-success btn-sm ml-3 #if(costOfNextTechnologyLevel > player.technologyPoints) { disabled }">Upgrade tech level</a>
+            <div class="row align-items-center">
+                <div class="col-2">
+                    <img src="/images/streamline-icon-cash-molecule@48x48-w.png"/>
+                </div>    
+                <div class="col"><div class="row mb-3  align-items-center">Cash: $#cash(player.cash)</div></div>
+            </div>
+            <div class="row mt-2 align-items-center">
+                <div class="col-2">
+                    <img src="/images/lab-flask-experiment-48-w.png"/>
+                </div>
+                <div class="col">
+                    <div class="row align-items-center">Technology level: #(player.technologyLevel)</div>
+                    <div class="row align-items-center">Technology points: #dec0(player.technologyPoints) / #dec0(costOfNextTechnologyLevel)
+                        <a href="/upgrade/techLevel" class="btn btn-success btn-sm ml-3 #if(costOfNextTechnologyLevel > player.technologyPoints) { disabled }">Upgrade tech level</a>
+                    </div>
+                </div>
             </div>
         </div>
         <div class="col">
@@ -62,14 +88,20 @@
             <p class="text-secondary">Improvements have various beneficial effects on your company.</p>
             <ul class="list-group">
             #for(improvement in player.improvements) {
-                <li class="list-group-item"><b>#(improvement.name)</b> #(improvement.description) #if(improvement.percentageCompleted < 100) { <br/>Currently building: #decimal(improvement.percentageCompleted)% done. }</li>
+                <li class="list-group-item">
+                    <div class="row align-items-center">
+                        <div class="col-2 justify-content-center"><img src="/images/Improvements/#(improvement.shortName)-w.png"/></div>
+                        <div class="col"><b>#(improvement.name)</b> #(improvement.description) #if(improvement.percentageCompleted < 100) { <br/>Currently building: 
+                            <div class="progress">
+                                    <div class="progress-bar" role="progressbar" style="width: #decimal(improvement.percentageCompleted)%" aria-valuenow="#decimal(improvement.percentageCompleted)" aria-valuemin="0" aria-valuemax="100"></div>
+                            </div>#decimal(improvement.percentageCompleted)% done. }
+                    </div>
+                </li>
             }
             </ul>
             <div class="mt-2"><a href="/build/improvements" class="btn btn-primary">Build improvements</a></div>
         </div>
-    </div>
-    <div class="container p-3 mt-3">
-        #embed("footer")
+        </div>
     </div>
 }
 
