@@ -222,6 +222,7 @@ class FrontEndController: RouteCollection {
                         switch result {
                         case .failure(let error):
                             throw error
+                            
                         case .success(let investmentResult):
                             return investmentResult.changedPlayer.save(on: req).flatMap(to: Response.self) { savedPlayer in
                                 return investmentResult.changedMission.save(on: req).map(to: Response.self) { savedMission in

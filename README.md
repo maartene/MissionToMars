@@ -91,5 +91,7 @@ The game provides some debug features:
 Need to contact me? Drop an email at maarten@thedreamweb.eu or twitter at [@maarten_engels](https://twitter.com/maarten_engels)
 
 ## Licensed assets & embedded media
+* [Solar theme](https://bootswatch.com/solar/) by [Thomas Park](https://thomaspark.co/)
+* Icons for components, stages, technologies, company and improvements are from the [Free Icons from Streamline Icons pack](https://www.streamlineicons.com/).
 * Paul Hudson's "vapor-clean" template is the basis of this product. You can find it here. https://github.com/twostraws/vapor-clean . Also, his book was/is invuluable if you want to take Vapor development further: https://www.hackingwithswift.com/store/server-side-swift  
 * Favicon is based on a Mars image from NASA. Apart from being a very esthetically pleasing image, it also shows Gale Crater: a possible Mars landing site. Original file:  https://www.nasa.gov/mission_pages/msl/multimedia/pia14293-amended.html 
