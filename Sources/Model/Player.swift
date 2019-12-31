@@ -18,6 +18,7 @@ public struct Player: Content, SQLiteUUIDModel {
         case userAlreadyExists
         case userDoesNotExist
         case playerAlreadyHasImprovement
+        case usernameFailedValidation
     }
     
     public var id: UUID?
@@ -175,14 +176,20 @@ extension Player: Migration { }
 // Database aware actions for Player model
 extension Player {
     public static func createUser(username: String, on conn: DatabaseConnectable) -> Future<Result<Player, PlayerError>> {
+        let player = Player(username: username)
+        do {
+            try player.validate()
+        } catch {
+            return Future.map(on: conn) { return .failure(.usernameFailedValidation) }
+        }
+        
+        print("This line should not print.")
         return Player.query(on: conn).filter(\.username, .equal, username).first().flatMap(to: Result<Player, PlayerError>.self) { existingUser in
             if existingUser != nil {
                 return Future.map(on: conn) { () -> Result<Player, PlayerError> in
                     return .failure(.userAlreadyExists)
                 }
             }
-            
-            let player = Player(username: username)
             
             return player.save(on: conn).map(to: Result<Player, PlayerError>.self) { player in
                 return .success(player)
@@ -276,6 +283,15 @@ extension Player {
 }
 
 extension Player: Parameter { }
+
+extension Player: Validatable {
+    /// See `Validatable`.
+    public static func validations() throws -> Validations<Player> {
+        var validations = Validations(Player.self)
+        try validations.add(\.username, .count(3...) && .alphanumeric)
+        return validations
+    }
+}
 
 func myPow(base: Double, exponent: Int) -> Double {
     var result = 1.0
