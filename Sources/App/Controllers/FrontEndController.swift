@@ -140,7 +140,7 @@ class FrontEndController: RouteCollection {
                 return playerFuture.flatMap(to: View.self) { players in
                     var mcs = [MissionContext]()
                     for i in 0 ..< players.count {
-                        mcs.append(MissionContext(id: missions[i].id!, missionName: missions[i].missionName, percentageDone: missions[i].percentageDone, successChance: missions[i].successChance, owningPlayerName: players[i].username))
+                        mcs.append(MissionContext(id: missions[i].id!, missionName: missions[i].missionName, percentageDone: missions[i].percentageDone, owningPlayerName: players[i].username))
                     }
                     return try req.view().render("missions", ["missions": mcs])
                 }
@@ -280,7 +280,8 @@ class FrontEndController: RouteCollection {
             return try self.getPlayerFromSession(on: req).flatMap(to: View.self) {
             player in
                 
-                let possibleImprovements = Improvement.allImprovements.filter { improvement in
+                let possibleImprovements = Improvement.unlockedImprovementsForPlayer(player).filter { improvement in
+                    // filter out the improvements the player has already built
                     player.improvements.contains(improvement) == false
                 }
                 
@@ -325,6 +326,58 @@ class FrontEndController: RouteCollection {
             }
         }
         
+        router.get("unlock/technologies") { req -> Future<View> in
+            struct UnlockTechnologyContext: Codable {
+                let player: Player
+                let possibleTechnologies: [Technology]
+            }
+            
+            return try self.getPlayerFromSession(on: req).flatMap(to: View.self) {
+            player in
+                
+                let possibleTechnologies = Technology.unlockableTechnologiesForPlayer(player)
+                
+                let context = UnlockTechnologyContext(player: player, possibleTechnologies: possibleTechnologies)
+                
+                return try req.view().render("technologies", context)
+            }
+        }
+        
+        router.get("unlock/technologies", Int.parameter) { req -> Future<Response> in
+            let number: Int = try req.parameters.next()
+            
+            guard let shortName = Technology.ShortName(rawValue: number) else {
+                return Future.map(on: req) { return req.redirect(to: "/main")}
+            }
+            
+            return try self.getPlayerFromSession(on: req).flatMap(to: Response.self) {
+            player in
+                guard let technology = Technology.getTechnologyByName(shortName) else {
+                    self.errorMessages[player.id!] = "No technology with shortName \(shortName) found."
+                    return Future.map(on: req) { return req.redirect(to: "/main")}
+                }
+                
+                do {
+                    
+                    let unlockingPlayer = try player.investInTechnology(technology)
+                    return unlockingPlayer.save(on: req).map(to: Response.self) { savedPlayer in
+                        return req.redirect(to: "/main")
+                    }
+                } catch {
+                    switch error {
+                    case Player.PlayerError.playerAlreadyUnlockedTechnology:
+                        self.errorMessages[player.id!] = "You already unlocked \(technology.name)."
+                    case Player.PlayerError.insufficientTechPoints:
+                        self.errorMessages[player.id!] = "Insufficient technology points to unlock \(technology.name)."
+                    case Player.PlayerError.playerMissesPrerequisiteTechnology:
+                        self.errorMessages[player.id!] = "You miss the prerequisite technology to unlock \(technology.name)."
+                    default:
+                        throw error
+                    }
+                    return Future.map(on: req) { return req.redirect(to: "/main") }
+                }
+            }
+        }
         
         router.get("debug", "allUsers") { req -> Future<[Player]> in
             return Player.query(on: req).all()
@@ -392,10 +445,14 @@ class FrontEndController: RouteCollection {
             let mission: Mission?
             let currentStage: Stage?
             let currentBuildingComponent: Component?
-            let costOfNextTechnologyLevel: Double
             let simulation: Simulation
             let errorMessage: String?
             let currentStageComplete: Bool
+            let unlockableTechnologogies: [Technology]
+            let unlockedTechnologies: [Technology]
+            let unlockedComponents: [Component]
+            let techlockedComponents: [Component]
+            let playerIsBuildingComponent: Bool
         }
         
         return Player.find(id, on: req).flatMap(to: View.self) { player in
@@ -418,7 +475,18 @@ class FrontEndController: RouteCollection {
                         return try req.view().render("win")
                     }
                     
-                    let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponent: mission.currentStage.currentlyBuildingComponent, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, errorMessage: errorMessage, currentStageComplete: mission.currentStage.stageComplete)
+                    var unlockedComponents = [Component]()
+                    var techlockedComponents = [Component]()
+                    
+                    for component in mission.currentStage.components {
+                        if component.playerHasPrerequisitesForComponent(player) {
+                            unlockedComponents.append(component)
+                        } else {
+                            techlockedComponents.append(component)
+                        }
+                    }
+                    
+                    let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponent: mission.currentStage.currentlyBuildingComponent, simulation: simulation, errorMessage: errorMessage, currentStageComplete: mission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: unlockedComponents, techlockedComponents: techlockedComponents, playerIsBuildingComponent: mission.currentStage.currentlyBuildingComponent != nil)
                     
                     return try req.view().render("main", context)
                 }
@@ -440,13 +508,13 @@ class FrontEndController: RouteCollection {
                             return try req.view().render("win")
                         }
                         
-                        let context = MainContext(player: player, mission: supportedMission, currentStage: supportedMission.currentStage, currentBuildingComponent: supportedMission.currentStage.currentlyBuildingComponent, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, errorMessage: errorMessage, currentStageComplete: supportedMission.currentStage.stageComplete)
+                        let context = MainContext(player: player, mission: supportedMission, currentStage: supportedMission.currentStage, currentBuildingComponent: supportedMission.currentStage.currentlyBuildingComponent, simulation: simulation, errorMessage: errorMessage, currentStageComplete: supportedMission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: supportedMission.currentStage.components, techlockedComponents: [], playerIsBuildingComponent: false)
                         
                         return try req.view().render("main", context)
                     }
                 }
             } else {
-                let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponent: nil ,costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, errorMessage: errorMessage, currentStageComplete: false)
+                let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponent: nil, simulation: simulation, errorMessage: errorMessage, currentStageComplete: false, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: [], techlockedComponents: [], playerIsBuildingComponent: false)
             
                 return try req.view().render("main", context)
             }
@@ -471,6 +539,5 @@ struct MissionContext: Content {
     let id: UUID
     let missionName: String
     let percentageDone: Double
-    let successChance: Double
     let owningPlayerName: String
 }

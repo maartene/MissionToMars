@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "MissionToMars::Model"
-               BuildableName = "Model.framework"
-               BlueprintName = "Model"
+               BlueprintIdentifier = "MissionToMars::Run"
+               BuildableName = "Run"
+               BlueprintName = "Run"
                ReferencedContainer = "container:MissionToMars.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>
@@ -28,9 +28,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "MissionToMars::Run"
-               BuildableName = "Run"
-               BlueprintName = "Run"
+               BlueprintIdentifier = "MissionToMars::Model"
+               BuildableName = "Model.framework"
+               BlueprintName = "Model"
                ReferencedContainer = "container:MissionToMars.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>

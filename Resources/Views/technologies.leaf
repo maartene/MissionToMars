@@ -1,0 +1,21 @@
+#set("body") {
+    <h2>Which technology do you wish to research?</h2>
+    <div>
+      <ul class="list-group">
+        #for(tech in possibleTechnologies) {
+          <li class="list-group-item">
+            <div class="row">
+              <div class="col-1"><img src="/images/Technologies/#(tech.shortName)-w.png" alt="#(tech.name)"/></div>
+              <div class="col">
+                  <b>#(tech.name)</b> - #(tech.description)<br/>
+                  This technology costs #dec0(tech.cost) points. <a href="/unlock/technologies/#(tech.shortName)" class="btn btn-sm btn-primary #if(tech.cost > player.technologyPoints) { disabled }">Unlock this technology</a>
+              </div>
+            </div>
+          </li>
+        } 
+      </ul>
+      <p class="pt-2"><a href="/main" class="btn btn-secondary">Back</a></p>
+    </div>
+}
+
+#embed("master")

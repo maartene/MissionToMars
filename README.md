@@ -8,7 +8,7 @@ Getting to Mars is hard. Very hard. This game aims to become a "hard-scifi" simu
 * Whether you spend your funds on improving technology, supporting other players, building improvements is up to you.
 
 ## Playable version online
-You can play a playable build of version 0.0.3 on https://mission2mars.space 
+You can play a playable build of version 0.0.4 on https://mission2mars.space 
 
 ## Features
 ### Whats available
@@ -17,12 +17,17 @@ You can play a playable build of version 0.0.3 on https://mission2mars.space
 * Model is database-backed (currently: SQLite);
 * There is a simple Leaf based UI: completely server-side rendered, no JS/AJAX whatsoever;
 * Mission stages and components;
-* Stubs for income and research.
+* Build improvements to get more cash per day, more value from research, improved production and the possibility to build mission parts
+* Stub for income;
+* Skeleton of technology system/tech tree.
 
 ### What's still to come
 * Incorporate flight time;
-* Build improvements to get more cash per day, more value from research, improved production and the possibility to build mission parts;
-* User management and authentication (for now, using the randomly generated UUID for a Player will be enough).
+* Technology (tech tree);
+* More interesting interaction with other players (especially when you want to support somebody else's mission);
+* More improvements;
+* User management and authentication (for now, using the randomly generated UUID for a Player will be enough);
+* Backup/restore in case something goes wrong with the database/server.
 
 ### What won't be here
 * forums, messaging, chat: I assume you bring your own.
@@ -30,8 +35,8 @@ You can play a playable build of version 0.0.3 on https://mission2mars.space
 ## Architecture - model
 This game is built on the Vapor Server-side Swift framework.
 The actual simulation/model is in the `Sources/Model` folder. To reference it's types, use `import Model`
-Currently the model contains two types:
-1. A `Player` struct
+Currently the model contains three types:
+1. A `Player` struct (Player has sub-structures for `Improvements`, but these are not database aware, just plain strucs.)
 2. A `Mission` struct (Mission has sub-structures for `Stages` and ``Components`, but these are not database aware, just plain strucs.)
 3. A `Simulation` struct
 
@@ -73,6 +78,9 @@ It also contains an updateSimulation function that takes care of updating data e
 ```
 
 There should only be one simulation in the database at any time. To prevent unnecessary database lookups, the simulation ID (as it is known in the database) is cashed as a global variable: `Simulation.GLOBAL_SIMULATION_ID`.
+
+### Technology.swift
+The `Technology` struct is mostly a static and immutable data carrier: both an array of all technologies in the game (i.e. tech tree), as well as the basic data we need to know about. By themselves, the technology has no behaviour. Behaviour is added with players (which technologies does the player know about? is the player able to unlock this technology?), components (which technology is required to build the component?) and improvements (which technology is required to build the improvement?)
 
 ## Architecture - UI
 The UI is Leaf based. The most important Leaf view is `main.leaf` (called from `\main`). This shows the game dashboard, but also performs the following tasks:
