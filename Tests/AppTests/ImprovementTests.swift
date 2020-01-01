@@ -103,7 +103,7 @@ final class ImprovementTests : XCTestCase {
         
         let updatedPlayer = player.updatePlayer()
         XCTAssertGreaterThan(updatedPlayer.cash, player.cash + playerWouldGetCash , "Cash")
-    }
+     }
     
     func testPlayerCannotBuildImprovementWithoutPrerequisiteTech() throws {
         let player = Player(username: "testUser")

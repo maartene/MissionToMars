@@ -235,25 +235,6 @@ class FrontEndController: RouteCollection {
             }
             
         }
-         
-        router.get("upgrade/techLevel") { req -> Future<Response> in
-            return try self.getPlayerFromSession(on: req).flatMap(to: Response.self) { player in
-                do {
-                    let changedPlayer = try player.investInNextLevelOfTechnology()
-                    return changedPlayer.save(on: req).map(to: Response.self) { savedPlayer in
-                        return req.redirect(to: "/main")
-                    }
-                } catch {
-                    switch error {
-                    case Player.PlayerError.insufficientTechPoints:
-                        self.errorMessages[player.id!] = "Insufficient funds to upgrade."
-                        return Future.map(on: req) { return req.redirect(to: "/main") }
-                    default:
-                        throw error
-                    }
-                }
-            }
-        }
         
         router.get("advance/stage") { req -> Future<Response> in
             return try self.getPlayerFromSession(on: req).flatMap(to: Response.self) { player in

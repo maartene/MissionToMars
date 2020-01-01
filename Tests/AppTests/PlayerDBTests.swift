@@ -95,22 +95,6 @@ final class PlayerDBTests : XCTestCase {
         XCTAssertEqual(result.savedMission.owningPlayerID, result.savedPlayer.id)
     }
     
-    func testInvestInTechnology() throws {
-        let player = try createTestPlayer()
-        let changedPlayer = try player.investInNextLevelOfTechnology()
-        let savedPlayer = try app?.withPooledConnection(to: .sqlite, closure: { conn -> Future<Player> in
-            return changedPlayer.save(on: conn)
-        }).wait()
-        
-        XCTAssertNotNil(savedPlayer, " savedPlayer should not be nil")
-        
-        XCTAssertLessThan(savedPlayer!.technologyPoints, player.technologyPoints, " technology points")
-        XCTAssertGreaterThan(savedPlayer!.technologyLevel, player.technologyLevel, " tech levels")
-        
-        XCTAssertEqual(savedPlayer!.technologyPoints, changedPlayer.technologyPoints, " technology points")
-        XCTAssertEqual(savedPlayer!.technologyLevel, changedPlayer.technologyLevel, " tech levels")
-    }
-    
     func testDonateCashToPlayer() throws {
         var player1 = try createTestPlayer(username: "player1")
         let player2 = try createTestPlayer(username: "player2")
@@ -232,7 +216,6 @@ final class PlayerDBTests : XCTestCase {
         ("testCreateMission", testCreateMission),
         ("testCannotCreatePlayerWithExistingUsername", testCannotCreatePlayerWithExistingUsername),
         ("testAddMissionToPlayer", testAddMissionToPlayer),
-        ("testInvestInTechnology", testInvestInTechnology),
         ("testDonateCashToPlayer", testDonateCashToPlayer),
         ("testDonateTechToPlayer", testDonateTechToPlayer),
         ("testSaveUpdatedPlayer", testSaveUpdatedPlayer),

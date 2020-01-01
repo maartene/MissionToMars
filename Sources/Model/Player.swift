@@ -40,10 +40,7 @@ public struct Player: Content, SQLiteUUIDModel {
     // resources
     public private(set) var cash: Double = 1000
     public private(set) var technologyPoints: Double = 75
-    
-    @available(*, deprecated, message: "This is the old technology system, which is now deprecated.")
-    public private(set) var technologyLevel: Int = 1
-    
+        
     public private(set) var improvements: [Improvement]
     
     public init(username: String) {
@@ -78,9 +75,8 @@ public struct Player: Content, SQLiteUUIDModel {
         return updatedPlayer
     }
     
-    @available(*, deprecated, message: "This uses the old technology system, which is now deprecated.")
     public var cashPerTick: Double {
-        return 5_000.0 * myPow(base: 1.5, exponent: technologyLevel)
+        return BASE_CASH_PER_TICK
     }
     
     func extraIncome(amount: Double) -> Player {
@@ -144,27 +140,7 @@ public struct Player: Content, SQLiteUUIDModel {
         
         return (updatedPlayer, updatedMission)
     }
-    
-    @available(*, deprecated, message: "This is the old technology system, which is now deprecated.")
-    public var costOfNextTechnologyLevel: Double {
-        return 40.0 * myPow(base: 1.6, exponent: technologyLevel)
-    }
-    
-    @available(*, deprecated, message: "This is the old technology system, which is now deprecated.")
-    public func investInNextLevelOfTechnology() throws -> Player {
-        //print("Required tech points for next level: \(costOfNextTechnologyLevel)")
-        guard costOfNextTechnologyLevel <= self.technologyPoints else {
-            throw PlayerError.insufficientTechPoints
-        }
         
-        var changedPlayer = self
-        
-        changedPlayer.technologyPoints -= costOfNextTechnologyLevel
-        changedPlayer.technologyLevel += 1
-        
-        return changedPlayer
-    }
-    
     public func startBuildImprovement(_ improvement: Improvement, startDate: Date) throws -> Player {
         guard improvements.contains(improvement) == false else {
             throw PlayerError.playerAlreadyHasImprovement
@@ -332,12 +308,4 @@ extension Player: Validatable {
         try validations.add(\.username, .count(3...) && .alphanumeric)
         return validations
     }
-}
-
-func myPow(base: Double, exponent: Int) -> Double {
-    var result = 1.0
-    for _ in 0 ..< exponent {
-        result *= base
-    }
-    return result
 }
