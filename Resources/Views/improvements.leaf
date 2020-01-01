@@ -8,13 +8,13 @@
               <div class="col-1"><img src="/images/Improvements/#(improvement.shortName)-w.png" alt="#(improvement.name)"/></div>
               <div class="col">
                   <b>#(improvement.name)</b> - #(improvement.description)<br/>
-                  #cash(improvement.cost) <a href="/build/improvements/#(improvement.shortName)" class="btn btn-sm btn-primary #if(improvement.cost > player.cash) { disabled }">Build this improvement</a>
+                  Cost: $#cash(improvement.cost) <a href="/build/improvements/#(improvement.shortName)" class="btn btn-sm btn-primary #if(improvement.cost > player.cash) { disabled }">Build this improvement</a>
               </div>
             </div>
           </li>
         } 
       </ul>
-      <a href="/main" class="btn btn-secondary">Back</a>
+      <p class="pt-2"><a href="/main" class="btn btn-secondary">Back</a></p>
     </div>
 }
 

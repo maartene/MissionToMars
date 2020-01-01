@@ -19,6 +19,8 @@ public struct Player: Content, SQLiteUUIDModel {
         case userDoesNotExist
         case playerAlreadyHasImprovement
         case usernameFailedValidation
+        case playerAlreadyUnlockedTechnology
+        case playerMissesPrerequisiteTechnology
     }
     
     public var id: UUID?
@@ -28,10 +30,18 @@ public struct Player: Content, SQLiteUUIDModel {
     public var ownsMissionID: UUID?
     public var supportsPlayerID: UUID?
     
+    public private(set) var unlockedTechnologyNames: [Technology.ShortName]
+    public var unlockedTechnologies: [Technology] {
+        return unlockedTechnologyNames.compactMap { techName in
+            return Technology.getTechnologyByName(techName)
+        }
+    }
+    
     // resources
     public private(set) var cash: Double = 1000
     public private(set) var technologyPoints: Double = 75
     
+    @available(*, deprecated, message: "This is the old technology system, which is now deprecated.")
     public private(set) var technologyLevel: Int = 1
     
     public private(set) var improvements: [Improvement]
@@ -45,6 +55,8 @@ public struct Player: Content, SQLiteUUIDModel {
             assert(completedConsultancy.isCompleted, "Your starting tech consultancy firm should be complete.")
             self.improvements = [completedConsultancy]
         }
+        
+        self.unlockedTechnologyNames = [Technology.ShortName.AutonomousDriving]
     }
     
     public func updatePlayer(ticks: Int = 1) -> Player {
@@ -66,6 +78,7 @@ public struct Player: Content, SQLiteUUIDModel {
         return updatedPlayer
     }
     
+    @available(*, deprecated, message: "This uses the old technology system, which is now deprecated.")
     public var cashPerTick: Double {
         return 5_000.0 * myPow(base: 1.5, exponent: technologyLevel)
     }
@@ -128,10 +141,12 @@ public struct Player: Content, SQLiteUUIDModel {
         return (updatedPlayer, updatedMission)
     }
     
+    @available(*, deprecated, message: "This is the old technology system, which is now deprecated.")
     public var costOfNextTechnologyLevel: Double {
         return 40.0 * myPow(base: 1.6, exponent: technologyLevel)
     }
     
+    @available(*, deprecated, message: "This is the old technology system, which is now deprecated.")
     public func investInNextLevelOfTechnology() throws -> Player {
         //print("Required tech points for next level: \(costOfNextTechnologyLevel)")
         guard costOfNextTechnologyLevel <= self.technologyPoints else {
@@ -166,6 +181,25 @@ public struct Player: Content, SQLiteUUIDModel {
         return changedPlayer
     }
     
+    public func investInTechnology(_ technology: Technology) throws -> Player {
+        guard technologyPoints >= technology.cost else {
+            throw PlayerError.insufficientTechPoints
+        }
+        
+        guard unlockedTechnologies.contains(technology) == false else {
+            throw PlayerError.playerAlreadyUnlockedTechnology
+        }
+        
+        guard technology.playerHasPrerequisitesForTechnology(self) else {
+            throw PlayerError.playerMissesPrerequisiteTechnology
+        }
+        
+        var changedPlayer = self
+        changedPlayer.unlockedTechnologyNames.append(technology.shortName)
+        changedPlayer.technologyPoints -= technology.cost
+        return changedPlayer
+    }
+    
     mutating public func debug_setCash(_ amount: Double) {
         self.cash = amount
     }
@@ -179,21 +213,20 @@ extension Player {
         let player = Player(username: username)
         do {
             try player.validate()
-        } catch {
-            return Future.map(on: conn) { return .failure(.usernameFailedValidation) }
-        }
-        
-        print("This line should not print.")
-        return Player.query(on: conn).filter(\.username, .equal, username).first().flatMap(to: Result<Player, PlayerError>.self) { existingUser in
-            if existingUser != nil {
-                return Future.map(on: conn) { () -> Result<Player, PlayerError> in
-                    return .failure(.userAlreadyExists)
+            
+            return Player.query(on: conn).filter(\.username, .equal, username).first().flatMap(to: Result<Player, PlayerError>.self) { existingUser in
+                if existingUser != nil {
+                    return Future.map(on: conn) { () -> Result<Player, PlayerError> in
+                        return .failure(.userAlreadyExists)
+                    }
+                }
+                
+                return player.save(on: conn).map(to: Result<Player, PlayerError>.self) { player in
+                    return .success(player)
                 }
             }
-            
-            return player.save(on: conn).map(to: Result<Player, PlayerError>.self) { player in
-                return .success(player)
-            }
+        } catch {
+            return Future.map(on: conn) { return .failure(.usernameFailedValidation) }
         }
     }
     

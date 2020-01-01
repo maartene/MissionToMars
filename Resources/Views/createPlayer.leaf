@@ -4,7 +4,8 @@
   <form action="/create/player" method="POST">
     <div class="form-group">
         <label for="username">User name</label>
-        <input type="text" class="form-control" id="text" name="username"/>
+        <input type="text" class="form-control" id="text" name="username" required minlength="3" pattern="^[a-zA-Z0-9_]*$"/>
+        <small id="emailHelp" class="form-text text-muted">Required, minimum of three characters, letters, underscores and numbers only.</small>
     </div>
     <a href="/" type="cancel" class="btn btn-secondary">Cancel</a>
     <button type="submit" class="btn btn-success">Save</button>

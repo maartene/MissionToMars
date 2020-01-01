@@ -27,14 +27,14 @@
                         <h4>Current stage: #(currentStage.name) (#(currentStage.level) / 5)</h4>
                     </div>
                     <div class="row m-2 pt-2 align-items-center bg-dark rounded">
-                        <div class="col-1"><img src="/images/Stages/#(currentStage.level)-w.png" alt="#(currentStage.name)"/></div>
+                        <div class="col-md-1"><img src="/images/Stages/#(currentStage.level)-w.png" alt="#(currentStage.name)"/></div>
                         <div class="col"><p>#(currentStage.description)</p></div>
                     </div>
                     <div class="row m-2"><ul class="list-group">
                         #for(component in currentStage.components) { 
                             <li class="list-group-item">
                                 <div class="row align-items-center">
-                                    <div class="col-1"><img src="/images/Components/#(component.shortName)-w.png" alt="#(component.name)"/></div>
+                                    <div class="col-md-1"><img src="/images/Components/#(component.shortName)-w.png" alt="#(component.name)"/></div>
                                     <div class="col">
                                         <b>#(component.name)</b> #(component.description)<br/>
                                         Cost: #cash(component.cost) - Build time: #(component.buildTime) days.
@@ -61,46 +61,72 @@
         </div>
     </div>
     <div class="container border p-3 mt-3">
-        <div class="row px-3">
-        <div class="col">
-            <div class="row  align-items-center"><h3>Your corp</h3></div>
-            <div class="row mb-3"><p class="text-secondary">Your corporation is your bread and butter. It provides the cash and technology required to partake in missions.</p></div>
-            <div class="row align-items-center">
-                <div class="col-2">
-                    <img src="/images/streamline-icon-cash-molecule@48x48-w.png"/>
-                </div>    
-                <div class="col"><div class="row mb-3  align-items-center">Cash: $#cash(player.cash)</div></div>
-            </div>
-            <div class="row mt-2 align-items-center">
-                <div class="col-2">
-                    <img src="/images/lab-flask-experiment-48-w.png"/>
-                </div>
-                <div class="col">
-                    <div class="row align-items-center">Technology level: #(player.technologyLevel)</div>
-                    <div class="row align-items-center">Technology points: #dec0(player.technologyPoints) / #dec0(costOfNextTechnologyLevel)
-                        <a href="/upgrade/techLevel" class="btn btn-success btn-sm ml-3 #if(costOfNextTechnologyLevel > player.technologyPoints) { disabled }">Upgrade tech level</a>
-                    </div>
-                </div>
+        <h3>Your corp</h3>
+        <p class="text-secondary">Your corporation is your bread and butter. It provides the cash and technology required to partake in missions.</p>
+        <div class="row align-items-center">
+            <div class="col-md-auto">
+                <img src="/images/streamline-icon-cash-molecule@48x48-w.png" width="24"/><br/>
+            </div>    
+            <div class="col-md">
+                <h5>Cash: $#cash(player.cash)</h5>
             </div>
         </div>
-        <div class="col">
-            <h4>Improvements</h4>
-            <p class="text-secondary">Improvements have various beneficial effects on your company.</p>
-            <ul class="list-group">
-            #for(improvement in player.improvements) {
-                <li class="list-group-item">
-                    <div class="row align-items-center">
-                        <div class="col-2 justify-content-center"><img src="/images/Improvements/#(improvement.shortName)-w.png"/></div>
-                        <div class="col"><b>#(improvement.name)</b> #(improvement.description) #if(improvement.percentageCompleted < 100) { <br/>Currently building: 
+        <div class="row align-items-center">
+            <div class="col-md-auto">
+                <img src="/images/lab-flask-experiment-48-w.png" width="24"/>
+            </div>    
+            <div class="col-md">
+                <h5 class="mt-2">Technology points: #dec0(player.technologyPoints) / #dec0(costOfNextTechnologyLevel)</h5>
+            </div>
+        </div>
+        <div class="row mt-3 p-3">
+            <div class="col-md border-top pt-2">
+                <div class="row align-items-center">
+                    <div class="col-md-2">
+                        <img src="/images/lab-flask-experiment-48-w.png" alt="Technology"/>
+                    </div>
+                    <div class="col-md">
+                        <h4>Technology</h4>
+                        <p class="text-secondary">Invest in technology to unlock improvements, components and further tech.</p>
+                    </div>
+                </div>
+                <ul class="list-group">
+                #for(tech in unlockedTechnologies) {
+                    <li class="list-group-item">
+                        <div class="row align-items-center">
+                            <div class="col-md-2 justify-content-center"><img src="/images/Technologies/#(tech.shortName)-w.png"/></div>
+                            <div class="col-md"><b>#(tech.name)</b> - #(tech.description)</div>
+                        </div>
+                    </li>
+                }
+                </ul>
+                <div class="mt-2"><a href="/unlock/technologies" class="btn btn-primary">Unlock technologies</a></div>
+            </div>
+            <div class="col-md border-top pt-2">
+                <div class="row align-items-center">
+                    <div class="col-md-2">
+                        <img src="/images/streamline-icon-project-blueprint-create@48x48-w.png" alt="Improvements"/>
+                    </div>
+                    <div class="col-md">
+                        <h4>Improvements</h4>
+                        <p class="text-secondary">Improvements have various beneficial effects on your company.</p>
+                    </div>
+                </div>
+                <ul class="list-group">
+                    #for(improvement in player.improvements) {
+                        <li class="list-group-item">
+                            <div class="row align-items-center">
+                            <div class="col-md-2 justify-content-center"><img src="/images/Improvements/#(improvement.shortName)-w.png"/></div>
+                            <div class="col"><b>#(improvement.name)</b> #(improvement.description) #if(improvement.percentageCompleted < 100) { <br/>Currently building: 
                             <div class="progress">
                                     <div class="progress-bar" role="progressbar" style="width: #decimal(improvement.percentageCompleted)%" aria-valuenow="#decimal(improvement.percentageCompleted)" aria-valuemin="0" aria-valuemax="100"></div>
                             </div>#decimal(improvement.percentageCompleted)% done. }
-                    </div>
-                </li>
-            }
-            </ul>
-            <div class="mt-2"><a href="/build/improvements" class="btn btn-primary">Build improvements</a></div>
-        </div>
+                            </div>
+                        </li>
+                    }
+                </ul>
+                <div class="mt-2"><a href="/build/improvements" class="btn btn-primary">Build improvements</a></div>
+            </div>
         </div>
     </div>
 }

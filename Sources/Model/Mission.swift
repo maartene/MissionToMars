@@ -26,7 +26,6 @@ public struct Mission: Content, SQLiteUUIDModel {
         }
         return sum / Double(stages.count)
     }
-    public var successChance: Double = 0
     
     public private(set) var stages: [Stage]
     public private(set) var currentStageLevel = 1
