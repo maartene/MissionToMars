@@ -280,7 +280,8 @@ class FrontEndController: RouteCollection {
             return try self.getPlayerFromSession(on: req).flatMap(to: View.self) {
             player in
                 
-                let possibleImprovements = Improvement.allImprovements.filter { improvement in
+                let possibleImprovements = Improvement.unlockedImprovementsForPlayer(player).filter { improvement in
+                    // filter out the improvements the player has already built
                     player.improvements.contains(improvement) == false
                 }
                 
@@ -444,12 +445,14 @@ class FrontEndController: RouteCollection {
             let mission: Mission?
             let currentStage: Stage?
             let currentBuildingComponent: Component?
-            let costOfNextTechnologyLevel: Double
             let simulation: Simulation
             let errorMessage: String?
             let currentStageComplete: Bool
             let unlockableTechnologogies: [Technology]
             let unlockedTechnologies: [Technology]
+            let unlockedComponents: [Component]
+            let techlockedComponents: [Component]
+            let playerIsBuildingComponent: Bool
         }
         
         return Player.find(id, on: req).flatMap(to: View.self) { player in
@@ -472,7 +475,18 @@ class FrontEndController: RouteCollection {
                         return try req.view().render("win")
                     }
                     
-                    let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponent: mission.currentStage.currentlyBuildingComponent, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, errorMessage: errorMessage, currentStageComplete: mission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies)
+                    var unlockedComponents = [Component]()
+                    var techlockedComponents = [Component]()
+                    
+                    for component in mission.currentStage.components {
+                        if component.playerHasPrerequisitesForComponent(player) {
+                            unlockedComponents.append(component)
+                        } else {
+                            techlockedComponents.append(component)
+                        }
+                    }
+                    
+                    let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponent: mission.currentStage.currentlyBuildingComponent, simulation: simulation, errorMessage: errorMessage, currentStageComplete: mission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: unlockedComponents, techlockedComponents: techlockedComponents, playerIsBuildingComponent: mission.currentStage.currentlyBuildingComponent != nil)
                     
                     return try req.view().render("main", context)
                 }
@@ -494,13 +508,13 @@ class FrontEndController: RouteCollection {
                             return try req.view().render("win")
                         }
                         
-                        let context = MainContext(player: player, mission: supportedMission, currentStage: supportedMission.currentStage, currentBuildingComponent: supportedMission.currentStage.currentlyBuildingComponent, costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, errorMessage: errorMessage, currentStageComplete: supportedMission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies)
+                        let context = MainContext(player: player, mission: supportedMission, currentStage: supportedMission.currentStage, currentBuildingComponent: supportedMission.currentStage.currentlyBuildingComponent, simulation: simulation, errorMessage: errorMessage, currentStageComplete: supportedMission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: supportedMission.currentStage.components, techlockedComponents: [], playerIsBuildingComponent: false)
                         
                         return try req.view().render("main", context)
                     }
                 }
             } else {
-                let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponent: nil ,costOfNextTechnologyLevel: player.costOfNextTechnologyLevel, simulation: simulation, errorMessage: errorMessage, currentStageComplete: false, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies)
+                let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponent: nil, simulation: simulation, errorMessage: errorMessage, currentStageComplete: false, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: [], techlockedComponents: [], playerIsBuildingComponent: false)
             
                 return try req.view().render("main", context)
             }

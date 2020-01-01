@@ -156,7 +156,8 @@ final class PlayerDBTests : XCTestCase {
         let player = playerMissionCombo.savedPlayer
         let mission = playerMissionCombo.savedMission
         
-        let component = mission.currentStage.components.first!
+        XCTAssertGreaterThan(mission.currentStage.components.count, 1)
+        let component = mission.currentStage.components[1]
         
         XCTAssertGreaterThanOrEqual(player.cash, component.cost, "cash")
         

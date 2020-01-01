@@ -29,7 +29,19 @@
         <div class="col-lg"></div>
     </div>
     <div class="jumbotron mt-3">
-        <h3 class="mv-3">Note: this is pre-release software. For details see the <a href="https://github.com/maartene/MissionToMars">repository</a>.</h3>
+        <h3 class="mv-3">Note: this is pre-release software. For details see the <a href="https://github.com/maartene/MissionToMars">GitHub repository</a>.</h3>
+        <p>
+            <ul>
+                <li>Game may go down for deployment of new version without prior warning;</li>
+                <li>Database may be refreshed at any time (typically happens once every day with a new deployment);</li>
+                <li>I don't accept any liability for what might happen when you play the game;
+                <li>This game is provided "as-is", without any guarantees;</li>
+                <li>Feedback is appreciated! Have any ideas? Found a bug? Found typo's? Please create an issue in the <a href="https://github.com/maartene/MissionToMars/issues" target="_blank">GitHub repository</a>.</li>
+            </ul>
+        </p>
+        <p>
+            Current version: <span class="text-danger">0.0.4</span>
+        </p>
     </div>
 }
 

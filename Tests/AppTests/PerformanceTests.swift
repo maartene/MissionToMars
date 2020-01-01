@@ -79,7 +79,7 @@ final class PerformanceTests: XCTestCase {
     }
     
     func testGame() throws {
-        var player = Player(username: "testPlayer")
+        var player = Player(username: "testPlayer").extraIncome(amount: 2_000_000_000)
         player.id = UUID()
         
         var mission = Mission(owningPlayerID: player.id!)
@@ -95,9 +95,10 @@ final class PerformanceTests: XCTestCase {
             mission = mission.updateMission()
             
             if player.cash >= component.cost && mission.currentStage.currentlyBuildingComponent == nil {
-                let investment = try player.investInComponent(component, in: mission, date: Date())
-                player = investment.changedPlayer
-                mission = investment.changedMission
+                if let investment = try? player.investInComponent(component, in: mission, date: Date()) {
+                    player = investment.changedPlayer
+                    mission = investment.changedMission
+                }
             }
             
             if mission.currentStage.components.first(where: {c in c == component})!.percentageCompleted >= 100.0 {
@@ -118,8 +119,16 @@ final class PerformanceTests: XCTestCase {
                     }
             }
             
-            if player.technologyPoints >= player.costOfNextTechnologyLevel {
-                player = try player.investInNextLevelOfTechnology()
+            if let improvement = Improvement.unlockedImprovementsForPlayer(player).filter({impr in player.improvements.contains(impr) == false}).first {
+                if player.cash >= improvement.cost {
+                    player = try player.startBuildImprovement(improvement, startDate: Date())
+                }
+            }
+            
+            if let tech = Technology.unlockableTechnologiesForPlayer(player).first {
+                if player.technologyPoints >= tech.cost {
+                    player = try player.investInTechnology(tech)
+                }
             }
             
             steps += 1

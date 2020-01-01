@@ -22,6 +22,7 @@
 
 /* Begin PBXBuildFile section */
 		DE14AD3423BC028300475467 /* TechnologyTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE14AD3323BC028300475467 /* TechnologyTests.swift */; };
+		DE14AD3623BCD9C500475467 /* LeafComponentTag.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE14AD3523BCD9C500475467 /* LeafComponentTag.swift */; };
 		OBJ_1000 /* CBcrypt.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Crypto::CBcrypt::Product" /* CBcrypt.framework */; };
 		OBJ_1001 /* CBase32.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Crypto::CBase32::Product" /* CBase32.framework */; };
 		OBJ_1002 /* Command.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "Console::Command::Product" /* Command.framework */; };
@@ -5618,6 +5619,7 @@
 		"Crypto::Crypto::Product" /* Crypto.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Crypto.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Crypto::Random::Product" /* Random.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Random.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DE14AD3323BC028300475467 /* TechnologyTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TechnologyTests.swift; sourceTree = "<group>"; };
+		DE14AD3523BCD9C500475467 /* LeafComponentTag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeafComponentTag.swift; sourceTree = "<group>"; };
 		"DatabaseKit::DatabaseKit::Product" /* DatabaseKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = DatabaseKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Fluent::Fluent::Product" /* Fluent.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Fluent.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Fluent::FluentSQL::Product" /* FluentSQL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = FluentSQL.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -9598,6 +9600,7 @@
 				OBJ_11 /* LeafCashFormatter.swift */,
 				OBJ_12 /* LeafDateTag.swift */,
 				OBJ_13 /* LeafDecimalTag.swift */,
+				DE14AD3523BCD9C500475467 /* LeafComponentTag.swift */,
 			);
 			path = Controllers;
 			sourceTree = "<group>";
@@ -12664,6 +12667,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 0;
 			files = (
+				DE14AD3623BCD9C500475467 /* LeafComponentTag.swift in Sources */,
 				OBJ_966 /* FrontEndController.swift in Sources */,
 				OBJ_967 /* LeafCashFormatter.swift in Sources */,
 				OBJ_968 /* LeafDateTag.swift in Sources */,

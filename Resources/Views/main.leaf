@@ -31,7 +31,7 @@
                         <div class="col"><p>#(currentStage.description)</p></div>
                     </div>
                     <div class="row m-2"><ul class="list-group">
-                        #for(component in currentStage.components) { 
+                        #for(component in unlockedComponents) { 
                             <li class="list-group-item">
                                 <div class="row align-items-center">
                                     <div class="col-md-1"><img src="/images/Components/#(component.shortName)-w.png" alt="#(component.name)"/></div>
@@ -44,7 +44,26 @@
                                                 <div class="progress-bar" role="progressbar" style="width: #decimal(component.percentageCompleted)%" aria-valuenow="#decimal(improvement.percentageCompleted)" aria-valuemin="0" aria-valuemax="100"></div>
                                             </div>
                                             #decimal(component.percentageCompleted)% complete. } else {
-                                            #if(player.ownsMissionID) {<a href="/build/component/#(component.shortName)" class="btn btn-sm btn-primary #if(component.cost > player.cash) {disabled}">Start build</a>}
+                                            #if(player.ownsMissionID) {<a href="/build/component/#(component.shortName)" class="btn btn-sm btn-primary #if(component.cost > player.cash || playerIsBuildingComponent) {disabled}">Start build</a>}
+                                        }
+                                    </div>
+                                </div>
+                            </li> }
+                        #for(component in techlockedComponents) { 
+                            <li class="list-group-item">
+                                <div class="row align-items-center">
+                                    <div class="col-md-1"><img src="/images/Components/#(component.shortName)-w.png" alt="#(component.name)"/></div>
+                                    <div class="col">
+                                        <b>#(component.name)</b> #(component.description)<br/>
+                                        Cost: #cash(component.cost) - Build time: #(component.buildTime) days.
+                                        <br />
+                                        #if(component.buildStartedOn) { Build started on: #date(component.buildStartedOn) 
+                                            <div class="progress">
+                                                <div class="progress-bar" role="progressbar" style="width: #decimal(component.percentageCompleted)%" aria-valuenow="#decimal(improvement.percentageCompleted)" aria-valuemin="0" aria-valuemax="100"></div>
+                                            </div>
+                                            #decimal(component.percentageCompleted)% complete. } else {
+                                            <p class="text-warning">Required technologie(s): #compPrereqs(component.shortName)</p>
+                                            <a href="/build/component/#(component.shortName)" class="btn btn-sm btn-primary disabled">Start build</a>
                                         }
                                     </div>
                                 </div>
@@ -76,7 +95,7 @@
                 <img src="/images/lab-flask-experiment-48-w.png" width="24"/>
             </div>    
             <div class="col-md">
-                <h5 class="mt-2">Technology points: #dec0(player.technologyPoints) / #dec0(costOfNextTechnologyLevel)</h5>
+                <h5 class="mt-2">Technology points: #dec0(player.technologyPoints)</h5>
             </div>
         </div>
         <div class="row mt-3 p-3">

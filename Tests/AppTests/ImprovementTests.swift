@@ -14,7 +14,7 @@ import XCTest
 
 final class ImprovementTests : XCTestCase {
     func testStartBuildImprovement() throws {
-        let improvement = Improvement(shortName: .Faculty, name: "Factory", description: "Test", cost: 200, buildTime: 100)
+        let improvement = Improvement(shortName: .Faculty, name: "Factory", description: "Test", cost: 200, buildTime: 100, requiredTechnologyShortnames: [])
         XCTAssertNil(improvement.buildStartedOn)
         let buildingComponent = try improvement.startBuild(startDate: Date())
         XCTAssertNotNil(buildingComponent.buildStartedOn)
@@ -105,6 +105,29 @@ final class ImprovementTests : XCTestCase {
         XCTAssertGreaterThan(updatedPlayer.cash, player.cash + playerWouldGetCash , "Cash")
     }
     
+    func testPlayerCannotBuildImprovementWithoutPrerequisiteTech() throws {
+        let player = Player(username: "testUser")
+        let improvement = Improvement.getImprovementByName(.DroneDeliveryService)!
+        
+        XCTAssertThrowsError(try player.startBuildImprovement(improvement, startDate: Date()), "Player should not be able to build this improvement because player misses prereq technology.")
+    }
+    
+    func testPlayerCanBuildImprovementWithPrerequisiteTech() throws {
+        var player = Player(username: "testUser")
+        player = player.extraTech(amount: 1_000_000)
+        
+        let improvement = Improvement.getImprovementByName(.DroneDeliveryService)!
+        player = player.extraIncome(amount: improvement.cost)
+        
+        let prereqs = improvement.requiredTechnologies
+        
+        for prereq in prereqs {
+            player = try player.investInTechnology(prereq)
+        }
+        
+        _ = try player.startBuildImprovement(improvement, startDate: Date())
+    }
+    
     static let allTests = [
         ("testStartBuildImprovement", testStartBuildImprovement),
         ("testGetImprovementByName", testGetImprovementByName),
@@ -113,6 +136,8 @@ final class ImprovementTests : XCTestCase {
         ("testFactoryShouldIncreaseIncome", testFactoryShouldIncreaseIncome),
         ("testUpdateOfPlayerImprovesBuildProgress", testUpdateOfPlayerImprovesBuildProgress),
         ("testUpdateOfPlayerTriggersImprovementEffect", testUpdateOfPlayerTriggersImprovementEffect),
+        ("testPlayerCannotBuildImprovementWithoutPrerequisiteTech", testPlayerCannotBuildImprovementWithoutPrerequisiteTech),
+        ("testPlayerCanBuildImprovementWithPrerequisiteTech", testPlayerCanBuildImprovementWithPrerequisiteTech),
     ]
 
 }

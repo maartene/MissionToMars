@@ -14,7 +14,7 @@ import XCTest
 
 final class ComponentTests : XCTestCase {
     func testStartBuildComponent() throws {
-        let component = Component(shortName: .Satellite, name: "testComponent", description: "", cost: 1, buildTime: 1)
+        let component = Component(shortName: .Satellite, name: "testComponent", description: "", cost: 1, buildTime: 1, requiredTechnologyShortnames: [])
         XCTAssertNil(component.buildStartedOn)
         let buildingComponent = try component.startBuild(startDate: Date())
         XCTAssertNotNil(buildingComponent.buildStartedOn)

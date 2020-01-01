@@ -135,6 +135,10 @@ public struct Player: Content, SQLiteUUIDModel {
             throw PlayerError.insufficientFunds
         }
         
+        guard component.playerHasPrerequisitesForComponent(self) else {
+            throw PlayerError.playerMissesPrerequisiteTechnology
+        }
+        
         updatedMission = try updatedMission.startBuildingInStage(component, buildDate: date)
         updatedPlayer.cash -= component.cost
         
@@ -164,6 +168,10 @@ public struct Player: Content, SQLiteUUIDModel {
     public func startBuildImprovement(_ improvement: Improvement, startDate: Date) throws -> Player {
         guard improvements.contains(improvement) == false else {
             throw PlayerError.playerAlreadyHasImprovement
+        }
+        
+        guard improvement.playerHasPrerequisitesForImprovement(self) else {
+            throw PlayerError.playerMissesPrerequisiteTechnology
         }
         
         guard cash >= improvement.cost else {

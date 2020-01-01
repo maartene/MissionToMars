@@ -50,6 +50,7 @@ public func configure(
     tags.use(DecimalTag(), as: "decimal")
     tags.use(ZeroDecimalTag(), as: "dec0")
     tags.use(CashTag(), as: "cash")
+    tags.use(ComponentPrereqTag(), as: "compPrereqs")
     services.register(tags)
 
     // Register middleware (file serving and sessions)
