@@ -300,7 +300,7 @@ class FrontEndController: RouteCollection {
                         self.errorMessages[player.id!] = "Insufficient funds to build \(improvement.name)."
                         return Future.map(on: req) { return req.redirect(to: "/main") }
                     case Player.PlayerError.playerIsAlreadyBuildingImprovement:
-                        self.errorMessages[player.id!] = "You already building another improvement. You can only build one at a time."
+                        self.errorMessages[player.id!] = "You're already building another improvement. You can only build one at a time."
                         return Future.map(on: req) { return req.redirect(to: "/main") }
                     default:
                         throw error
