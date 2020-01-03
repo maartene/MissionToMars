@@ -79,7 +79,7 @@ final class PerformanceTests: XCTestCase {
     }
     
     func testGame() throws {
-        var player = Player(username: "testPlayer").extraIncome(amount: 2_000_000_000)
+        var player = Player(username: "testPlayer")
         player.id = UUID()
         
         var mission = Mission(owningPlayerID: player.id!)
@@ -119,9 +119,11 @@ final class PerformanceTests: XCTestCase {
                     }
             }
             
-            if let improvement = Improvement.unlockedImprovementsForPlayer(player).filter({impr in player.improvements.contains(impr) == false}).first {
-                if player.cash >= improvement.cost {
-                    player = try player.startBuildImprovement(improvement, startDate: Date())
+            if player.isCurrentlyBuildingImprovement == false {
+                if let improvement = Improvement.unlockedImprovementsForPlayer(player).filter({impr in player.improvements.contains(impr) == false}).first {
+                    if player.cash >= improvement.cost {
+                        player = try player.startBuildImprovement(improvement, startDate: Date())
+                    }
                 }
             }
             
