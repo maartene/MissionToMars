@@ -11,7 +11,7 @@
 </head>
 <body>
     <div class="container mt-3">
-        <p><a href="/"><img src="/images/streamline-icon-earth-3@48x48.png"/><img src="/images/logo.png" alt="Mission To Mars" width="25%"></a></p>
+        <p><a href="/"><img src="/images/streamline-icon-earth-3@48x48.png"/><img src="/images/logo.png" alt="Mission To Mars" width="50%"></a></p>
             #get(body)
     </div>
      <div class="container p-3 mt-3 border-top">

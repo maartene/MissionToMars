@@ -5,8 +5,8 @@
         #for(improvement in possibleImprovements) {
           <li class="list-group-item">
             <div class="row">
-              <div class="col-1"><img src="/images/Improvements/#(improvement.shortName)-w.png" alt="#(improvement.name)"/></div>
-              <div class="col">
+              <div class="col-md-1"><img src="/images/Improvements/#(improvement.shortName)-w.png" alt="#(improvement.name)"/></div>
+              <div class="col-md">
                   <b>#(improvement.name)</b> - #(improvement.description)<br/>
                   Cost: $#cash(improvement.cost) <a href="/build/improvements/#(improvement.shortName)" class="btn btn-sm btn-primary #if(improvement.cost > player.cash) { disabled }">Build this improvement</a>
               </div>

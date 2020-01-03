@@ -21,6 +21,7 @@ public struct Player: Content, SQLiteUUIDModel {
         case usernameFailedValidation
         case playerAlreadyUnlockedTechnology
         case playerMissesPrerequisiteTechnology
+        case playerIsAlreadyBuildingImprovement
     }
     
     public var id: UUID?
@@ -42,6 +43,12 @@ public struct Player: Content, SQLiteUUIDModel {
     public private(set) var technologyPoints: Double = 75
         
     public private(set) var improvements: [Improvement]
+    public var isCurrentlyBuildingImprovement: Bool {
+        let unfinishedImprovements = improvements.filter { improvement in
+            return improvement.buildStartedOn != nil && improvement.isCompleted == false
+        }
+        return unfinishedImprovements.count > 0
+    }
     
     public init(username: String) {
         self.username = username
@@ -154,12 +161,17 @@ public struct Player: Content, SQLiteUUIDModel {
             throw PlayerError.insufficientFunds
         }
         
+        guard isCurrentlyBuildingImprovement == false else {
+            throw PlayerError.playerIsAlreadyBuildingImprovement
+        }
+        
         let buildingImprovement = try improvement.startBuild(startDate: startDate)
         
         var changedPlayer = self
         
         changedPlayer.improvements.append(buildingImprovement)
-        assert(improvement.percentageCompleted == 0)
+        assert(buildingImprovement.percentageCompleted == 0)
+        assert(changedPlayer.improvements.last!.buildStartedOn != nil)
         changedPlayer.cash -= improvement.cost
         
         return changedPlayer

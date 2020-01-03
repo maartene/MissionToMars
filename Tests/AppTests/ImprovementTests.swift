@@ -128,6 +128,20 @@ final class ImprovementTests : XCTestCase {
         _ = try player.startBuildImprovement(improvement, startDate: Date())
     }
     
+    func testPlayerIsBuildingImprovementCannotBuildAnother() throws {
+        var player = Player(username: "testUser")
+        let improvement = Improvement.getImprovementByName(.Faculty)!
+        player = player.extraIncome(amount: improvement.cost)
+        
+        var buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
+        XCTAssertTrue(buildingPlayer.isCurrentlyBuildingImprovement)
+        
+        let improvement2 = Improvement.getImprovementByName(.SpaceTourism)!
+        buildingPlayer = buildingPlayer.extraIncome(amount: improvement2.cost)
+        
+        XCTAssertThrowsError(try buildingPlayer.startBuildImprovement(improvement2, startDate: Date())) { error in print(error) }
+    }
+    
     static let allTests = [
         ("testStartBuildImprovement", testStartBuildImprovement),
         ("testGetImprovementByName", testGetImprovementByName),
@@ -138,6 +152,7 @@ final class ImprovementTests : XCTestCase {
         ("testUpdateOfPlayerTriggersImprovementEffect", testUpdateOfPlayerTriggersImprovementEffect),
         ("testPlayerCannotBuildImprovementWithoutPrerequisiteTech", testPlayerCannotBuildImprovementWithoutPrerequisiteTech),
         ("testPlayerCanBuildImprovementWithPrerequisiteTech", testPlayerCanBuildImprovementWithPrerequisiteTech),
+        ("testPlayerIsBuildingImprovementCannotBuildAnother", testPlayerIsBuildingImprovementCannotBuildAnother),
     ]
 
 }

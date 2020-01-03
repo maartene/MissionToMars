@@ -299,6 +299,9 @@ class FrontEndController: RouteCollection {
                     case Player.PlayerError.insufficientFunds:
                         self.errorMessages[player.id!] = "Insufficient funds to build \(improvement.name)."
                         return Future.map(on: req) { return req.redirect(to: "/main") }
+                    case Player.PlayerError.playerIsAlreadyBuildingImprovement:
+                        self.errorMessages[player.id!] = "You already building another improvement. You can only build one at a time."
+                        return Future.map(on: req) { return req.redirect(to: "/main") }
                     default:
                         throw error
                     }
@@ -368,7 +371,7 @@ class FrontEndController: RouteCollection {
             return Player.query(on: req).all().flatMap(to: [Player].self) { players in
                 let richPlayers = players.map { player -> Player in
                     var changedPlayer = player
-                    changedPlayer.debug_setCash(10_000_000_000)
+                    changedPlayer.debug_setCash(1_000_000_000)
                     return changedPlayer
                 }
                 
@@ -378,6 +381,22 @@ class FrontEndController: RouteCollection {
         
         router.get() { req in
             return try req.view().render("index")
+        }
+        
+        struct DataDump: Content {
+            let simulation: Simulation
+            let players: [Player]
+            let missions: [Mission]
+        }
+        
+        router.get("debug/dataDump") { req -> Future<DataDump> in
+            return self.getSimulation(on: req).flatMap(to: DataDump.self) { simulation in
+                return Player.query(on: req).all().flatMap(to: DataDump.self) { players in
+                    return Mission.query(on: req).all().map(to: DataDump.self) { missions in
+                        return DataDump(simulation: simulation, players: players, missions: missions)
+                    }
+                }
+            }
         }
     }
             
