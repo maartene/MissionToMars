@@ -45,7 +45,7 @@ class MailJetTests: XCTestCase {
         try? app.runningServer?.close().wait()
     }
     
-    func disable_testSendTestMail() throws {
+    func testSendTestMail() throws {
         guard let publicKey = Environment.get("MAILJET_API_KEY") else {
             XCTFail("Could not find MailJet api key in environment. Did you remember to set it?")
             return

@@ -2,7 +2,7 @@
 import Foundation
 import Vapor
 
-final class MailJetConfig: NSObject, URLSessionDelegate {
+struct MailJetConfig {
     
     let apiKey: String
     let secretKey: String
