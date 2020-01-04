@@ -10,8 +10,9 @@ let package = Package(
         .package(url: "https://github.com/vapor/leaf.git", from: "3.0.0")
     ],
     targets: [
+        .target(name: "MailJet", dependencies: ["Vapor"]),
         .target(name: "Model", dependencies: ["Vapor", "FluentSQLite"]),
-        .target(name: "App", dependencies: ["Vapor", "Model", "Leaf"]),
+        .target(name: "App", dependencies: ["Vapor", "Model", "Leaf", "MailJet"]),
         .target(name: "Run", dependencies: ["App"]),
         .testTarget(name: "AppTests", dependencies: ["App", "Model"]),
     ]

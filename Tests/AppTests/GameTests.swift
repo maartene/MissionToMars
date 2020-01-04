@@ -1,84 +1,28 @@
 //
-//  PerformanceTests.swift
+//  GameTests.swift
 //  AppTests
 //
-//  Created by Maarten Engels on 15/12/2019.
+//  Created by Maarten Engels on 04/01/2020.
 //
 
-import App
-import Dispatch
-import Vapor
 import XCTest
 @testable import Model
 
-final class PerformanceTests: XCTestCase {
-    var app: Application!
-    
+class GameTests: XCTestCase {
+
     override func setUp() {
-        do {
-            var config = Config.default()
-            var env = try Environment.detect()
-            var services = Services.default()
-            
-            // this line clears the command-line arguments
-            env.commandInput.arguments = []
-            
-            try App.configure(&config, &env, &services)
-            
-            app = try Application(
-                config: config,
-                environment: env,
-                services: services
-            )
-            
-            try App.boot(app)
-            try app.asyncRun().wait()
-            
-            try deleteData()
-        } catch {
-            fatalError("Failed to launch Vapor server: \(error.localizedDescription)")
-        }
-    }
-    
-    override func tearDown() {
-        try? deleteData()
-        try? app.runningServer?.close().wait()
+        // Put setup code here. This method is called before the invocation of each test method in the class.
     }
 
-    func deleteData() throws {
-        _ = try? app?.withPooledConnection(to: .sqlite, closure: { conn -> Future<Void> in
-            return Player.query(on: conn).delete().map(to: Void.self) { result in
-                return Mission.query(on: conn).delete()
-            }
-        }).wait()
-        print("deleted data")
+    override func tearDown() {
+        // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
-    
-    func testCreatePlayerInDBPerformance() throws {
-        guard let app = app else {
-            throw PlayerDBTestsHelpersError.appIsNil
-        }
+
+    func testGame() throws {
+        var stepsTech: Int?
+        var stepsImprovement: Int?
+        var stepsCompoment: Int?
         
-        print("Started measured test run.")
-        _ = try? app.withPooledConnection(to: .sqlite, closure: { conn -> Future<[Player]> in
-            var futures = [Future<Player>]()
-            for i in 0 ..< 1000 {
-                let playerFuture = Player.createUser(username: "testUser\(i)", on: conn).map(to: Player.self) { result in
-                    switch result {
-                    case .success(let player):
-                        return player
-                    case .failure(let error):
-                        throw error
-                    }
-                }
-                futures.append(playerFuture)
-            }
-            return futures.flatten(on: app)
-        }).wait()
-        print("Finished measured test run.")
-    }
-    
-    /*func testGame() throws {
         var player = Player(username: "testPlayer")
         player.id = UUID()
         
@@ -88,7 +32,7 @@ final class PerformanceTests: XCTestCase {
         player.ownsMissionID = mission.id
         
         // simulate until mission done (with a maximum of a million steps)
-        let maxSteps = 100_000
+        let maxSteps = 1_000_000
         var steps = 0
         while mission.missionComplete == false && steps < maxSteps {
             player = player.updatePlayer()
@@ -98,20 +42,21 @@ final class PerformanceTests: XCTestCase {
                 if let investment = try? player.investInComponent(component, in: mission, date: Date()) {
                     player = investment.changedPlayer
                     mission = investment.changedMission
+                    if stepsCompoment == nil { stepsCompoment = steps }
                 }
             }
             
             if mission.currentStage.components.first(where: {c in c == component})!.percentageCompleted >= 100.0 {
                     if mission.currentStage.unstartedComponents.count > 0 {
                         component = mission.currentStage.unstartedComponents.first!
-                        print("Now starting on: \(component.name)")
+                        print("Step: \(steps): now starting on: \(component.name)")
                     } else {
                         do {
                             mission = try mission.goToNextStage()
-                            print("Now on stage: \(mission.currentStageLevel)")
+                            print("Step: \(steps): now on stage: \(mission.currentStageLevel)")
                             if mission.currentStage.unstartedComponents.count > 0 {
                                 component = mission.currentStage.unstartedComponents.first!
-                                print("Now starting on: \(component.name)")
+                                print("Step: \(steps): now starting on: \(component.name)")
                             }
                         } catch {
                             break
@@ -123,6 +68,7 @@ final class PerformanceTests: XCTestCase {
                 if let improvement = Improvement.unlockedImprovementsForPlayer(player).filter({impr in player.improvements.contains(impr) == false}).first {
                     if player.cash >= improvement.cost {
                         player = try player.startBuildImprovement(improvement, startDate: Date())
+                        if stepsImprovement == nil { stepsImprovement = steps }
                     }
                 }
             }
@@ -130,12 +76,17 @@ final class PerformanceTests: XCTestCase {
             if let tech = Technology.unlockableTechnologiesForPlayer(player).first {
                 if player.technologyPoints >= tech.cost {
                     player = try player.investInTechnology(tech)
+                    if stepsTech == nil { stepsTech = steps }
                 }
             }
             
             steps += 1
         }
         print("Completed running simulation (max steps: \(maxSteps).")
+        print("Steps to first tech: \(stepsTech ?? -1)")
+        print("Steps to first improvement: \(stepsImprovement ?? -1)")
+        print("Steps to first component: \(stepsCompoment ?? -1)")
+        
         print("Got this far: \(mission.percentageDone)")
         if mission.percentageDone >= 100 {
             print("Completed mission in \(steps) update steps.")
@@ -144,17 +95,9 @@ final class PerformanceTests: XCTestCase {
             print("Failed to complete mission in \(maxSteps) steps.")
             XCTAssertTrue(true)
         }
-        print("Player: \(player)")
-    }*/
-    
-    // HELPERS
-    enum PlayerDBTestsHelpersError: Error {
-        case appIsNil
+        
+        print("Cash: \(player.cash)")
+        //print("Player: \(player)")
     }
 
-    
-    static let allTests = [
-        ("testCreatePlayerInDBPerformance", testCreatePlayerInDBPerformance),
-        //("testGame", testGame)
-    ]
 }

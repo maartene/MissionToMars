@@ -76,7 +76,7 @@ final class ImprovementTests : XCTestCase {
         return completedImprovement
     }
     
-    func testTechFirmShouldIncreaseIncomeAndTechPoints() throws {
+    /*func testTechFirmShouldIncreaseIncomeAndTechPoints() throws {
         let player = Player(username: "testUser")
         assert(player.improvements.count > 0)
         assert(player.improvements[0].shortName == .TechConsultancy)
@@ -85,11 +85,11 @@ final class ImprovementTests : XCTestCase {
         
         XCTAssertGreaterThan(updatedPlayer.cash, player.cash, " cash")
         XCTAssertGreaterThan(updatedPlayer.technologyPoints, player.technologyPoints, " tech points")
-    }
+    }*/
     
     func testUpdateOfPlayerImprovesBuildProgress() throws {
         var player = Player(username: "testUser")
-        let improvement = Improvement.getImprovementByName(.SpaceTourism)!
+        let improvement = Improvement.getImprovementByName(.CrowdFundingCampaign)!
         player.debug_setCash(improvement.cost)
         
         let buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
@@ -98,11 +98,14 @@ final class ImprovementTests : XCTestCase {
     }
     
     func testUpdateOfPlayerTriggersImprovementEffect() throws {
-        let player = Player(username: "testUser")
+        let improvement = Improvement.getImprovementByName(.InvestmentPortfolio_S)!
+        let player = Player(username: "testUser").extraIncome(amount: improvement.cost)
         let playerWouldGetCash = player.cashPerTick
+        var buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
+        buildingPlayer = buildingPlayer.updatePlayer(ticks: improvement.buildTime)
         
-        let updatedPlayer = player.updatePlayer()
-        XCTAssertGreaterThan(updatedPlayer.cash, player.cash + playerWouldGetCash , "Cash")
+        let updatedPlayer = buildingPlayer.updatePlayer()
+        XCTAssertGreaterThan(updatedPlayer.cash, buildingPlayer.cash + playerWouldGetCash , "Cash")
      }
     
     func testPlayerCannotBuildImprovementWithoutPrerequisiteTech() throws {
@@ -116,14 +119,10 @@ final class ImprovementTests : XCTestCase {
         var player = Player(username: "testUser")
         player = player.extraTech(amount: 1_000_000)
         
-        let improvement = Improvement.getImprovementByName(.DroneDeliveryService)!
+        let improvement = Improvement.getImprovementByName(.BioResearchFacility)!
         player = player.extraIncome(amount: improvement.cost)
         
-        let prereqs = improvement.requiredTechnologies
-        
-        for prereq in prereqs {
-            player = try player.investInTechnology(prereq)
-        }
+        player = try player.investInTechnology(Technology.getTechnologyByName(.AdaptiveML)!)
         
         _ = try player.startBuildImprovement(improvement, startDate: Date())
     }

@@ -10,7 +10,7 @@ import FluentSQLite
 import Vapor
 
 public struct Simulation {
-    public static let UPDATE_INTERVAL_IN_MINUTES = 60.0
+    public static let UPDATE_INTERVAL_IN_MINUTES = 30.0
     public static var GLOBAL_SIMULATION_ID: UUID?
     
     public var id: UUID?
@@ -33,7 +33,7 @@ public struct Simulation {
         while updatedSimulation.simulationShouldUpdate(currentDate: currentDate) {
             //print("updating \(result)")
             let nextUpdateDate = updatedSimulation.nextUpdateDate.addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60)
-            //let nextUpdateDate = updatedSimulation.nextUpdateDate.addingTimeInterval(0.1)
+            //let nextUpdateDate = updatedSimulation.nextUpdateDate.addingTimeInterval(1)
             let gameDate = updatedSimulation.gameDate.addingTimeInterval(24*60*60)
             let tickCount = updatedSimulation.tickCount + 1
             

@@ -8,7 +8,7 @@ Getting to Mars is hard. Very hard. This game aims to become a "hard-scifi" simu
 * Whether you spend your funds on improving technology, supporting other players, building improvements is up to you.
 
 ## Playable version online
-You can play a playable build of version 0.0.4 on https://mission2mars.space 
+You can play a playable build of version 0.0.5 on https://mission2mars.space 
 
 ## Features
 ### Whats available
@@ -19,13 +19,13 @@ You can play a playable build of version 0.0.4 on https://mission2mars.space
 * Mission stages and components;
 * Build improvements to get more cash per day, more value from research, improved production and the possibility to build mission parts
 * Stub for income;
-* Skeleton of technology system/tech tree.
+* There is a first tech tree implementation for stage one of missions.
 
 ### What's still to come
 * Incorporate flight time;
-* Technology (tech tree);
+* Technology (tech tree) for stages 2-5 (including extra improvements);
 * More interesting interaction with other players (especially when you want to support somebody else's mission);
-* More improvements;
+* Tuning;
 * User management and authentication (for now, using the randomly generated UUID for a Player will be enough);
 * Backup/restore in case something goes wrong with the database/server.
 
@@ -99,7 +99,7 @@ The game provides some debug features:
 Need to contact me? Drop an email at maarten@thedreamweb.eu or twitter at [@maarten_engels](https://twitter.com/maarten_engels)
 
 ## Licensed assets & embedded media
-* [Solar theme](https://bootswatch.com/solar/) by [Thomas Park](https://thomaspark.co/)
+* [Solar theme](https://bootswatch.com/solar/) by [Thomas Park](https://thomaspark.co/) (MIT License)
 * Icons for components, stages, technologies, company and improvements are from the [Free Icons from Streamline Icons pack](https://www.streamlineicons.com/).
-* Paul Hudson's "vapor-clean" template is the basis of this product. You can find it here. https://github.com/twostraws/vapor-clean . Also, his book was/is invuluable if you want to take Vapor development further: https://www.hackingwithswift.com/store/server-side-swift  
+* Paul Hudson's "vapor-clean" template is the basis of this product. You can find it here. https://github.com/twostraws/vapor-clean (MIT License). Also, his book was/is invaluable if you want to take Vapor development further: https://www.hackingwithswift.com/store/server-side-swift  
 * Favicon is based on a Mars image from NASA. Apart from being a very esthetically pleasing image, it also shows Gale Crater: a possible Mars landing site. Original file:  https://www.nasa.gov/mission_pages/msl/multimedia/pia14293-amended.html 
