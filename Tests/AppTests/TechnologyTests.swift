@@ -22,7 +22,7 @@ class TechnologyTests: XCTestCase {
 
     func testPlayerStartsWithTechnology() {
         let player = Player(username: "testuser")
-        XCTAssert(player.unlockedTechnologyNames.contains(.AutonomousDriving))
+        XCTAssert(player.unlockedTechnologyNames.contains(.LiIonBattery))
     }
     
     func testPlayerHasPrerequisiteTechnologies() {
@@ -31,9 +31,9 @@ class TechnologyTests: XCTestCase {
         let unlockableTechs = Technology.unlockableTechnologiesForPlayer(player)
         let unlockableTechNames = unlockableTechs.map { tech in return tech.shortName }
         
-        XCTAssert(unlockableTechNames.contains(.RadiationShielding))
-        XCTAssert(unlockableTechNames.contains(.AutonomousDriving) == false, "you already have Autonomous Driving")
-        XCTAssert(unlockableTechNames.contains(.AdvancedRocketry) == false, "you don't have the prerequisites for Advanced Rocketry")
+        XCTAssert(unlockableTechNames.contains(.AdaptiveML))
+        XCTAssert(unlockableTechNames.contains(.LiIonBattery) == false, "you already have LiIonBattery")
+        XCTAssert(unlockableTechNames.contains(.GrapheneMaterials) == false, "you don't have the prerequisites for GrapheneMaterial")
     }
     
     static let allTests = [

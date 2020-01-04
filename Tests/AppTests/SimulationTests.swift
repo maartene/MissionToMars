@@ -80,7 +80,7 @@ final class SimulationTests : XCTestCase {
         let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
         
         var player = Player(username: "testUser")
-        let improvement = Improvement.getImprovementByName(.SpaceTourism)!
+        let improvement = Improvement.getImprovementByName(.Faculty)!
         player.debug_setCash(improvement.cost)
         let buildingPlayer = try player.startBuildImprovement(improvement, startDate: gameDate)
         
@@ -92,7 +92,9 @@ final class SimulationTests : XCTestCase {
         let gameDate = Date().addingTimeInterval(Double(SECONDS_IN_YEAR))
         let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
         
-        let player = Player(username: "testUser")
+        let improvement = Improvement(shortName: .BatteryOutlet, name: "Cheap BO", description: "", cost: 1, buildTime: 1, percentageCompleted: 0, requiredTechnologyShortnames: [])
+        var player = try Player(username: "testUser").startBuildImprovement(improvement, startDate: Date())
+        player = player.updatePlayer(ticks: improvement.buildTime)
         let extraCash = player.cashPerTick
         
         let updateResult = simulation.updateSimulation(currentDate: Date(), players: [player], missions: [])

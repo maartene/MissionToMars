@@ -39,7 +39,7 @@ public struct Player: Content, SQLiteUUIDModel {
     }
     
     // resources
-    public private(set) var cash: Double = 1000
+    public private(set) var cash: Double = 250_000
     public private(set) var technologyPoints: Double = 75
         
     public private(set) var improvements: [Improvement]
@@ -60,7 +60,7 @@ public struct Player: Content, SQLiteUUIDModel {
             self.improvements = [completedConsultancy]
         }
         
-        self.unlockedTechnologyNames = [Technology.ShortName.AutonomousDriving]
+        self.unlockedTechnologyNames = [Technology.ShortName.LiIonBattery]
     }
     
     public func updatePlayer(ticks: Int = 1) -> Player {
@@ -174,6 +174,17 @@ public struct Player: Content, SQLiteUUIDModel {
         assert(changedPlayer.improvements.last!.buildStartedOn != nil)
         changedPlayer.cash -= improvement.cost
         
+        return changedPlayer
+    }
+    
+    func removeImprovement(_ improvement: Improvement) -> Player {
+        var changedPlayer = self
+        
+        if let index = changedPlayer.improvements.firstIndex(of: improvement) {
+            _ = changedPlayer.improvements.remove(at: index)
+            //print("removing \()")
+        }
+        assert(changedPlayer.improvements.contains(improvement) == false)
         return changedPlayer
     }
     
