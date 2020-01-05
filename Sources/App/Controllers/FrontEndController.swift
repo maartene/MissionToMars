@@ -408,10 +408,17 @@ class FrontEndController: RouteCollection {
         }
         
         router.get("debug", "allUsers") { req -> Future<[Player]> in
+            guard (Environment.get("DEBUG_MODE") ?? "inactive") == "active" else {
+                throw Abort(.notFound)
+            }
             return Player.query(on: req).all()
         }
         
         router.post("debug", "cash") { req -> Future<[Player]> in
+            guard (Environment.get("DEBUG_MODE") ?? "inactive") == "active" else {
+                throw Abort(.notFound)
+            }
+            
             return Player.query(on: req).all().flatMap(to: [Player].self) { players in
                 let richPlayers = players.map { player -> Player in
                     var changedPlayer = player
@@ -434,6 +441,10 @@ class FrontEndController: RouteCollection {
         }
         
         router.get("debug/dataDump") { req -> Future<DataDump> in
+            guard (Environment.get("DEBUG_MODE") ?? "inactive") == "active" else {
+                throw Abort(.notFound)
+            }
+            
             return self.getSimulation(on: req).flatMap(to: DataDump.self) { simulation in
                 return Player.query(on: req).all().flatMap(to: DataDump.self) { players in
                     return Mission.query(on: req).all().map(to: DataDump.self) { missions in
