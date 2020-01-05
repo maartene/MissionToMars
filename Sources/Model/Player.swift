@@ -43,11 +43,15 @@ public struct Player: Content, SQLiteUUIDModel {
     public private(set) var technologyPoints: Double = 75
         
     public private(set) var improvements: [Improvement]
-    public var isCurrentlyBuildingImprovement: Bool {
+    public var currentlyBuildingImprovement: Improvement? {
         let unfinishedImprovements = improvements.filter { improvement in
             return improvement.buildStartedOn != nil && improvement.isCompleted == false
         }
-        return unfinishedImprovements.count > 0
+        return unfinishedImprovements.first
+    }
+    
+    public var isCurrentlyBuildingImprovement: Bool {
+        return currentlyBuildingImprovement != nil
     }
     
     public init(username: String) {
@@ -161,8 +165,10 @@ public struct Player: Content, SQLiteUUIDModel {
             throw PlayerError.insufficientFunds
         }
         
-        guard isCurrentlyBuildingImprovement == false else {
-            throw PlayerError.playerIsAlreadyBuildingImprovement
+        if let buildingImprovement = currentlyBuildingImprovement {
+            if buildingImprovement.allowsParrallelBuild == false || improvement.allowsParrallelBuild == false {
+                throw PlayerError.playerIsAlreadyBuildingImprovement
+            }
         }
         
         let buildingImprovement = try improvement.startBuild(startDate: startDate)
@@ -185,6 +191,22 @@ public struct Player: Content, SQLiteUUIDModel {
             //print("removing \()")
         }
         assert(changedPlayer.improvements.contains(improvement) == false)
+        return changedPlayer
+    }
+    
+    public func rushImprovement(_ improvement: Improvement) throws -> Player {
+        guard cash >= improvement.cost else {
+            throw PlayerError.insufficientFunds
+        }
+        
+        var changedPlayer = self
+        
+        let rushedImprovement = try improvement.rush()
+        
+        changedPlayer = changedPlayer.removeImprovement(improvement)
+        changedPlayer.improvements.append(rushedImprovement)
+        
+        assert(changedPlayer.improvements.contains(improvement))
         return changedPlayer
     }
     

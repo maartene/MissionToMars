@@ -48,7 +48,7 @@ public struct Stage: Equatable, Codable {
     }
     
     public var unstartedComponents: [Component] {
-        return uncompletedComponents.filter { component in component.buildStartedOn == nil }
+        return uncompletedComponents.filter { component in component.buildStartedOn == nil && component.percentageCompleted < 100.0 }
     }
     
     public var percentageComplete: Double {

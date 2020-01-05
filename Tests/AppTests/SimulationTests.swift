@@ -92,7 +92,7 @@ final class SimulationTests : XCTestCase {
         let gameDate = Date().addingTimeInterval(Double(SECONDS_IN_YEAR))
         let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
         
-        let improvement = Improvement(shortName: .BatteryOutlet, name: "Cheap BO", description: "", cost: 1, buildTime: 1, percentageCompleted: 0, requiredTechnologyShortnames: [])
+        let improvement = Improvement(shortName: .BatteryOutlet, name: "Cheap BO", description: "", cost: 1, buildTime: 1, percentageCompleted: 0, requiredTechnologyShortnames: [], allowsParrallelBuild: true, rushable: true)
         var player = try Player(username: "testUser").startBuildImprovement(improvement, startDate: Date())
         player = player.updatePlayer(ticks: improvement.buildTime)
         let extraCash = player.cashPerTick

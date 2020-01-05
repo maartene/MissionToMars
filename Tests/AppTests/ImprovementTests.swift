@@ -14,7 +14,7 @@ import XCTest
 
 final class ImprovementTests : XCTestCase {
     func testStartBuildImprovement() throws {
-        let improvement = Improvement(shortName: .Faculty, name: "Factory", description: "Test", cost: 200, buildTime: 100, requiredTechnologyShortnames: [])
+        let improvement = Improvement(shortName: .Faculty, name: "Factory", description: "Test", cost: 200, buildTime: 100, requiredTechnologyShortnames: [], allowsParrallelBuild: true, rushable: true)
         XCTAssertNil(improvement.buildStartedOn)
         let buildingComponent = try improvement.startBuild(startDate: Date())
         XCTAssertNotNil(buildingComponent.buildStartedOn)
@@ -135,10 +135,47 @@ final class ImprovementTests : XCTestCase {
         var buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
         XCTAssertTrue(buildingPlayer.isCurrentlyBuildingImprovement)
         
-        let improvement2 = Improvement.getImprovementByName(.SpaceTourism)!
+        let improvement2 = Improvement.getImprovementByName(.CrowdFundingCampaign)!
         buildingPlayer = buildingPlayer.extraIncome(amount: improvement2.cost)
         
         XCTAssertThrowsError(try buildingPlayer.startBuildImprovement(improvement2, startDate: Date())) { error in print(error) }
+    }
+    
+    func testPlayerCanRushImprovement() throws {
+        var player = Player(username: "testuser")
+        let improvement = Improvement.getImprovementByName(.Faculty)!
+        player = player.extraIncome(amount: improvement.cost * 2)
+        
+        var buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
+        XCTAssertEqual(buildingPlayer.currentlyBuildingImprovement!.percentageCompleted, 0, "% complete")
+        
+        buildingPlayer = try buildingPlayer.rushImprovement(improvement)
+        
+        XCTAssertEqual(buildingPlayer.improvements.last!.shortName, Improvement.ShortName.Faculty)
+        XCTAssertGreaterThanOrEqual(buildingPlayer.improvements.last!.percentageCompleted, 100.0, "% complete")
+        
+    }
+    
+    func testPlayerCannotRushUnrushableImprovement() throws {
+        var player = Player(username: "testuser")
+        let improvement = Improvement.getImprovementByName(.InvestmentPortfolio_S)!
+        player = player.extraIncome(amount: improvement.cost * 2)
+        
+        let buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
+        XCTAssertEqual(buildingPlayer.currentlyBuildingImprovement!.percentageCompleted, 0, "% complete")
+        
+        XCTAssertThrowsError(try buildingPlayer.rushImprovement(improvement))
+    }
+    
+    func testPlayerCannotRushWithInsufficientFunds() throws {
+        var player = Player(username: "testuser")
+        let improvement = Improvement.getImprovementByName(.InvestmentPortfolio_S)!
+        player = player.extraIncome(amount: improvement.cost)
+        
+        let buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
+        XCTAssertEqual(buildingPlayer.currentlyBuildingImprovement!.percentageCompleted, 0, "% complete")
+        
+        XCTAssertThrowsError(try buildingPlayer.rushImprovement(improvement))
     }
     
     static let allTests = [
@@ -152,6 +189,9 @@ final class ImprovementTests : XCTestCase {
         ("testPlayerCannotBuildImprovementWithoutPrerequisiteTech", testPlayerCannotBuildImprovementWithoutPrerequisiteTech),
         ("testPlayerCanBuildImprovementWithPrerequisiteTech", testPlayerCanBuildImprovementWithPrerequisiteTech),
         ("testPlayerIsBuildingImprovementCannotBuildAnother", testPlayerIsBuildingImprovementCannotBuildAnother),
+        ("testPlayerCanRushImprovement", testPlayerCanRushImprovement),
+        ("testPlayerCannotRushUnrushableImprovement", testPlayerCannotRushUnrushableImprovement),
+        ("testPlayerCannotRushWithInsufficientFunds", testPlayerCannotRushWithInsufficientFunds),
     ]
 
 }
