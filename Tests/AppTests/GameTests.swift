@@ -31,6 +31,8 @@ class GameTests: XCTestCase {
         var component = mission.currentStage.components.first!
         player.ownsMissionID = mission.id
         
+        var completeComponents = [String]()
+        
         // simulate until mission done (with a maximum of a million steps)
         let maxSteps = 1_000_000
         var steps = 0
@@ -38,25 +40,32 @@ class GameTests: XCTestCase {
             player = player.updatePlayer()
             mission = mission.updateMission()
             
-            if player.cash >= component.cost && mission.currentStage.currentlyBuildingComponent == nil {
-                if let investment = try? player.investInComponent(component, in: mission, date: Date()) {
+            if player.cash >= component.cost && mission.currentStage.currentlyBuildingComponent == nil && mission.currentStage.currentlyBuildingComponent?.percentageCompleted ?? 0 < 100 && mission.currentStage.percentageComplete < 100.0 && completeComponents.contains("\(String(component.shortName.rawValue)+String(mission.currentStage.level))") == false {
+                do {
+                    let investment = try player.investInComponent(component, in: mission, date: Date())
+                    completeComponents.append("\(String(component.shortName.rawValue)+String(mission.currentStage.level))")
+                    print("Step: \(steps): now starting on: \(component.name), cash: \(investment.changedPlayer.cash)")
                     player = investment.changedPlayer
                     mission = investment.changedMission
                     if stepsCompoment == nil { stepsCompoment = steps }
+                } catch {
+                    print(error)
                 }
             }
             
             if mission.currentStage.components.first(where: {c in c == component})!.percentageCompleted >= 100.0 {
                     if mission.currentStage.unstartedComponents.count > 0 {
                         component = mission.currentStage.unstartedComponents.first!
-                        print("Step: \(steps): now starting on: \(component.name)")
+                        //print("Step: \(steps): now starting on: \(component.name)")
+                        //completeComponents.append(component)
                     } else {
                         do {
                             mission = try mission.goToNextStage()
                             print("Step: \(steps): now on stage: \(mission.currentStageLevel)")
                             if mission.currentStage.unstartedComponents.count > 0 {
                                 component = mission.currentStage.unstartedComponents.first!
-                                print("Step: \(steps): now starting on: \(component.name)")
+                                //print("Step: \(steps): now starting on: \(component.name)")
+                                //completeComponents.append(component)
                             }
                         } catch {
                             break
@@ -68,6 +77,8 @@ class GameTests: XCTestCase {
                 if let improvement = Improvement.unlockedImprovementsForPlayer(player).filter({impr in player.improvements.contains(impr) == false}).first {
                     if player.cash >= improvement.cost {
                         player = try player.startBuildImprovement(improvement, startDate: Date())
+                        if improvement.shortName != .CrowdFundingCampaign {
+                            print("Step \(steps): Now starting on build of: \(improvement.name), cash: \(player.cash)") }
                         if stepsImprovement == nil { stepsImprovement = steps }
                     }
                 }
@@ -76,8 +87,13 @@ class GameTests: XCTestCase {
             if let tech = Technology.unlockableTechnologiesForPlayer(player).first {
                 if player.technologyPoints >= tech.cost {
                     player = try player.investInTechnology(tech)
+                    print("Step \(steps): Now investing in tech: \(tech.name), cash: \(player.cash)")
                     if stepsTech == nil { stepsTech = steps }
                 }
+            }
+            
+            if mission.missionComplete {
+                print("Completed the mission in \(steps) steps.")
             }
             
             steps += 1

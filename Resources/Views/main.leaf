@@ -140,7 +140,7 @@
                             <div class="col"><b>#(improvement.name)</b> #(improvement.description) #if(improvement.percentageCompleted < 100) { <br/>Currently building: 
                             <div class="progress">
                                     <div class="progress-bar" role="progressbar" style="width: #decimal(improvement.percentageCompleted)%" aria-valuenow="#decimal(improvement.percentageCompleted)" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>#decimal(improvement.percentageCompleted)% done. }
+                            </div>#decimal(improvement.percentageCompleted)% done. #if(improvement.rushable){<a class="btn btn-sm btn-warning #if(improvement.cost > player.cash) {disabled}" href="/rush/improvements/#(improvement.shortName)">Rush</a>} }
                             </div>
                         </li>
                     }

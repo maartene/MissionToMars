@@ -7,7 +7,8 @@
 
     #if(errorMessage != "noError") {
         <h2>Oh ooh!</h2>
-        #(errorMessage)
+        <p class="text-warning">#(errorMessage)</p>
+        <a class="btn btn-primary" href="/create/player">Back</a>
     }
 }
 

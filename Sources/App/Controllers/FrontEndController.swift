@@ -33,8 +33,12 @@ class FrontEndController: RouteCollection {
                 case .success(let player):
                     context.uuid = String(player.id!)
                 case .failure(let error):
-                    context.errorMessage = error.localizedDescription
-                    print(context.errorMessage)
+                    switch error {
+                    case .userAlreadyExists:
+                        context.errorMessage = "A user with username '\(username)' already exists. Please choose another one."
+                    default:
+                        context.errorMessage = error.localizedDescription
+                    }
                 }
                 
                 return try req.view().render("userCreated", context)
@@ -55,7 +59,7 @@ class FrontEndController: RouteCollection {
         
         router.get("main") { req -> Future<View> in
             guard let id = self.getPlayerIDFromSession(on: req) else {
-                throw Abort(.unauthorized)
+                return try req.view().render("index")
             }
             
             return self.getSimulation(on: req).flatMap(to: View.self) { simulation in
@@ -300,12 +304,48 @@ class FrontEndController: RouteCollection {
                         self.errorMessages[player.id!] = "Insufficient funds to build \(improvement.name)."
                         return Future.map(on: req) { return req.redirect(to: "/main") }
                     case Player.PlayerError.playerIsAlreadyBuildingImprovement:
-                        self.errorMessages[player.id!] = "You're already building another improvement. You can only build one at a time."
+                        self.errorMessages[player.id!] = "You can't build \(improvement.name) while you are building \(player.currentlyBuildingImprovement?.name ?? "unknown")"
                         return Future.map(on: req) { return req.redirect(to: "/main") }
                     default:
                         throw error
                     }
                     return Future.map(on: req) { return req.redirect(to: "/main") }
+                }
+            }
+        }
+        
+        router.get("rush/improvements", Int.parameter) { req -> Future<Response> in
+            let number: Int = try req.parameters.next()
+            
+            guard let shortName = Improvement.ShortName(rawValue: number) else {
+                return Future.map(on: req) { return req.redirect(to: "/main")}
+            }
+            
+            return try self.getPlayerFromSession(on: req).flatMap(to: Response.self) {
+            player in
+                guard let improvement = Improvement.getImprovementByName(shortName) else {
+                    self.errorMessages[player.id!] = "No improvement with shortName \(shortName) found."
+                    return Future.map(on: req) { return req.redirect(to: "/main")}
+                }
+                
+                do {
+                    let rushingPlayer = try player.rushImprovement(improvement)
+                    return rushingPlayer.save(on: req).map(to: Response.self) { savedPlayer in
+                        return req.redirect(to: "/main")
+                    }
+                } catch {
+                    switch error {
+                    case Player.PlayerError.insufficientFunds:
+                        self.errorMessages[player.id!] = "Insufficient funds to rush \(improvement.name)."
+                        return Future.map(on: req) { return req.redirect(to: "/main") }
+                    case Improvement.ImprovementError.improvementCannotBeRushed:
+                        self.errorMessages[player.id!] = "\(improvement.name) cannot be rushed."
+                        return Future.map(on: req) { return req.redirect(to: "/main") }
+                    default:
+                        self.errorMessages[player.id!] = error.localizedDescription
+                        return Future.map(on: req) { return req.redirect(to: "/main") }
+                    }
+                    //return Future.map(on: req) { return req.redirect(to: "/main") }
                 }
             }
         }
