@@ -13,6 +13,7 @@ import Model
 class FrontEndController: RouteCollection {
     
     var errorMessages = [UUID: String?]()
+    var infoMessages = [UUID: String?]()
     
     func boot(router: Router) throws {
         router.get("create/player") { req -> Future<View> in
@@ -294,6 +295,7 @@ class FrontEndController: RouteCollection {
                     
                     let buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
                     return buildingPlayer.save(on: req).map(to: Response.self) { savedPlayer in
+                        self.infoMessages[savedPlayer.id!] = "Started working on \(improvement.name)."
                         return req.redirect(to: "/main")
                     }
                 } catch {
@@ -331,6 +333,7 @@ class FrontEndController: RouteCollection {
                 do {
                     let rushingPlayer = try player.rushImprovement(improvement)
                     return rushingPlayer.save(on: req).map(to: Response.self) { savedPlayer in
+                        self.infoMessages[savedPlayer.id!] = "Succesfully rushed \(improvement.name)."
                         return req.redirect(to: "/main")
                     }
                 } catch {
@@ -385,6 +388,7 @@ class FrontEndController: RouteCollection {
                     
                     let unlockingPlayer = try player.investInTechnology(technology)
                     return unlockingPlayer.save(on: req).map(to: Response.self) { savedPlayer in
+                        self.infoMessages[savedPlayer.id!] = "Succesfully unlocked \(technology.name)."
                         return req.redirect(to: "/main")
                     }
                 } catch {
@@ -487,6 +491,7 @@ class FrontEndController: RouteCollection {
             let currentBuildingComponent: Component?
             let simulation: Simulation
             let errorMessage: String?
+            let infoMessage: String?
             let currentStageComplete: Bool
             let unlockableTechnologogies: [Technology]
             let unlockedTechnologies: [Technology]
@@ -503,6 +508,8 @@ class FrontEndController: RouteCollection {
             
             let errorMessage = self.errorMessages[id] ?? nil
             self.errorMessages.removeValue(forKey: id)
+            let infoMessage = self.infoMessages[id] ?? nil
+            self.infoMessages.removeValue(forKey: id)
  
             // does this player have his/her own mission?
             if let missionID = player.ownsMissionID {
@@ -526,7 +533,7 @@ class FrontEndController: RouteCollection {
                         }
                     }
                     
-                    let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponent: mission.currentStage.currentlyBuildingComponent, simulation: simulation, errorMessage: errorMessage, currentStageComplete: mission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: unlockedComponents, techlockedComponents: techlockedComponents, playerIsBuildingComponent: mission.currentStage.currentlyBuildingComponent != nil)
+                    let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponent: mission.currentStage.currentlyBuildingComponent, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage, currentStageComplete: mission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: unlockedComponents, techlockedComponents: techlockedComponents, playerIsBuildingComponent: mission.currentStage.currentlyBuildingComponent != nil)
                     
                     return try req.view().render("main", context)
                 }
@@ -548,13 +555,13 @@ class FrontEndController: RouteCollection {
                             return try req.view().render("win")
                         }
                         
-                        let context = MainContext(player: player, mission: supportedMission, currentStage: supportedMission.currentStage, currentBuildingComponent: supportedMission.currentStage.currentlyBuildingComponent, simulation: simulation, errorMessage: errorMessage, currentStageComplete: supportedMission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: supportedMission.currentStage.components, techlockedComponents: [], playerIsBuildingComponent: false)
+                        let context = MainContext(player: player, mission: supportedMission, currentStage: supportedMission.currentStage, currentBuildingComponent: supportedMission.currentStage.currentlyBuildingComponent, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage, currentStageComplete: supportedMission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: supportedMission.currentStage.components, techlockedComponents: [], playerIsBuildingComponent: false)
                         
                         return try req.view().render("main", context)
                     }
                 }
             } else {
-                let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponent: nil, simulation: simulation, errorMessage: errorMessage, currentStageComplete: false, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: [], techlockedComponents: [], playerIsBuildingComponent: false)
+                let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponent: nil, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage,  currentStageComplete: false, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: [], techlockedComponents: [], playerIsBuildingComponent: false)
             
                 return try req.view().render("main", context)
             }
