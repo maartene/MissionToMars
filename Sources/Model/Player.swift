@@ -67,6 +67,15 @@ public struct Player: Content, SQLiteUUIDModel {
         self.unlockedTechnologyNames = [Technology.ShortName.LiIonBattery]
     }
     
+    var buildTimeFactor: Double {
+        let value = improvements.reduce(1.0) { result, improvement in
+            return result - improvement.lowersImprovementBuildTime
+        }
+        
+        return max(value, 0.1)
+    }
+    
+    
     public func updatePlayer(ticks: Int = 1) -> Player {
         var updatedPlayer = self
         
@@ -75,7 +84,7 @@ public struct Player: Content, SQLiteUUIDModel {
             updatedPlayer.technologyPoints += 7
             
             let updatedImprovements = updatedPlayer.improvements.map { improvement in
-                return improvement.updateImprovement()}
+                return improvement.updateImprovement(buildTimeFactor: buildTimeFactor)}
             updatedPlayer.improvements = updatedImprovements
             
             for improvement in updatedPlayer.improvements {
