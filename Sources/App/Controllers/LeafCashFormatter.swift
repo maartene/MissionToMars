@@ -15,7 +15,9 @@ public final class CashTag: TagRenderer {
         return Future.map(on: tag.container) {
             if let double = tag.parameters[0].double {
                 let cashInt = Int(double)
-                if cashInt / 1_000_000 > 1 {
+                if cashInt / 1_000_000_000 > 1 {
+                    return .string(String("\(cashInt / 1_000_000_000) billion"))
+                } else if cashInt / 1_000_000 > 1 {
                     return .string(String("\(cashInt / 1_000_000) million"))
                 } else if cashInt / 1_000 > 1 {
                     return .string(String("\(cashInt / 1_000) thousand"))
