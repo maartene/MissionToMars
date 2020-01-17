@@ -67,15 +67,38 @@ public struct Player: Content, SQLiteUUIDModel {
         self.unlockedTechnologyNames = [Technology.ShortName.LiIonBattery]
     }
     
+    var completedImprovements: [Improvement] {
+        return improvements.filter { improvement in
+            return improvement.isCompleted
+        }
+    }
+    
+    var buildTimeFactor: Double {
+        let allEffects = completedImprovements.map { improvement in
+            return improvement.staticEffects
+            }.joined()
+        
+        let rawBuildTimeFactor = allEffects.reduce(1.0) { result, effect in
+            switch effect {
+            case .lowerProductionTimePercentage(let percentage):
+                return result - (percentage / 100.0)
+            default:
+                return result
+            }
+        }
+        
+        return max(rawBuildTimeFactor, 0.1)
+    }
+    
     public func updatePlayer(ticks: Int = 1) -> Player {
         var updatedPlayer = self
         
         for _ in 0 ..< ticks {
-            updatedPlayer.cash += cashPerTick
-            updatedPlayer.technologyPoints += 7
+            //updatedPlayer.cash += cashPerTick
+            //updatedPlayer.technologyPoints += 7
             
             let updatedImprovements = updatedPlayer.improvements.map { improvement in
-                return improvement.updateImprovement()}
+                return improvement.updateImprovement(buildTimeFactor: buildTimeFactor)}
             updatedPlayer.improvements = updatedImprovements
             
             for improvement in updatedPlayer.improvements {
@@ -83,11 +106,52 @@ public struct Player: Content, SQLiteUUIDModel {
             }
         }
         
+        //print("cashPerTick: \(cashPerTick)")
+        //print(updatedPlayer)
         return updatedPlayer
     }
     
     public var cashPerTick: Double {
-        return BASE_CASH_PER_TICK
+        let allEffects = completedImprovements.map { improvement in
+            return improvement.updateEffects
+            }.joined()
+        
+        let flatIncomePerTick = allEffects.reduce(0.0) { result, effect in
+            switch effect {
+            case .extraIncomeFlat(let amount):
+                return result + amount
+            default:
+                return result
+            }
+        }
+        
+        let interestPerTick = allEffects.reduce(0.0) { result, effect in
+            switch effect {
+            case .extraIncomePercentage(let percentage):
+                return result + (percentage / 100.0)
+            default:
+                return result
+            }
+        }
+        
+        return flatIncomePerTick + cash * interestPerTick
+    }
+    
+    public var techPerTick: Double {
+        let allEffects = completedImprovements.map { improvement in
+            return improvement.updateEffects
+            }.joined()
+        
+        let flatTechPerTick = allEffects.reduce(0.0) { result, effect in
+            switch effect {
+            case .extraTechFlat(let amount):
+                return result + amount
+            default:
+                return result
+            }
+        }
+        
+        return flatTechPerTick
     }
     
     func extraIncome(amount: Double) -> Player {
@@ -192,6 +256,14 @@ public struct Player: Content, SQLiteUUIDModel {
         }
         assert(changedPlayer.improvements.contains(improvement) == false)
         return changedPlayer
+    }
+    
+    func removeImprovement(_ shortName: Improvement.ShortName) -> Player {
+        guard let improvement = Improvement.getImprovementByName(shortName) else {
+            return self
+        }
+        
+        return removeImprovement(improvement)
     }
     
     public func rushImprovement(_ improvement: Improvement) throws -> Player {

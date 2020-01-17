@@ -105,6 +105,8 @@ final class ImprovementTests : XCTestCase {
         buildingPlayer = buildingPlayer.updatePlayer(ticks: improvement.buildTime)
         
         let updatedPlayer = buildingPlayer.updatePlayer()
+        print("Player would get cash: \(buildingPlayer.cashPerTick)")
+        print("Cash before update: \(buildingPlayer.cash) after update: \(updatedPlayer.cash)")
         XCTAssertGreaterThan(updatedPlayer.cash, buildingPlayer.cash + playerWouldGetCash , "Cash")
      }
     
@@ -178,6 +180,45 @@ final class ImprovementTests : XCTestCase {
         XCTAssertThrowsError(try buildingPlayer.rushImprovement(improvement))
     }
     
+    // test static effect
+    func testBuildTimeFactorShortensBuildTime() throws {
+        let improvement1 = Improvement.getImprovementByName(.CrowdFundingCampaign)!
+        let improvement2 = Improvement.getImprovementByName(.CrowdFundingCampaign)!
+        let ikea = Improvement.getImprovementByName(.PrefabFurniture)!
+        
+        var player1 = Player(username: "testUser")
+        player1 = player1.extraIncome(amount: improvement1.cost)
+        player1 = try player1.startBuildImprovement(improvement1, startDate: Date())
+        XCTAssertEqual(player1.currentlyBuildingImprovement?.percentageCompleted ?? 1.0, 0.0, "%")
+        
+        var player2 = Player(username: "testUser2")
+        player2 = player2.extraIncome(amount: improvement2.cost + ikea.cost)
+        player2 = try player2.startBuildImprovement(ikea, startDate: Date())
+        player2 = player2.updatePlayer(ticks: ikea.buildTime + 1)
+        XCTAssert(player2.improvements.filter { improvement in improvement.isCompleted }.contains(ikea))
+        player2 = try player2.startBuildImprovement(improvement2, startDate: Date())
+        XCTAssertEqual(player2.currentlyBuildingImprovement?.percentageCompleted ?? 1.0, 0.0, "%")
+        player1 = player1.updatePlayer()
+        player2 = player2.updatePlayer()
+        
+        XCTAssertGreaterThan(player2.currentlyBuildingImprovement?.percentageCompleted ?? 0, player1.currentlyBuildingImprovement?.percentageCompleted ?? 0)
+        
+    }
+    
+    // test static effect
+    func testBuildingCanIncreaseBuiltTimeFactor() throws {
+        let player = Player(username: "testUser")
+        XCTAssertEqual(player.buildTimeFactor, 1.0)
+        
+        // Build Ikea store
+        let ikea = Improvement.getImprovementByName(.PrefabFurniture)!
+        var ikeaPlayer = player.extraIncome(amount: ikea.cost)
+        ikeaPlayer = try ikeaPlayer.startBuildImprovement(ikea, startDate: Date())
+        ikeaPlayer = ikeaPlayer.updatePlayer(ticks: ikea.buildTime + 1)
+        
+        XCTAssertLessThan(ikeaPlayer.buildTimeFactor, player.buildTimeFactor)
+    }
+    
     static let allTests = [
         ("testStartBuildImprovement", testStartBuildImprovement),
         ("testGetImprovementByName", testGetImprovementByName),
@@ -192,6 +233,8 @@ final class ImprovementTests : XCTestCase {
         ("testPlayerCanRushImprovement", testPlayerCanRushImprovement),
         ("testPlayerCannotRushUnrushableImprovement", testPlayerCannotRushUnrushableImprovement),
         ("testPlayerCannotRushWithInsufficientFunds", testPlayerCannotRushWithInsufficientFunds),
+        ("testBuildTimeFactorShortensBuildTime", testBuildTimeFactorShortensBuildTime),
+        ("testBuildingCanIncreaseBuiltTimeFactor", testBuildingCanIncreaseBuiltTimeFactor),
     ]
 
 }

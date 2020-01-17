@@ -56,11 +56,20 @@ final class PlayerTests : XCTestCase {
         XCTAssertThrowsError(try givingPlayer.donate(techPoints: givingPlayer.technologyPoints + 1, to: receivingPlayer))
     }
     
+    func testUpdatePlayerWithoutImprovementsShouldNotChangePlayer() throws {
+        var player = Player(username: "testPlayer")
+        player = player.removeImprovement(.TechConsultancy)
+        let updatedPlayer = player.updatePlayer()
+        XCTAssertEqual(player.cash, updatedPlayer.cash)
+        XCTAssertEqual(player.technologyPoints, updatedPlayer.technologyPoints)
+    }
+    
     static let allTests = [
         ("testUpdatePlayer", testUpdatePlayer),
         ("testDonateCashToPlayer", testDonateCashToPlayer),
         ("testDonateTechnologyToPlayer", testDonateTechnologyToPlayer),
         ("testCannotDonateMoreCashThanAvailable", testCannotDonateMoreCashThanAvailable),
         ("testCannotDonateMoreTechThanAvailable", testCannotDonateMoreTechThanAvailable),
+        ("testUpdatePlayerWithoutImprovementsShouldNotChangePlayer", testUpdatePlayerWithoutImprovementsShouldNotChangePlayer),
     ]
 }

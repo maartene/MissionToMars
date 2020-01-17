@@ -27,15 +27,6 @@
       selectedDebuggerIdentifier = "Xcode.DebuggerFoundation.Debugger.LLDB"
       selectedLauncherIdentifier = "Xcode.DebuggerFoundation.Launcher.LLDB"
       shouldUseLaunchSchemeArgsEnv = "NO">
-      <MacroExpansion>
-         <BuildableReference
-            BuildableIdentifier = "primary"
-            BlueprintIdentifier = "MissionToMars::Run"
-            BuildableName = "Run"
-            BlueprintName = "Run"
-            ReferencedContainer = "container:MissionToMars.xcodeproj">
-         </BuildableReference>
-      </MacroExpansion>
       <EnvironmentVariables>
          <EnvironmentVariable
             key = "USE_MEMORY_STORAGE"
@@ -78,18 +69,8 @@
       </BuildableProductRunnable>
       <EnvironmentVariables>
          <EnvironmentVariable
-            key = "MAILJET_API_KEY"
-            value = "2c07970d717a8f060facab74164287bf"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-         <EnvironmentVariable
             key = "DEBUG_MODE"
             value = "active"
-            isEnabled = "YES">
-         </EnvironmentVariable>
-         <EnvironmentVariable
-            key = "MAILJET_SECRET_KEY"
-            value = "68f136b1f7abb7149eff7b1485cdce3a"
             isEnabled = "YES">
          </EnvironmentVariable>
       </EnvironmentVariables>
