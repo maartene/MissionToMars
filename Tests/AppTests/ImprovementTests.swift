@@ -180,6 +180,7 @@ final class ImprovementTests : XCTestCase {
         XCTAssertThrowsError(try buildingPlayer.rushImprovement(improvement))
     }
     
+    // test static effect
     func testBuildTimeFactorShortensBuildTime() throws {
         let improvement1 = Improvement.getImprovementByName(.CrowdFundingCampaign)!
         let improvement2 = Improvement.getImprovementByName(.CrowdFundingCampaign)!
@@ -204,6 +205,7 @@ final class ImprovementTests : XCTestCase {
         
     }
     
+    // test static effect
     func testBuildingCanIncreaseBuiltTimeFactor() throws {
         let player = Player(username: "testUser")
         XCTAssertEqual(player.buildTimeFactor, 1.0)

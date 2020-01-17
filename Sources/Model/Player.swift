@@ -137,6 +137,23 @@ public struct Player: Content, SQLiteUUIDModel {
         return flatIncomePerTick + cash * interestPerTick
     }
     
+    public var techPerTick: Double {
+        let allEffects = completedImprovements.map { improvement in
+            return improvement.updateEffects
+            }.joined()
+        
+        let flatTechPerTick = allEffects.reduce(0.0) { result, effect in
+            switch effect {
+            case .extraTechFlat(let amount):
+                return result + amount
+            default:
+                return result
+            }
+        }
+        
+        return flatTechPerTick
+    }
+    
     func extraIncome(amount: Double) -> Player {
         var changedPlayer = self
         changedPlayer.cash += amount
