@@ -443,6 +443,55 @@ class FrontEndController: RouteCollection {
             }
         }
         
+        router.get("mission/supportingPlayers") { req -> Future<View> in
+            struct SupportingPlayerContext: Content {
+                let player: Player
+                let supportingPlayerNames: [String]
+                let missionName: String
+            }
+            
+            return try self.getPlayerFromSession(on: req).flatMap(to: View.self) {
+            player in
+                if player.ownsMissionID != nil {
+                    return try player.getSupportedMission(on: req).flatMap(to: View.self) { mission in
+                        guard let mission = mission else {
+                            throw Abort(.notFound, reason: "No mission found for player \(player.username)")
+                        }
+                        return try mission.getSupportingPlayers(on: req).flatMap(to: View.self) { supportingPlayers in
+                            var result = supportingPlayers.map { player in
+                                return player.username
+                            }
+                            result.insert(player.username + " (owner)", at: 0)
+                            let context = SupportingPlayerContext(player: player, supportingPlayerNames: result, missionName: mission.missionName)
+                            return try req.view().render("mission_supportingPlayers", context)
+                        }
+                    }
+                } else if player.supportsPlayerID != nil {
+                    return try player.getSupportedPlayer(on: req).flatMap(to: View.self) { supportedPlayer in
+                        guard let supportedPlayer = supportedPlayer else {
+                            throw Abort(.notFound, reason: "No supported player found.")
+                        }
+                        
+                        return try supportedPlayer.getSupportedMission(on: req).flatMap(to: View.self) { mission in
+                            guard let mission = mission else {
+                                throw Abort(.notFound, reason: "No mission found.")
+                            }
+                            return try mission.getSupportingPlayers(on: req).flatMap(to: View.self) { supportingPlayers in
+                                var result = supportingPlayers.map { player in
+                                    return player.username
+                                }
+                                result.insert(supportedPlayer.username + " (owner)", at: 0)
+                                let context = SupportingPlayerContext(player: player, supportingPlayerNames: result, missionName: mission.missionName)
+                                return try req.view().render("mission_supportingPlayers", context)
+                            }
+                        }
+                    }
+                } else {
+                    throw Abort(.notFound, reason: "No mission for player.")
+                }
+            }
+        }
+        
         router.get("unlock/technologies") { req -> Future<View> in
             struct UnlockTechnologyContext: Codable {
                 let player: Player

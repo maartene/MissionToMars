@@ -1,0 +1,13 @@
+#set("body") {
+    <h2>Players supporting mission <b>#(missionName)</b></h2>
+    <div class="py-3">
+      <ul class="list-group">
+        #for(player in supportingPlayerNames) {
+          <li class="list-group-item">#(player)</li>
+        } 
+      </ul>
+      <a href="/mission" class="btn btn-secondary mt-3">Back</a>
+    </div>
+}
+
+#embed("master")

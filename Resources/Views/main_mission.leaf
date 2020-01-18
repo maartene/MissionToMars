@@ -2,6 +2,7 @@
 <div class="row px-3">
     <h3>Current mission: <span class="text-info">#(mission.missionName)</span>#if(player.ownsMissionID) {&nbsp;&nbsp;<a href="/edit/mission" class="btn btn-sm btn-warning" >Rename mission</a>}</h3>
     <p class="text-secondary">Finishing the first manned flight to Mars to settle a colony there is the objective of this game. You can choose to create your own mission or support another player. Note: going in alone takes a very long time.</p>
+    #if(mission) {<a href="/mission/supportingPlayers" class="btn btn-primary">Supporting players</a>}
 </div>
 <div class="row px-3">
     <div class="col">
