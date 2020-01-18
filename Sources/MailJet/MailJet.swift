@@ -2,7 +2,7 @@
 import Foundation
 import Vapor
 
-struct MailJetConfig {
+public struct MailJetConfig {
     
     let apiKey: String
     let secretKey: String
@@ -16,11 +16,11 @@ struct MailJetConfig {
         self.senderEmail = senderEmail
     }
     
-    func sendMessage(to toEmail: String, toName: String, subject: String, message: String, on container: Container) {
-        sendMessages([Message(from: EmailAddress(name: senderName, email: senderEmail), to: [EmailAddress(name: toName, email: toEmail)], subject: subject, textPart: message)], on: container)
+    public func sendMessage(to toEmail: String, toName: String, subject: String, message: String, htmlMessage: String?, on container: Container) {
+        sendMessages([Message(from: EmailAddress(name: senderName, email: senderEmail), to: [EmailAddress(name: toName, email: toEmail)], subject: subject, textPart: message, htmlPart: htmlMessage)], on: container)
     }
     
-    func sendMessages(_ messages: [Message], on container: Container) {
+    public func sendMessages(_ messages: [Message], on container: Container) {
         do {
             
         // Connect a new client to the supplied hostname.
@@ -40,23 +40,24 @@ struct MailJetConfig {
             
             //print(request)
             
-            let res = try client.send(request).wait()
-            
-            print(res)
+            _ = client.send(request)
         } catch {
             print(error)
         }
     }
 }
 
-struct EmailAddress: Codable {
+public struct EmailAddress: Codable {
     let name: String
     let email: String
 }
 
-struct Message: Content {
+public struct Message: Content {
     let from: EmailAddress
     let to: [EmailAddress]
     let subject: String
     let textPart: String
+    let htmlPart: String?
+    
+    
 }

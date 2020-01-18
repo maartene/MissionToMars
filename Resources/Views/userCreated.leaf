@@ -1,7 +1,8 @@
 #set("body") {
     #if(uuid != "unknown") {
         <h2>Welcome!</h2>
-        <p>Please remember your unique code: #(uuid)</p>
+        <h3>Please remember your unique code: <span class="text-primary">#(uuid)</span></h3>
+        <p>An email was sent to your email address <span class="text-success">#(email)</span> with this information.</p>
         <p><a href="/" class="btn btn-success">Login</a></p>
     }
 

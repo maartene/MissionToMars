@@ -9,6 +9,7 @@ import Foundation
 import Vapor
 import Leaf
 import Model
+import MailJet
 
 class FrontEndController: RouteCollection {
     
@@ -23,20 +24,48 @@ class FrontEndController: RouteCollection {
         router.post("create/player") { req -> Future<View> in
             struct CreateCharacterContext: Codable {
                 var errorMessage = "noError"
+                var email = ""
                 var uuid = "unknown"
             }
-            let username: String = try req.content.syncGet(at: "username")
+            let emailAddress: String = try req.content.syncGet(at: "emailAddress")
+            let name: String = try req.content.syncGet(at: "name")
             
-            return Player.createUser(username: username, on: req).flatMap(to: View.self) { result in
+            return Player.createUser(emailAddress: emailAddress, name: name, on: req).flatMap(to: View.self) { result in
                 var context = CreateCharacterContext()
                 
                 switch result {
                 case .success(let player):
                     context.uuid = String(player.id!)
+                    context.email = player.emailAddress
+                    
+                    let publicKey = Environment.get("MAILJET_API_KEY") ?? ""
+                    
+                    let privateKey = Environment.get("MAILJET_SECRET_KEY") ?? ""
+                    
+                    let mailJetConfig = MailJetConfig(apiKey: publicKey, secretKey: privateKey, senderName: "Mission2Mars Support", senderEmail: "support@mission2mars.space")
+                    mailJetConfig.sendMessage(to: emailAddress, toName: name, subject: "Your login id", message: """
+                        Welcome \(player.name) to Mission2Mars
+                        
+                        Your login id is: \(player.id!)
+                        Please keep this code secret, as there is no other authentication method at this time!
+                        
+                        Have fun!
+                        
+                        - the Mission2Mars team
+                        """, htmlMessage: """
+                        <h1>Welcome \(player.name) to Mission2Mars</h1>
+                        
+                        <h3>Your login id is: <b>\(player.id!)</b></h3>
+                        <p>Please keep this code secret, as there is no other authentication method at this time!</p>
+                        <p>&nbsp;</p>
+                        <p>Have fun!</p>
+                        <p>&nbsp;</p>
+                        <p>- the Mission2Mars team</p>
+                        """, on: req)
                 case .failure(let error):
                     switch error {
                     case .userAlreadyExists:
-                        context.errorMessage = "A user with username '\(username)' already exists. Please choose another one."
+                        context.errorMessage = "A user with email address '\(emailAddress)' already exists. Please choose another one."
                     default:
                         context.errorMessage = error.localizedDescription
                     }
@@ -162,7 +191,7 @@ class FrontEndController: RouteCollection {
                 return playerFuture.flatMap(to: View.self) { players in
                     var mcs = [MissionContext]()
                     for i in 0 ..< players.count {
-                        mcs.append(MissionContext(id: missions[i].id!, missionName: missions[i].missionName, percentageDone: missions[i].percentageDone, owningPlayerName: players[i].username))
+                        mcs.append(MissionContext(id: missions[i].id!, missionName: missions[i].missionName, percentageDone: missions[i].percentageDone, owningPlayerName: players[i].name))
                     }
                     return try req.view().render("missions", ["missions": mcs])
                 }
@@ -204,7 +233,7 @@ class FrontEndController: RouteCollection {
                     guard let supportedPlayer = supportedPlayer else {
                         throw Abort(.notFound, reason: "No supported user found.")
                     }
-                    let context = DonateContext(player: player, supportedPlayerName: supportedPlayer.username)
+                    let context = DonateContext(player: player, supportedPlayerName: supportedPlayer.name)
                     return try req.view().render("donate", context)
                 }
             }
@@ -455,13 +484,13 @@ class FrontEndController: RouteCollection {
                 if player.ownsMissionID != nil {
                     return try player.getSupportedMission(on: req).flatMap(to: View.self) { mission in
                         guard let mission = mission else {
-                            throw Abort(.notFound, reason: "No mission found for player \(player.username)")
+                            throw Abort(.notFound, reason: "No mission found for player \(player.name)")
                         }
                         return try mission.getSupportingPlayers(on: req).flatMap(to: View.self) { supportingPlayers in
                             var result = supportingPlayers.map { player in
-                                return player.username
+                                return player.name
                             }
-                            result.insert(player.username + " (owner)", at: 0)
+                            result.insert(player.name + " (owner)", at: 0)
                             let context = SupportingPlayerContext(player: player, supportingPlayerNames: result, missionName: mission.missionName)
                             return try req.view().render("mission_supportingPlayers", context)
                         }
@@ -478,9 +507,9 @@ class FrontEndController: RouteCollection {
                             }
                             return try mission.getSupportingPlayers(on: req).flatMap(to: View.self) { supportingPlayers in
                                 var result = supportingPlayers.map { player in
-                                    return player.username
+                                    return player.name
                                 }
-                                result.insert(supportedPlayer.username + " (owner)", at: 0)
+                                result.insert(supportedPlayer.name + " (owner)", at: 0)
                                 let context = SupportingPlayerContext(player: player, supportingPlayerNames: result, missionName: mission.missionName)
                                 return try req.view().render("mission_supportingPlayers", context)
                             }

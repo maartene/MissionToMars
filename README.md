@@ -8,7 +8,7 @@ Getting to Mars is hard. Very hard. This game aims to become a "hard-scifi" simu
 * Whether you spend your funds on improving technology, supporting other players, building improvements is up to you.
 
 ## Playable version online
-You can play a playable build of version 0.0.8 on https://mission2mars.space 
+You can play a playable build of version 0.0.9 on https://mission2mars.space 
 
 ## Features
 ### Whats available
@@ -19,6 +19,7 @@ You can play a playable build of version 0.0.8 on https://mission2mars.space
 * Mission stages and components;
 * Build improvements to get more cash per day, more value from research, improved production and the possibility to build mission parts
 * Stub for income;
+* Email integration using [MailJet](https://www.mailjet.com)
 * There is a first tech tree implementation for stage one of missions.
 
 ### What's still to come

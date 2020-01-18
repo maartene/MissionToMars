@@ -26,7 +26,8 @@ public struct Player: Content, SQLiteUUIDModel {
     
     public var id: UUID?
     
-    public let username: String
+    public let emailAddress: String
+    public let name: String
     
     public var ownsMissionID: UUID?
     public var supportsPlayerID: UUID?
@@ -54,8 +55,9 @@ public struct Player: Content, SQLiteUUIDModel {
         return currentlyBuildingImprovement != nil
     }
     
-    public init(username: String) {
-        self.username = username
+    public init(emailAddress: String, name: String) {
+        self.emailAddress = emailAddress
+        self.name = name
         self.improvements = []
         
         let techConsultancy = Improvement.getImprovementByName(.TechConsultancy)!
@@ -310,12 +312,12 @@ extension Player: Migration { }
 
 // Database aware actions for Player model
 extension Player {
-    public static func createUser(username: String, on conn: DatabaseConnectable) -> Future<Result<Player, PlayerError>> {
-        let player = Player(username: username)
+    public static func createUser(emailAddress: String, name: String, on conn: DatabaseConnectable) -> Future<Result<Player, PlayerError>> {
+        let player = Player(emailAddress: emailAddress, name: name)
         do {
             try player.validate()
             
-            return Player.query(on: conn).filter(\.username, .equal, username).first().flatMap(to: Result<Player, PlayerError>.self) { existingUser in
+            return Player.query(on: conn).filter(\.emailAddress, .equal, emailAddress).first().flatMap(to: Result<Player, PlayerError>.self) { existingUser in
                 if existingUser != nil {
                     return Future.map(on: conn) { () -> Result<Player, PlayerError> in
                         return .failure(.userAlreadyExists)
@@ -422,7 +424,8 @@ extension Player: Validatable {
     /// See `Validatable`.
     public static func validations() throws -> Validations<Player> {
         var validations = Validations(Player.self)
-        try validations.add(\.username, .count(3...) && .alphanumeric)
+        try validations.add(\.emailAddress, .email)
+        try validations.add(\.name, .count(3...) && .ascii)
         return validations
     }
 }

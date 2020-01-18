@@ -1,5 +1,5 @@
 #set("body") {
-    <h2>Welcome #(player.username)!</h2>
+    <h2>Welcome #(player.name)!</h2>
     #if(errorMessage) {
         <div class="alert alert-dismissible alert-warning">
             <button type="button" class="close" data-dismiss="alert">&times;</button>
