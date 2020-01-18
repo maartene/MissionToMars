@@ -23,7 +23,7 @@ class GameTests: XCTestCase {
         var stepsImprovement: Int?
         var stepsCompoment: Int?
         
-        var player = Player(username: "testPlayer")
+        var player = Player(emailAddress: "example@example.com", name: "testUser")
         player.id = UUID()
         
         var mission = Mission(owningPlayerID: player.id!)

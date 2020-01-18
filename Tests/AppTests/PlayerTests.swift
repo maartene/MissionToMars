@@ -13,7 +13,7 @@ import XCTest
 final class PlayerTests : XCTestCase {
 
     func testUpdatePlayer() throws {
-        let player = Player(username: "testUser")
+        let player = Player(emailAddress: "example@example.com", name: "testUser")
         
         let updatedPlayer = player.updatePlayer()
         
@@ -23,8 +23,8 @@ final class PlayerTests : XCTestCase {
     }
 
     func testDonateCashToPlayer() throws {
-        let givingPlayer = Player(username: "givingPlayer")
-        let receivingPlayer = Player(username: "receivingPlayer")
+        let givingPlayer = Player(emailAddress: "example@example.com", name: "giving player")
+        let receivingPlayer = Player(emailAddress: "example2@example.com", name: "receiving player")
         
         let updatedPlayers = try givingPlayer.donate(cash: 100, to: receivingPlayer)
         
@@ -33,8 +33,8 @@ final class PlayerTests : XCTestCase {
     }
 
     func testDonateTechnologyToPlayer() throws {
-        let givingPlayer = Player(username: "givingPlayer")
-        let receivingPlayer = Player(username: "receivingPlayer")
+        let givingPlayer = Player(emailAddress: "example@example.com", name: "giving player")
+        let receivingPlayer = Player(emailAddress: "example2@example.com", name: "receiving player")
         
         let updatedPlayers = try givingPlayer.donate(techPoints: 10, to: receivingPlayer)
         
@@ -43,21 +43,21 @@ final class PlayerTests : XCTestCase {
     }
     
     func testCannotDonateMoreCashThanAvailable() throws {
-        let givingPlayer = Player(username: "givingPlayer")
-        let receivingPlayer = Player(username: "receivingPlayer")
+        let givingPlayer = Player(emailAddress: "example@example.com", name: "giving player")
+        let receivingPlayer = Player(emailAddress: "example2@example.com", name: "receiving player")
         
         XCTAssertThrowsError(try givingPlayer.donate(cash: givingPlayer.cash + 1, to: receivingPlayer))
     }
     
     func testCannotDonateMoreTechThanAvailable() throws {
-        let givingPlayer = Player(username: "givingPlayer")
-        let receivingPlayer = Player(username: "receivingPlayer")
+        let givingPlayer = Player(emailAddress: "example@example.com", name: "giving player")
+        let receivingPlayer = Player(emailAddress: "example2@example.com", name: "receiving player")
         
         XCTAssertThrowsError(try givingPlayer.donate(techPoints: givingPlayer.technologyPoints + 1, to: receivingPlayer))
     }
     
     func testUpdatePlayerWithoutImprovementsShouldNotChangePlayer() throws {
-        var player = Player(username: "testPlayer")
+        var player = Player(emailAddress: "example@example.com", name: "testUser")
         player = player.removeImprovement(.TechConsultancy)
         let updatedPlayer = player.updatePlayer()
         XCTAssertEqual(player.cash, updatedPlayer.cash)

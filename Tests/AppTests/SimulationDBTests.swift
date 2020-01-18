@@ -138,7 +138,7 @@ final class SimulationDBTests : XCTestCase {
         _ = try? app?.withPooledConnection(to: .sqlite, closure: { conn -> Future<String> in
             var createPlayerFutures = [Future<Result<Player, Player.PlayerError>>]()
             for i in 0 ..< 100 {
-                createPlayerFutures.append(Player.createUser(username: "testUser\(i)", on: conn))
+                createPlayerFutures.append(Player.createUser(emailAddress: "testUser\(i)@example.com", name: "testUser\(i)", on: conn))
             }
             
             let createPlayersFuture = createPlayerFutures.flatten(on: conn)
