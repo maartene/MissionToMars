@@ -1,0 +1,21 @@
+<div class="row align-items-center">
+    <div class="col-md">
+        <h4>Technology</h4>
+        <p class="text-secondary">Invest in technology to unlock improvements, components and further tech.</p>
+    </div>
+    <div class="col-md-1">
+        <img src="/images/lab-flask-experiment-48-w.png" alt="Technology"/>
+    </div>
+</div>
+<div class="my-2"><a href="/unlock/technologies" class="btn btn-primary">Unlock technologies</a></div>
+<ul class="list-group">
+    #for(tech in unlockedTechnologies) {
+        <li class="list-group-item">
+            <div class="row align-items-center">
+                <div class="col-md-1 justify-content-center"><img src="/images/Technologies/#(tech.shortName)-w.png"/></div>
+                <div class="col-md"><b>#(tech.name)</b> - #(tech.description)</div>
+            </div>
+        </li>
+    }
+</ul>
+<div class="mt-2"><a href="/unlock/technologies" class="btn btn-primary">Unlock technologies</a></div>

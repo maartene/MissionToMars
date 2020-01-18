@@ -108,4 +108,8 @@ extension Mission {
             return player
         }
     }
+    
+    public func getSupportingPlayers(on conn: DatabaseConnectable) throws -> Future<[Player]> {
+        return Player.query(on: conn).filter(\.supportsPlayerID, .equal, owningPlayerID).all()
+    }
 }

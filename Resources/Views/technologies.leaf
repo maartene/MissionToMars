@@ -14,7 +14,7 @@
           </li>
         } 
       </ul>
-      <p class="pt-2"><a href="/main" class="btn btn-secondary">Back</a></p>
+      <p class="pt-2"><a href="/technology" class="btn btn-secondary">Back</a></p>
     </div>
 }
 
