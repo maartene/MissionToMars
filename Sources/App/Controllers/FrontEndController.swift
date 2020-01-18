@@ -58,7 +58,24 @@ class FrontEndController: RouteCollection {
             return req.redirect(to: "/main")
         }
         
-        router.get("main") { req -> Future<View> in
+        router.get("main") { req in
+            return try mainPage(req: req, page: "main")
+        }
+        
+        router.get("mission") { req in
+            return try mainPage(req: req, page: "mission")
+        }
+        
+        router.get("technology") { req in
+            return try mainPage(req: req, page: "technology")
+        }
+        
+        router.get("improvements") { req in
+            return try mainPage(req: req, page: "improvements")
+        }
+        
+        
+        func mainPage(req: Request, page: String) throws -> Future<View> {
             guard let id = self.getPlayerIDFromSession(on: req) else {
                 return try req.view().render("index")
             }
@@ -74,14 +91,14 @@ class FrontEndController: RouteCollection {
                             return result.updatedSimulation.update(on: req).flatMap(to: View.self) { savedSimulation in
                                 return Player.savePlayers(result.updatedPlayers, on: req).flatMap(to: View.self) { players in
                                     return Mission.saveMissions(result.updatedMissions, on: req).flatMap(to: View.self) { missions in
-                                        return self.getMainViewForPlayer(with: id, simulation: savedSimulation, on: req)
+                                        return self.getMainViewForPlayer(with: id, simulation: savedSimulation, on: req, page: page)
                                     }
                                 }
                             }
                         }
                     }
                 } else {
-                    return self.getMainViewForPlayer(with: id, simulation: simulation, on: req)
+                    return self.getMainViewForPlayer(with: id, simulation: simulation, on: req, page: page)
                 }
                 
             }
@@ -109,7 +126,7 @@ class FrontEndController: RouteCollection {
                     
                     supportedMission.missionName = newName
                     return supportedMission.update(on: req).map(to: Response.self) { savedMission in
-                        return req.redirect(to: "/main")
+                        return req.redirect(to: "/mission")
                     }
                 }
             }
@@ -124,7 +141,7 @@ class FrontEndController: RouteCollection {
                     var updatedPlayer = player
                     updatedPlayer.ownsMissionID = mission.id
                     return updatedPlayer.save(on: req).map(to: Response.self) { updatedPlayer in
-                        return req.redirect(to: "/main")
+                        return req.redirect(to: "/mission")
                     }
                 }
             }
@@ -170,7 +187,7 @@ class FrontEndController: RouteCollection {
                     
                     updatedPlayer.supportsPlayerID = supportedMission.owningPlayerID
                     return updatedPlayer.update(on: req).map(to: Response.self) { savedPlayer in
-                        return req.redirect(to: "/main")
+                        return req.redirect(to: "/mission")
                     }
                 }
             }
@@ -191,7 +208,7 @@ class FrontEndController: RouteCollection {
                     case .success(let result):
                         return result.donatingPlayer.update(on: req).flatMap(to: Response.self) { updatedDonatingPlayer in
                             return result.receivingPlayer.update(on: req).map(to: Response.self) { updatedReceivingPlayer in
-                                return req.redirect(to: "/main")
+                                return req.redirect(to: "/mission")
                             }
                         }
                     case .failure(let error):
@@ -231,7 +248,7 @@ class FrontEndController: RouteCollection {
                         case .success(let investmentResult):
                             return investmentResult.changedPlayer.save(on: req).flatMap(to: Response.self) { savedPlayer in
                                 return investmentResult.changedMission.save(on: req).map(to: Response.self) { savedMission in
-                                    return req.redirect(to: "/main")
+                                    return req.redirect(to: "/mission")
                                 }
                             }
                         }
@@ -251,7 +268,7 @@ class FrontEndController: RouteCollection {
                     let advancedMission = try mission.goToNextStage()
                     
                     return advancedMission.save(on: req).map(to: Response.self) { savedMission in
-                        return req.redirect(to: "/main")
+                        return req.redirect(to: "/mission")
                     }
                 }
             }
@@ -296,7 +313,7 @@ class FrontEndController: RouteCollection {
                     let buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
                     return buildingPlayer.save(on: req).map(to: Response.self) { savedPlayer in
                         self.infoMessages[savedPlayer.id!] = "Started working on \(improvement.name)."
-                        return req.redirect(to: "/main")
+                        return req.redirect(to: "/improvements")
                     }
                 } catch {
                     switch error {
@@ -334,7 +351,7 @@ class FrontEndController: RouteCollection {
                     let rushingPlayer = try player.rushImprovement(improvement)
                     return rushingPlayer.save(on: req).map(to: Response.self) { savedPlayer in
                         self.infoMessages[savedPlayer.id!] = "Succesfully rushed \(improvement.name)."
-                        return req.redirect(to: "/main")
+                        return req.redirect(to: "/improvements")
                     }
                 } catch {
                     switch error {
@@ -389,7 +406,7 @@ class FrontEndController: RouteCollection {
                     let unlockingPlayer = try player.investInTechnology(technology)
                     return unlockingPlayer.save(on: req).map(to: Response.self) { savedPlayer in
                         self.infoMessages[savedPlayer.id!] = "Succesfully unlocked \(technology.name)."
-                        return req.redirect(to: "/main")
+                        return req.redirect(to: "/technology")
                     }
                 } catch {
                     switch error {
@@ -494,7 +511,7 @@ class FrontEndController: RouteCollection {
         }
     }
     
-    func getMainViewForPlayer(with id: UUID, simulation: Simulation, on req: Request) -> Future<View> {
+    func getMainViewForPlayer(with id: UUID, simulation: Simulation, on req: Request, page: String = "overview") -> Future<View> {
         struct MainContext: Codable {
             let player: Player
             let mission: Mission?
@@ -511,6 +528,7 @@ class FrontEndController: RouteCollection {
             let playerIsBuildingComponent: Bool
             let cashPerDay: Double
             let techPerDay: Double
+            let page: String
         }
         
         return Player.find(id, on: req).flatMap(to: View.self) { player in
@@ -546,7 +564,7 @@ class FrontEndController: RouteCollection {
                         }
                     }
                     
-                    let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponent: mission.currentStage.currentlyBuildingComponent, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage, currentStageComplete: mission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: unlockedComponents, techlockedComponents: techlockedComponents, playerIsBuildingComponent: mission.currentStage.currentlyBuildingComponent != nil, cashPerDay: player.cashPerTick, techPerDay: player.techPerTick)
+                    let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponent: mission.currentStage.currentlyBuildingComponent, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage, currentStageComplete: mission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: unlockedComponents, techlockedComponents: techlockedComponents, playerIsBuildingComponent: mission.currentStage.currentlyBuildingComponent != nil, cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, page: page)
                     
                     return try req.view().render("main", context)
                 }
@@ -568,13 +586,13 @@ class FrontEndController: RouteCollection {
                             return try req.view().render("win")
                         }
                         
-                        let context = MainContext(player: player, mission: supportedMission, currentStage: supportedMission.currentStage, currentBuildingComponent: supportedMission.currentStage.currentlyBuildingComponent, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage, currentStageComplete: supportedMission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: supportedMission.currentStage.components, techlockedComponents: [], playerIsBuildingComponent: false, cashPerDay: player.cashPerTick, techPerDay: player.techPerTick)
+                        let context = MainContext(player: player, mission: supportedMission, currentStage: supportedMission.currentStage, currentBuildingComponent: supportedMission.currentStage.currentlyBuildingComponent, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage, currentStageComplete: supportedMission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: supportedMission.currentStage.components, techlockedComponents: [], playerIsBuildingComponent: false, cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, page: page)
                         
                         return try req.view().render("main", context)
                     }
                 }
             } else {
-                let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponent: nil, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage,  currentStageComplete: false, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: [], techlockedComponents: [], playerIsBuildingComponent: false, cashPerDay: player.cashPerTick, techPerDay: player.techPerTick)
+                let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponent: nil, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage,  currentStageComplete: false, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: [], techlockedComponents: [], playerIsBuildingComponent: false, cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, page: page)
             
                 return try req.view().render("main", context)
             }

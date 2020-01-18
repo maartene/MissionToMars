@@ -1,0 +1,24 @@
+<div class="row align-items-center">
+    <div class="col-md">
+        <h4>Improvements</h4>
+        <p class="text-secondary">Improvements have various beneficial effects on your company.</p>
+    </div>
+    <div class="col-md-1">
+        <img src="/images/streamline-icon-project-blueprint-create@48x48-w.png" alt="Improvements"/>
+    </div>
+</div>
+<div class="my-2"><a href="/build/improvements" class="btn btn-primary">Build improvements</a></div>
+<ul class="list-group">
+    #for(improvement in player.improvements) {
+        <li class="list-group-item">
+            <div class="row align-items-center">
+            <div class="col-md-1 justify-content-center"><img src="/images/Improvements/#(improvement.shortName)-w.png"/></div>
+            <div class="col"><b>#(improvement.name)</b> #(improvement.description) #if(improvement.percentageCompleted < 100) { <br/>Currently building: 
+            <div class="progress">
+                    <div class="progress-bar" role="progressbar" style="width: #decimal(improvement.percentageCompleted)%" aria-valuenow="#decimal(improvement.percentageCompleted)" aria-valuemin="0" aria-valuemax="100"></div>
+            </div>#decimal(improvement.percentageCompleted)% done. #if(improvement.rushable){<a class="btn btn-sm btn-warning #if(improvement.cost > player.cash) {disabled}" href="/rush/improvements/#(improvement.shortName)">Rush</a>} }
+            </div>
+        </li>
+    }
+</ul>
+<div class="mt-2"><a href="/build/improvements" class="btn btn-primary">Build improvements</a></div>
