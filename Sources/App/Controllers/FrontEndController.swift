@@ -193,17 +193,54 @@ class FrontEndController: RouteCollection {
             }
         }
         
-        router.get("donate/to/supportedPlayer") { req -> Future<Response> in
+        router.get("donate") { req -> Future<View> in
+            struct DonateContext: Content {
+                let player: Player
+                let supportedPlayerName: String
+            }
+            return try self.getPlayerFromSession(on: req).flatMap(to: View.self) {
+            player in
+                return try player.getSupportedPlayer(on: req).flatMap(to: View.self) { supportedPlayer in
+                    guard let supportedPlayer = supportedPlayer else {
+                        throw Abort(.notFound, reason: "No supported user found.")
+                    }
+                    let context = DonateContext(player: player, supportedPlayerName: supportedPlayer.username)
+                    return try req.view().render("donate", context)
+                }
+            }
+        }
+        
+        router.get("donate/to/supportedPlayer/cash", String.parameter) { req -> Future<Response> in
             guard let id = self.getPlayerIDFromSession(on: req) else {
                 throw Abort(.unauthorized)
             }
+            
+            let donateString: String = try req.parameters.next()
             
             return Player.find(id, on: req).flatMap(to: Response.self) { player in
                 guard let changedPlayer = player else {
                     return Future.map(on: req) { return req.redirect(to: "/")}
                 }
                 
-                return try changedPlayer.donateToSupportedPlayer(cash: 1000, on: req).flatMap(to: Response.self) { result in
+                let cash: Double
+                switch donateString {
+                case "1k":
+                    cash = 1_000
+                case "10k":
+                    cash = 10_000
+                case "100k":
+                    cash = 100_000
+                case "1m":
+                    cash = 1_000_000
+                case "1b":
+                    cash = 1_000_000_000
+                case "10b":
+                    cash = 10_000_000_000
+                default:
+                    cash = 0
+                }
+                
+                return try changedPlayer.donateToSupportedPlayer(cash: cash, on: req).flatMap(to: Response.self) { result in
                     switch result {
                     case .success(let result):
                         return result.donatingPlayer.update(on: req).flatMap(to: Response.self) { updatedDonatingPlayer in
@@ -215,6 +252,42 @@ class FrontEndController: RouteCollection {
                         if let playerError = error as? Player.PlayerError {
                             if playerError == .insufficientFunds {
                                 self.errorMessages[changedPlayer.id!] = "Insufficient funds to donate."
+                                return Future.map(on: req) { return req.redirect(to: "/main") }
+                            } else {
+                                throw error
+                            }
+                        } else {
+                            throw error
+                        }
+                    }
+                }
+            }
+        }
+        
+        router.get("donate/to/supportedPlayer/tech", Int.parameter) { req -> Future<Response> in
+            guard let id = self.getPlayerIDFromSession(on: req) else {
+                throw Abort(.unauthorized)
+            }
+            
+            let techPoints: Int = try req.parameters.next()
+            
+            return Player.find(id, on: req).flatMap(to: Response.self) { player in
+                guard let changedPlayer = player else {
+                    return Future.map(on: req) { return req.redirect(to: "/")}
+                }
+                
+                return try changedPlayer.donateToSupportedPlayer(techPoints: Double(techPoints), on: req).flatMap(to: Response.self) { result in
+                    switch result {
+                    case .success(let result):
+                        return result.donatingPlayer.update(on: req).flatMap(to: Response.self) { updatedDonatingPlayer in
+                            return result.receivingPlayer.update(on: req).map(to: Response.self) { updatedReceivingPlayer in
+                                return req.redirect(to: "/mission")
+                            }
+                        }
+                    case .failure(let error):
+                        if let playerError = error as? Player.PlayerError {
+                            if playerError == .insufficientTechPoints {
+                                self.errorMessages[changedPlayer.id!] = "Insufficient technology points to donate."
                                 return Future.map(on: req) { return req.redirect(to: "/main") }
                             } else {
                                 throw error
