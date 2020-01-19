@@ -384,7 +384,7 @@ extension Player {
                     return .failure(Mission.MissionError.missionNotFound)
                 }
             }
-        } else if let supportedMissionOwnerID = supportsPlayerID {
+        } else if supportsPlayerID != nil {
             return try getSupportedPlayer(on: conn).flatMap(to: Result<Mission, Error>.self) { supportedPlayer in
                 guard let supportedPlayer = supportedPlayer else {
                     return Future.map(on: conn) { () -> Result<Mission, Error> in

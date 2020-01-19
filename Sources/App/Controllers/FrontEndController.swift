@@ -492,7 +492,7 @@ class FrontEndController: RouteCollection {
                     switch missionResult {
                     case .success(let mission):
                         return try mission.getSupportingPlayers(on: req).flatMap(to: View.self) { supportingPlayers in
-                            var result = supportingPlayers.map { player -> String in
+                            let result = supportingPlayers.map { player -> String in
                                 if player.id == mission.owningPlayerID {
                                     return player.name + " (\(player.emailAddress) - owner)"
                                 } else {
