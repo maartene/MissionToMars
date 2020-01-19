@@ -373,6 +373,7 @@ extension Player {
         }
     }
     
+    // refactor to use Result type. This now shows a very ugly error message when function throws (which might not be an issue at this time).
     public func getSupportedMission(on conn: DatabaseConnectable) throws -> Future<Mission?> {
         if let missionID = ownsMissionID {
             return Mission.find(missionID, on: conn)

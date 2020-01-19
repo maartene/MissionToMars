@@ -98,7 +98,8 @@ extension Mission {
         }
         return futures.flatten(on: conn)
     }
-        
+    
+    // Refactor to use Result type. By using "throw", you get a very ugly error message (not a big problem right now btw)
     public func getOwningPlayer(on conn: DatabaseConnectable) throws -> Future<Player> {
         return Player.find(owningPlayerID, on: conn).map(to: Player.self) { player in
             guard let player = player else {
