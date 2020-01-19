@@ -1,7 +1,8 @@
 <div class="row align-items-center">
     <div class="col-md">
         <h4>Technology</h4>
-        <p class="text-secondary">Invest in technology to unlock improvements, components and further tech.</p>
+        <p class="text-secondary">Invest in technology to unlock improvements, components and further tech.<br/>
+        Technology points: #dec0(player.technologyPoints) (+#dec0(techPerDay) / day)</p>
     </div>
     <div class="col-md-1">
         <img src="/images/lab-flask-experiment-48-w.png" alt="Technology"/>
