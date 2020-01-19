@@ -9,7 +9,7 @@ public struct MailJetConfig {
     let senderName: String
     let senderEmail: String
     
-    init(apiKey: String, secretKey: String, senderName: String, senderEmail: String) {
+    public init(apiKey: String, secretKey: String, senderName: String, senderEmail: String) {
         self.apiKey = apiKey
         self.secretKey = secretKey
         self.senderName = senderName
