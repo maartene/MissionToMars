@@ -22,6 +22,7 @@ public struct Player: Content, SQLiteUUIDModel {
         case playerAlreadyUnlockedTechnology
         case playerMissesPrerequisiteTechnology
         case playerIsAlreadyBuildingImprovement
+        case playerNotFound
     }
     
     public var id: UUID?
@@ -374,21 +375,35 @@ extension Player {
     }
     
     // refactor to use Result type. This now shows a very ugly error message when function throws (which might not be an issue at this time).
-    public func getSupportedMission(on conn: DatabaseConnectable) throws -> Future<Mission?> {
+    public func getSupportedMission(on conn: DatabaseConnectable) throws -> Future<Result<Mission, Error>> {
         if let missionID = ownsMissionID {
-            return Mission.find(missionID, on: conn)
+            return Mission.find(missionID, on: conn).map(to: Result<Mission, Error>.self) { mission in
+                if let mission = mission {
+                    return .success(mission)
+                } else {
+                    return .failure(Mission.MissionError.missionNotFound)
+                }
+            }
         } else if let supportedMissionOwnerID = supportsPlayerID {
-            return try getSupportedPlayer(on: conn).flatMap(to: Mission?.self) { supportedPlayer in
+            return try getSupportedPlayer(on: conn).flatMap(to: Result<Mission, Error>.self) { supportedPlayer in
                 guard let supportedPlayer = supportedPlayer else {
-                    throw Abort(.notFound, reason: "Player with id \(supportedMissionOwnerID) not found.")
+                    return Future.map(on: conn) { () -> Result<Mission, Error> in
+                        return .failure(PlayerError.playerNotFound)
+                    }
                 }
                 guard let missionID = supportedPlayer.ownsMissionID else {
                     throw PlayerError.noMission
                 }
-                return Mission.find(missionID, on: conn)
+                return Mission.find(missionID, on: conn).map(to: Result<Mission, Error>.self) { mission in
+                    if let mission = mission {
+                        return .success(mission)
+                    } else {
+                        return .failure(Mission.MissionError.missionNotFound)
+                    }
+                }
             }
         } else {
-            return Future.map(on: conn) { return nil }
+            return Future.map(on: conn) { return .failure(PlayerError.noMission) }
         }
     }
     
@@ -438,26 +453,29 @@ extension Player {
         }
     }
     
-    public func investInComponent(_ component: Component, on conn: DatabaseConnectable, date: Date) throws -> Future<Result<(changedPlayer: Player, changedMission: Mission), PlayerError>> {
-        return try getSupportedMission(on: conn).flatMap(to: Result<(changedPlayer: Player, changedMission: Mission), PlayerError>.self) { mission in
-            guard let changedMission = mission else {
-                return Future.map(on: conn) {
-                    return .failure(PlayerError.noMission)
-                }
-            }
+    public func investInComponent(_ component: Component, on conn: DatabaseConnectable, date: Date) throws -> Future<Result<(changedPlayer: Player, changedMission: Mission), Error>> {
+        return try getSupportedMission(on: conn).flatMap(to: Result<(changedPlayer: Player, changedMission: Mission), Error>.self) { missionResult in
             
-            var result: Result<(changedPlayer: Player, changedMission: Mission), PlayerError>
-            do {
-                let investResult = try self.investInComponent(component, in: changedMission, date: date)
-                result = .success(investResult)
-            } catch {
-                if let error = error as? PlayerError {
-                    result = .failure(error)
-                } else {
-                    throw error
+            switch missionResult {
+            case .success(let mission):
+                var result: Result<(changedPlayer: Player, changedMission: Mission), Error>
+                do {
+                    let investResult = try self.investInComponent(component, in: mission, date: date)
+                    result = .success(investResult)
+                } catch {
+                    if let error = error as? PlayerError {
+                        result = .failure(error)
+                    } else {
+                        throw error
+                    }
+                }
+                return Future.map(on: conn) { return result }
+            
+            case .failure(let error):
+                return Future.map(on: conn) {
+                    return .failure(error)
                 }
             }
-            return Future.map(on: conn) { return result }
         }
     }
     

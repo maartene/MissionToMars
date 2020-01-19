@@ -134,12 +134,13 @@ class FrontEndController: RouteCollection {
         
         router.get("edit/mission") { req -> Future<View> in
             return try self.getPlayerFromSession(on: req).flatMap(to: View.self) { player in
-                return try player.getSupportedMission(on: req).flatMap(to: View.self) { mission in
-                    guard let supportedMission = mission else {
-                        throw Abort(.notFound, reason: "Mission with id \(String(describing: player.ownsMissionID)) not found.")
+                return try player.getSupportedMission(on: req).flatMap(to: View.self) { missionResult in
+                    switch missionResult {
+                    case .success(let mission):
+                        return try req.view().render("editMission", ["missionName": mission.missionName])
+                    case .failure(let error):
+                        throw error
                     }
-                    
-                    return try req.view().render("editMission", ["missionName": supportedMission.missionName])
                 }
             }
         }
@@ -147,14 +148,15 @@ class FrontEndController: RouteCollection {
         router.post("edit/mission") { req -> Future<Response> in
             let newName: String = try req.content.syncGet(at: "missionName")
             return try self.getPlayerFromSession(on: req).flatMap(to: Response.self) { player in
-                return try player.getSupportedMission(on: req).flatMap(to: Response.self) { mission in
-                    guard var supportedMission = mission else {
-                        throw Abort(.notFound, reason: "Mission with id \(String(describing: player.ownsMissionID)) not found.")
-                    }
-                    
-                    supportedMission.missionName = newName
-                    return supportedMission.update(on: req).map(to: Response.self) { savedMission in
-                        return req.redirect(to: "/mission")
+                return try player.getSupportedMission(on: req).flatMap(to: Response.self) { missionResult in
+                    switch missionResult {
+                    case .success(var mission):
+                        mission.missionName = newName
+                        return mission.update(on: req).map(to: Response.self) { savedMission in
+                            return req.redirect(to: "/mission")
+                        }
+                    case .failure(let error):
+                        throw error
                     }
                 }
             }
@@ -187,10 +189,15 @@ class FrontEndController: RouteCollection {
                 }
                 let playerFuture = playerFutures.flatten(on: req)
                 
-                return playerFuture.flatMap(to: View.self) { players in
+                return playerFuture.flatMap(to: View.self) { playerResults in
                     var mcs = [MissionContext]()
-                    for i in 0 ..< players.count {
-                        mcs.append(MissionContext(id: missions[i].id!, missionName: missions[i].missionName, percentageDone: missions[i].percentageDone, owningPlayerName: players[i].name))
+                    for i in 0 ..< playerResults.count {
+                        switch playerResults[i] {
+                        case .success(let player):
+                            mcs.append(MissionContext(id: missions[i].id!, missionName: missions[i].missionName, percentageDone: missions[i].percentageDone, owningPlayerName: player.name))
+                        case .failure(let error):
+                            print(error)
+                        }
                     }
                     return try req.view().render("missions", ["missions": mcs])
                 }
@@ -361,15 +368,16 @@ class FrontEndController: RouteCollection {
         
         router.get("advance/stage") { req -> Future<Response> in
             return try self.getPlayerFromSession(on: req).flatMap(to: Response.self) { player in
-                return try player.getSupportedMission(on: req).flatMap(to: Response.self) { mission in
-                    guard let mission = mission else {
-                        throw Abort(.badRequest, reason: "No mission found for player.")
-                    }
-                    
-                    let advancedMission = try mission.goToNextStage()
-                    
-                    return advancedMission.save(on: req).map(to: Response.self) { savedMission in
-                        return req.redirect(to: "/mission")
+                return try player.getSupportedMission(on: req).flatMap(to: Response.self) { missionResult in
+                    switch missionResult {
+                    case .success(let mission):
+                        let advancedMission = try mission.goToNextStage()
+                        
+                        return advancedMission.save(on: req).map(to: Response.self) { savedMission in
+                            return req.redirect(to: "/mission")
+                        }
+                    case .failure(let error):
+                        throw error
                     }
                 }
             }
@@ -480,20 +488,23 @@ class FrontEndController: RouteCollection {
             
             return try self.getPlayerFromSession(on: req).flatMap(to: View.self) {
             player in
-                return try player.getSupportedMission(on: req).flatMap(to: View.self) { mission in
-                    guard let mission = mission else {
-                        throw Abort(.notFound, reason: "No mission found for player \(player.name)")
-                    }
-                    return try mission.getSupportingPlayers(on: req).flatMap(to: View.self) { supportingPlayers in
-                        var result = supportingPlayers.map { player -> String in
-                            if player.id == mission.owningPlayerID {
-                                return player.name + " (\(player.emailAddress) - owner)"
-                            } else {
-                                return player.name + " (\(player.emailAddress))"
+                return try player.getSupportedMission(on: req).flatMap(to: View.self) { missionResult in
+                    switch missionResult {
+                    case .success(let mission):
+                        return try mission.getSupportingPlayers(on: req).flatMap(to: View.self) { supportingPlayers in
+                            var result = supportingPlayers.map { player -> String in
+                                if player.id == mission.owningPlayerID {
+                                    return player.name + " (\(player.emailAddress) - owner)"
+                                } else {
+                                    return player.name + " (\(player.emailAddress))"
+                                }
                             }
+                            
+                            let context = SupportingPlayerContext(player: player, supportingPlayerNames: result, missionName: mission.missionName)
+                            return try req.view().render("mission_supportingPlayers", context)
                         }
-                        let context = SupportingPlayerContext(player: player, supportingPlayerNames: result, missionName: mission.missionName)
-                        return try req.view().render("mission_supportingPlayers", context)
+                    case .failure(let error):
+                        throw error
                     }
                 }
             }
@@ -687,9 +698,9 @@ class FrontEndController: RouteCollection {
             let infoMessage = self.infoMessages[id] ?? nil
             self.infoMessages.removeValue(forKey: id)
  
-            return try player.getSupportedMission(on: req).flatMap(to: View.self) { mission in
-                if let mission = mission {
-                
+            return try player.getSupportedMission(on: req).flatMap(to: View.self) { missionResult in
+                switch missionResult {
+                case .success(let mission):
                     if mission.missionComplete {
                         return try req.view().render("win")
                     }
@@ -708,12 +719,19 @@ class FrontEndController: RouteCollection {
                     let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponents: mission.currentStage.currentlyBuildingComponents, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage, currentStageComplete: mission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: unlockedComponents, techlockedComponents: techlockedComponents, playerIsBuildingComponent: mission.currentStage.playerIsBuildingComponentInStage(player), cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, page: page)
                     
                     return try req.view().render("main", context)
-                }
-                // no supported mission
-                else {
-                    let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponents: [], simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage,  currentStageComplete: false, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: [], techlockedComponents: [], playerIsBuildingComponent: false, cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, page: page)
-                
-                    return try req.view().render("main", context)
+                case .failure(let error):
+                    if let error = error as? Player.PlayerError {
+                        switch error {
+                        case .noMission:
+                            let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponents: [], simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage,  currentStageComplete: false, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: [], techlockedComponents: [], playerIsBuildingComponent: false, cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, page: page)
+                            
+                                return try req.view().render("main", context)
+                        default:
+                            throw error
+                        }
+                    } else {
+                        throw (error)
+                    }
                 }
             }
         }
