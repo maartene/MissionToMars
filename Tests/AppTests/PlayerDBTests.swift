@@ -154,7 +154,7 @@ final class PlayerDBTests : XCTestCase {
         case .failure(let error):
             XCTFail("Received a failure from test \(error)")
         case .success(let buildResult):
-            XCTAssertNotNil(buildResult.changedMission.currentStage.currentlyBuildingComponent, "Should now be building something.")
+            XCTAssertGreaterThan(buildResult.changedMission.currentStage.currentlyBuildingComponents.count, 0, "Should now be building something.")
             XCTAssertLessThan(buildResult.changedPlayer.cash, player.cash, "cash")
         }
         

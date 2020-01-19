@@ -40,7 +40,7 @@ class GameTests: XCTestCase {
             player = player.updatePlayer()
             mission = mission.updateMission()
             
-            if player.cash >= component.cost && mission.currentStage.currentlyBuildingComponent == nil && mission.currentStage.currentlyBuildingComponent?.percentageCompleted ?? 0 < 100 && mission.currentStage.percentageComplete < 100.0 && completeComponents.contains("\(String(component.shortName.rawValue)+String(mission.currentStage.level))") == false {
+            if player.cash >= component.cost && mission.currentStage.currentlyBuildingComponents.first == nil && mission.currentStage.currentlyBuildingComponents.first?.percentageCompleted ?? 0 < 100 && mission.currentStage.percentageComplete < 100.0 && completeComponents.contains("\(String(component.shortName.rawValue)+String(mission.currentStage.level))") == false {
                 do {
                     let investment = try player.investInComponent(component, in: mission, date: Date())
                     completeComponents.append("\(String(component.shortName.rawValue)+String(mission.currentStage.level))")

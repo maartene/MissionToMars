@@ -38,30 +38,29 @@ class FrontEndController: RouteCollection {
                     context.uuid = String(player.id!)
                     context.email = player.emailAddress
                     
-                    let publicKey = Environment.get("MAILJET_API_KEY") ?? ""
+                    if let publicKey = Environment.get("MAILJET_API_KEY"), let privateKey = Environment.get("MAILJET_SECRET_KEY") {
                     
-                    let privateKey = Environment.get("MAILJET_SECRET_KEY") ?? ""
-                    
-                    let mailJetConfig = MailJetConfig(apiKey: publicKey, secretKey: privateKey, senderName: "Mission2Mars Support", senderEmail: "support@mission2mars.space")
-                    mailJetConfig.sendMessage(to: emailAddress, toName: name, subject: "Your login id", message: """
-                        Welcome \(player.name) to Mission2Mars
-                        
-                        Your login id is: \(player.id!)
-                        Please keep this code secret, as there is no other authentication method at this time!
-                        
-                        Have fun!
-                        
-                        - the Mission2Mars team
-                        """, htmlMessage: """
-                        <h1>Welcome \(player.name) to Mission2Mars</h1>
-                        
-                        <h3>Your login id is: <b>\(player.id!)</b></h3>
-                        <p>Please keep this code secret, as there is no other authentication method at this time!</p>
-                        <p>&nbsp;</p>
-                        <p>Have fun!</p>
-                        <p>&nbsp;</p>
-                        <p>- the Mission2Mars team</p>
-                        """, on: req)
+                        let mailJetConfig = MailJetConfig(apiKey: publicKey, secretKey: privateKey, senderName: "Mission2Mars Support", senderEmail: "support@mission2mars.space")
+                        mailJetConfig.sendMessage(to: emailAddress, toName: name, subject: "Your login id", message: """
+                            Welcome \(player.name) to Mission2Mars
+                            
+                            Your login id is: \(player.id!)
+                            Please keep this code secret, as there is no other authentication method at this time!
+                            
+                            Have fun!
+                            
+                            - the Mission2Mars team
+                            """, htmlMessage: """
+                            <h1>Welcome \(player.name) to Mission2Mars</h1>
+                            
+                            <h3>Your login id is: <b>\(player.id!)</b></h3>
+                            <p>Please keep this code secret, as there is no other authentication method at this time!</p>
+                            <p>&nbsp;</p>
+                            <p>Have fun!</p>
+                            <p>&nbsp;</p>
+                            <p>- the Mission2Mars team</p>
+                            """, on: req)
+                        }
                 case .failure(let error):
                     switch error {
                     case .userAlreadyExists:
@@ -667,7 +666,7 @@ class FrontEndController: RouteCollection {
             let player: Player
             let mission: Mission?
             let currentStage: Stage?
-            let currentBuildingComponent: Component?
+            let currentBuildingComponents: [Component]
             let simulation: Simulation
             let errorMessage: String?
             let infoMessage: String?
@@ -693,13 +692,9 @@ class FrontEndController: RouteCollection {
             let infoMessage = self.infoMessages[id] ?? nil
             self.infoMessages.removeValue(forKey: id)
  
-            // does this player have his/her own mission?
-            if let missionID = player.ownsMissionID {
-                return try player.getSupportedMission(on: req).flatMap(to: View.self) { mission in
-                    guard let mission = mission else {
-                        throw Abort(.notFound, reason: "Mission with id \(missionID) does not exist.")
-                    }
-                    
+            return try player.getSupportedMission(on: req).flatMap(to: View.self) { mission in
+                if let mission = mission {
+                
                     if mission.missionComplete {
                         return try req.view().render("win")
                     }
@@ -715,37 +710,16 @@ class FrontEndController: RouteCollection {
                         }
                     }
                     
-                    let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponent: mission.currentStage.currentlyBuildingComponent, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage, currentStageComplete: mission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: unlockedComponents, techlockedComponents: techlockedComponents, playerIsBuildingComponent: mission.currentStage.currentlyBuildingComponent != nil, cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, page: page)
+                    let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponents: mission.currentStage.currentlyBuildingComponents, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage, currentStageComplete: mission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: unlockedComponents, techlockedComponents: techlockedComponents, playerIsBuildingComponent: mission.currentStage.playerIsBuildingComponentInStage(player), cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, page: page)
                     
                     return try req.view().render("main", context)
                 }
-            }
-            
-            // this player does not own his/her own mission, perhaps he/she supports the mission of another player?
-            else if let supportedPlayerID = player.supportsPlayerID {
-                return try player.getSupportedPlayer(on: req).flatMap(to: View.self) { supportedPlayer in
-                    guard let supportedPlayer = supportedPlayer else {
-                        throw Abort(.notFound, reason: "Player with id\(supportedPlayerID) does not exist.")
-                    }
-                    
-                    return try supportedPlayer.getSupportedMission(on: req).flatMap(to: View.self) { supportedMission in
-                        guard let supportedMission = supportedMission else {
-                            throw Abort(.notFound, reason: "Mission with id \(String(describing: supportedPlayer.ownsMissionID)) does not exist.")
-                        }
-                        
-                        if supportedMission.missionComplete {
-                            return try req.view().render("win")
-                        }
-                        
-                        let context = MainContext(player: player, mission: supportedMission, currentStage: supportedMission.currentStage, currentBuildingComponent: supportedMission.currentStage.currentlyBuildingComponent, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage, currentStageComplete: supportedMission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: supportedMission.currentStage.components, techlockedComponents: [], playerIsBuildingComponent: false, cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, page: page)
-                        
-                        return try req.view().render("main", context)
-                    }
+                // no supported mission
+                else {
+                    let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponents: [], simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage,  currentStageComplete: false, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: [], techlockedComponents: [], playerIsBuildingComponent: false, cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, page: page)
+                
+                    return try req.view().render("main", context)
                 }
-            } else {
-                let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponent: nil, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage,  currentStageComplete: false, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: [], techlockedComponents: [], playerIsBuildingComponent: false, cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, page: page)
-            
-                return try req.view().render("main", context)
             }
         }
     }

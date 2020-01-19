@@ -43,8 +43,8 @@ public struct Mission: Content, SQLiteUUIDModel {
         self.stages = Stage.allStages
     }
     
-    public func startBuildingInStage(_ component: Component, buildDate: Date, buildTimeFactor: Double = 1.0) throws -> Mission {
-        let changedStage = try currentStage.startBuildingComponent(component, buildDate: buildDate, buildTimeFactor: buildTimeFactor)
+    public func startBuildingInStage(_ component: Component, buildDate: Date, by player: Player) throws -> Mission {
+        let changedStage = try currentStage.startBuildingComponent(component, buildDate: buildDate, by: player)
         
         let stageIndex = stages.firstIndex(of: changedStage)!
         var changedStages = stages

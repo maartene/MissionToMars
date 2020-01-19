@@ -16,7 +16,7 @@ final class ComponentTests : XCTestCase {
     func testStartBuildComponent() throws {
         let component = Component(shortName: .Satellite, name: "testComponent", description: "", cost: 1, buildTime: 1, requiredTechnologyShortnames: [])
         XCTAssertNil(component.buildStartedOn)
-        let buildingComponent = try component.startBuild(startDate: Date())
+        let buildingComponent = try component.startBuild(startDate: Date(), by: Player(emailAddress: "", name: ""))
         XCTAssertNotNil(buildingComponent.buildStartedOn)
     }
     
@@ -46,7 +46,7 @@ final class ComponentTests : XCTestCase {
         }
         
         let numberOfTicksRequired = component.buildTime
-        let buildStartedComponent = try component.startBuild(startDate: Date())
+        let buildStartedComponent = try component.startBuild(startDate: Date(), by: Player(emailAddress: "", name: ""))
         let updatedComponent = buildStartedComponent.updateComponent(ticks: numberOfTicksRequired)
         
         XCTAssertGreaterThanOrEqual(updatedComponent.percentageCompleted, 100.0, "Component should be done by now.")
@@ -77,7 +77,7 @@ final class ComponentTests : XCTestCase {
         
         let result2 = try player2.investInComponent(component, in: mission2, date: Date())
         
-        XCTAssertLessThan(result2.changedMission.currentStage.currentlyBuildingComponent?.buildTime ?? 0, result1.changedMission.currentStage.currentlyBuildingComponent?.buildTime ?? -1)
+        XCTAssertLessThan(result2.changedMission.currentStage.currentlyBuildingComponents.first?.buildTime ?? 0, result1.changedMission.currentStage.currentlyBuildingComponents.first?.buildTime ?? -1)
     }
     
     func testComponentDiscount() throws {

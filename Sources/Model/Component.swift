@@ -75,6 +75,7 @@ public struct Component: Equatable, Codable {
     public var buildTime: Int // in days/ticks
     public private(set) var buildStartedOn: Date?
     public private(set) var percentageCompleted: Double = 0
+    public private(set) var builtByPlayerID: UUID?
     public let requiredTechnologyShortnames: [Technology.ShortName]
     public var requiredTechnologies: [Technology] {
         return requiredTechnologyShortnames.compactMap { shortName in
@@ -82,14 +83,19 @@ public struct Component: Equatable, Codable {
         }
     }
     
-    public func startBuild(startDate: Date, buildTimeFactor: Double = 1.0) throws -> Component {
+    public func startBuild(startDate: Date, by player: Player) throws -> Component {
         guard buildStartedOn == nil else {
             throw ComponentError.componentAlreadyBeingBuilt
         }
         
+        guard builtByPlayerID == nil else {
+            throw ComponentError.componentAlreadyBeingBuilt
+        }
+        
         var startedBuiltComponent = self
-        startedBuiltComponent.buildTime = Int(Double(buildTime) * buildTimeFactor)
+        startedBuiltComponent.buildTime = Int(Double(buildTime) * player.componentBuildTimeFactor)
         startedBuiltComponent.buildStartedOn = startDate
+        startedBuiltComponent.builtByPlayerID = player.id
         return startedBuiltComponent
     }
     

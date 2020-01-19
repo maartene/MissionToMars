@@ -248,7 +248,7 @@ public struct Player: Content, SQLiteUUIDModel {
             throw PlayerError.playerMissesPrerequisiteTechnology
         }
         
-        updatedMission = try updatedMission.startBuildingInStage(component, buildDate: date, buildTimeFactor: componentBuildTimeFactor)
+        updatedMission = try updatedMission.startBuildingInStage(component, buildDate: date, by: self)
         updatedPlayer.cash -= netCost
         
         return (updatedPlayer, updatedMission)
@@ -370,11 +370,21 @@ extension Player {
     }
     
     public func getSupportedMission(on conn: DatabaseConnectable) throws -> Future<Mission?> {
-        guard let missionID = ownsMissionID else {
+        if let missionID = ownsMissionID {
+            return Mission.find(missionID, on: conn)
+        } else if let supportedMissionOwnerID = supportsPlayerID {
+            return try getSupportedPlayer(on: conn).flatMap(to: Mission?.self) { supportedPlayer in
+                guard let supportedPlayer = supportedPlayer else {
+                    throw Abort(.notFound, reason: "Player with id \(supportedMissionOwnerID) not found.")
+                }
+                guard let missionID = supportedPlayer.ownsMissionID else {
+                    throw PlayerError.noMission
+                }
+                return Mission.find(missionID, on: conn)
+            }
+        } else {
             throw PlayerError.noMission
         }
-        
-        return Mission.find(missionID, on: conn)
     }
     
     public func getSupportedPlayer(on conn: DatabaseConnectable) throws -> Future<Player?> {

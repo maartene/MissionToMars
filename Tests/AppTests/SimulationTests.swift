@@ -63,7 +63,7 @@ final class SimulationTests : XCTestCase {
         let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
         let mission = Mission(owningPlayerID: UUID())
         let component = mission.currentStage.components.first!
-        let buildingMission = try mission.startBuildingInStage(component, buildDate: Date())
+        let buildingMission = try mission.startBuildingInStage(component, buildDate: Date(), by: Player(emailAddress: "example@example.com", name: "testuser"))
         
         let missions = [buildingMission]
         
@@ -71,7 +71,7 @@ final class SimulationTests : XCTestCase {
         let updatedMission = updatedSimulationResult.updatedMissions.first!
         XCTAssertGreaterThan(updatedMission.percentageDone, mission.percentageDone)
         XCTAssertGreaterThan(updatedMission.currentStage.percentageComplete, mission.currentStage.percentageComplete)
-        XCTAssertGreaterThan(updatedMission.currentStage.currentlyBuildingComponent?.percentageCompleted ?? 0, mission.currentStage.currentlyBuildingComponent?.percentageCompleted ?? 0)
+        XCTAssertGreaterThan(updatedMission.currentStage.currentlyBuildingComponents.first?.percentageCompleted ?? 0, mission.currentStage.currentlyBuildingComponents.first?.percentageCompleted ?? 0)
         
     }
     
