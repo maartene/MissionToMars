@@ -96,8 +96,8 @@ final class PlayerDBTests : XCTestCase {
     }
     
     func testDonateCashToPlayer() throws {
-        var player1 = try createTestPlayer(username: "player1")
-        let player2 = try createTestPlayer(username: "player2")
+        var player1 = try createTestPlayer(emailAddress: "player1@example.com")
+        let player2 = try createTestPlayer(emailAddress: "player2@example.com")
         
         player1.supportsPlayerID = player2.id
         
@@ -116,8 +116,8 @@ final class PlayerDBTests : XCTestCase {
     }
     
     func testDonateTechToPlayer() throws {
-        var player1 = try createTestPlayer(username: "player1")
-        let player2 = try createTestPlayer(username: "player2")
+        var player1 = try createTestPlayer(emailAddress: "player1@example.com")
+        let player2 = try createTestPlayer(emailAddress: "player2@example.com")
         
         player1.supportsPlayerID = player2.id
         
@@ -154,7 +154,7 @@ final class PlayerDBTests : XCTestCase {
         case .failure(let error):
             XCTFail("Received a failure from test \(error)")
         case .success(let buildResult):
-            XCTAssertNotNil(buildResult.changedMission.currentStage.currentlyBuildingComponent, "Should now be building something.")
+            XCTAssertGreaterThan(buildResult.changedMission.currentStage.currentlyBuildingComponents.count, 0, "Should now be building something.")
             XCTAssertLessThan(buildResult.changedPlayer.cash, player.cash, "cash")
         }
         
@@ -166,13 +166,13 @@ final class PlayerDBTests : XCTestCase {
         case appIsNil
     }
     
-    func createTestPlayer(username: String = "testUser") throws -> Player {
+    func createTestPlayer(emailAddress: String = "example@example.com") throws -> Player {
         guard let app = app else {
             throw PlayerDBTestsHelpersError.appIsNil
         }
         
         return try app.withPooledConnection(to: .sqlite, closure: { conn -> Future<Result<Player, Player.PlayerError>> in
-            return Player.createUser(username: username, on: conn)
+            return Player.createUser(emailAddress: emailAddress, name: "testUser", on: conn)
             }).map(to: Player.self) { result in
                 switch result {
                 case .success(let player):

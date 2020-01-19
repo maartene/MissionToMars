@@ -26,7 +26,8 @@ public struct Player: Content, SQLiteUUIDModel {
     
     public var id: UUID?
     
-    public let username: String
+    public let emailAddress: String
+    public let name: String
     
     public var ownsMissionID: UUID?
     public var supportsPlayerID: UUID?
@@ -54,8 +55,9 @@ public struct Player: Content, SQLiteUUIDModel {
         return currentlyBuildingImprovement != nil
     }
     
-    public init(username: String) {
-        self.username = username
+    public init(emailAddress: String, name: String) {
+        self.emailAddress = emailAddress
+        self.name = name
         self.improvements = []
         
         let techConsultancy = Improvement.getImprovementByName(.TechConsultancy)!
@@ -81,6 +83,40 @@ public struct Player: Content, SQLiteUUIDModel {
         let rawBuildTimeFactor = allEffects.reduce(1.0) { result, effect in
             switch effect {
             case .lowerProductionTimePercentage(let percentage):
+                return result - (percentage / 100.0)
+            default:
+                return result
+            }
+        }
+        
+        return max(rawBuildTimeFactor, 0.1)
+    }
+    
+    var componentDiscount: Double {
+        let allEffects = completedImprovements.map { improvement in
+            return improvement.staticEffects
+            }.joined()
+        
+        let rawDiscount = allEffects.reduce(1.0) { result, effect in
+            switch effect {
+            case .componentBuildDiscount(let percentage):
+                return result - (percentage / 100.0)
+            default:
+                return result
+            }
+        }
+        
+        return max(rawDiscount, 0.1)
+    }
+    
+    var componentBuildTimeFactor: Double {
+        let allEffects = completedImprovements.map { improvement in
+            return improvement.staticEffects
+            }.joined()
+        
+        let rawBuildTimeFactor = allEffects.reduce(1.0) { result, effect in
+            switch effect {
+            case .shortenComponentBuildTime(let percentage):
                 return result - (percentage / 100.0)
             default:
                 return result
@@ -202,7 +238,9 @@ public struct Player: Content, SQLiteUUIDModel {
             return (updatedPlayer, updatedMission)
         }
         
-        guard cash >= component.cost else {
+        let netCost = component.cost * componentDiscount
+        
+        guard cash >= netCost else {
             throw PlayerError.insufficientFunds
         }
         
@@ -210,8 +248,8 @@ public struct Player: Content, SQLiteUUIDModel {
             throw PlayerError.playerMissesPrerequisiteTechnology
         }
         
-        updatedMission = try updatedMission.startBuildingInStage(component, buildDate: date)
-        updatedPlayer.cash -= component.cost
+        updatedMission = try updatedMission.startBuildingInStage(component, buildDate: date, by: self)
+        updatedPlayer.cash -= netCost
         
         return (updatedPlayer, updatedMission)
     }
@@ -304,18 +342,22 @@ public struct Player: Content, SQLiteUUIDModel {
     mutating public func debug_setCash(_ amount: Double) {
         self.cash = amount
     }
+    
+    mutating public func debug_setTech(_ amount: Double) {
+        self.technologyPoints = amount
+    }
 }
 
 extension Player: Migration { }
 
 // Database aware actions for Player model
 extension Player {
-    public static func createUser(username: String, on conn: DatabaseConnectable) -> Future<Result<Player, PlayerError>> {
-        let player = Player(username: username)
+    public static func createUser(emailAddress: String, name: String, on conn: DatabaseConnectable) -> Future<Result<Player, PlayerError>> {
+        let player = Player(emailAddress: emailAddress, name: name)
         do {
             try player.validate()
             
-            return Player.query(on: conn).filter(\.username, .equal, username).first().flatMap(to: Result<Player, PlayerError>.self) { existingUser in
+            return Player.query(on: conn).filter(\.emailAddress, .equal, emailAddress).first().flatMap(to: Result<Player, PlayerError>.self) { existingUser in
                 if existingUser != nil {
                     return Future.map(on: conn) { () -> Result<Player, PlayerError> in
                         return .failure(.userAlreadyExists)
@@ -332,11 +374,21 @@ extension Player {
     }
     
     public func getSupportedMission(on conn: DatabaseConnectable) throws -> Future<Mission?> {
-        guard let missionID = ownsMissionID else {
+        if let missionID = ownsMissionID {
+            return Mission.find(missionID, on: conn)
+        } else if let supportedMissionOwnerID = supportsPlayerID {
+            return try getSupportedPlayer(on: conn).flatMap(to: Mission?.self) { supportedPlayer in
+                guard let supportedPlayer = supportedPlayer else {
+                    throw Abort(.notFound, reason: "Player with id \(supportedMissionOwnerID) not found.")
+                }
+                guard let missionID = supportedPlayer.ownsMissionID else {
+                    throw PlayerError.noMission
+                }
+                return Mission.find(missionID, on: conn)
+            }
+        } else {
             throw PlayerError.noMission
         }
-        
-        return Mission.find(missionID, on: conn)
     }
     
     public func getSupportedPlayer(on conn: DatabaseConnectable) throws -> Future<Player?> {
@@ -422,7 +474,8 @@ extension Player: Validatable {
     /// See `Validatable`.
     public static func validations() throws -> Validations<Player> {
         var validations = Validations(Player.self)
-        try validations.add(\.username, .count(3...) && .alphanumeric)
+        try validations.add(\.emailAddress, .email)
+        try validations.add(\.name, .count(3...) && .ascii)
         return validations
     }
 }

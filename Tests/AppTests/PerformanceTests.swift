@@ -63,7 +63,7 @@ final class PerformanceTests: XCTestCase {
         _ = try? app.withPooledConnection(to: .sqlite, closure: { conn -> Future<[Player]> in
             var futures = [Future<Player>]()
             for i in 0 ..< 1000 {
-                let playerFuture = Player.createUser(username: "testUser\(i)", on: conn).map(to: Player.self) { result in
+                let playerFuture = Player.createUser(emailAddress: "testUser\(i)@example.com", name: "testUser\(i)", on: conn).map(to: Player.self) { result in
                     switch result {
                     case .success(let player):
                         return player

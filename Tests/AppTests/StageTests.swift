@@ -39,11 +39,11 @@ class StageTests: XCTestCase {
         let stage = try Stage.getStageByLevel(1)
         XCTAssertEqual(stage.components.count, stage.uncompletedComponents.count, "All components should be uncompleted.")
         XCTAssertEqual(0, stage.completedComponents.count, "No components should be completed yet.")
-        XCTAssertNil(stage.currentlyBuildingComponent, "No component should be building.")
+        XCTAssertEqual(stage.currentlyBuildingComponents.count, 0, "No component should be building.")
         
-        let changedStage = try stage.startBuildingComponent(stage.components.randomElement()!, buildDate: Date())
+        let changedStage = try stage.startBuildingComponent(stage.components.randomElement()!, buildDate: Date(), by: Player(emailAddress: "", name: ""))
         
-        XCTAssertNotNil(changedStage.currentlyBuildingComponent, "A component should be building.")
+        XCTAssertGreaterThan(changedStage.currentlyBuildingComponents.count, 0, "A component should be building.")
         
     }
     
@@ -51,12 +51,12 @@ class StageTests: XCTestCase {
         let stage = try Stage.getStageByLevel(1)
         XCTAssertEqual(stage.components.count, stage.uncompletedComponents.count, "All components should be uncompleted.")
         XCTAssertEqual(0, stage.completedComponents.count, "No components should be completed yet.")
-        XCTAssertNil(stage.currentlyBuildingComponent, "No component should be building.")
+        XCTAssertEqual(0, stage.currentlyBuildingComponents.count, "No component should be building.")
         
         let componentToBuild = stage.components.randomElement()!
-        let changedStage = try stage.startBuildingComponent(componentToBuild, buildDate: Date())
-        let updatedStage = changedStage.updateStage(ticks: changedStage.currentlyBuildingComponent?.buildTime ?? 0)
-        XCTAssertNil(updatedStage.currentlyBuildingComponent, "A component should not be building.")
+        let changedStage = try stage.startBuildingComponent(componentToBuild, buildDate: Date(), by: Player(emailAddress: "", name: ""))
+        let updatedStage = changedStage.updateStage(ticks: changedStage.currentlyBuildingComponents.first?.buildTime ?? 0)
+        XCTAssertEqual(0, updatedStage.currentlyBuildingComponents.count, "A component should not be building.")
         XCTAssertEqual(1, updatedStage.completedComponents.count, "One component should be completed.")
         XCTAssert(updatedStage.completedComponents.contains(componentToBuild), "The component to build should be part of completedComponents")
     }

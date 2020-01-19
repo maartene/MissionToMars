@@ -43,8 +43,8 @@ public struct Stage: Equatable, Codable {
         return components.filter { component in component.percentageCompleted < 100 }
     }
     
-    public var currentlyBuildingComponent: Component? {
-        return uncompletedComponents.first { component in component.buildStartedOn != nil }
+    public var currentlyBuildingComponents: [Component] {
+        return uncompletedComponents.filter { component in component.buildStartedOn != nil }
     }
     
     public var unstartedComponents: [Component] {
@@ -75,10 +75,20 @@ public struct Stage: Equatable, Codable {
         return updatedStage
     }
     
-    public func startBuildingComponent(_ component: Component, buildDate: Date) throws -> Stage {
+    public func playerIsBuildingComponentInStage(_ player: Player) -> Bool {
+        for component in currentlyBuildingComponents {
+            if component.builtByPlayerID == player.id {
+                return true
+            }
+        }
+        return false
+    }
+    
+    public func startBuildingComponent(_ component: Component, buildDate: Date, by player: Player) throws -> Stage {
         var updatedStage = self
         
-        guard currentlyBuildingComponent == nil else {
+        
+        guard playerIsBuildingComponentInStage(player) == false else {
             throw StageError.alreadyBuildingComponent
         }
         
@@ -89,7 +99,7 @@ public struct Stage: Equatable, Codable {
         var updatedComponents = components
         
         if let componentIndex = updatedComponents.firstIndex(of: component) {
-            updatedComponents[componentIndex] = try component.startBuild(startDate: buildDate)
+            updatedComponents[componentIndex] = try component.startBuild(startDate: buildDate, by: player)
         }
          
         updatedStage.components = updatedComponents

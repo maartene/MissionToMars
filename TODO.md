@@ -1,0 +1,1 @@
+* Supporting players should be able to build components

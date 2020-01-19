@@ -49,7 +49,7 @@ final class SimulationTests : XCTestCase {
     func testUpdatePlayer() throws {
         // let's assume gamedate is one year from now.
         let gameDate = Date().addingTimeInterval(24*60*60*365)
-        let players = [Player(username: "testUser")]
+        let players = [Player(emailAddress: "example@example.com", name: "testUser")]
         
         let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
         let update = simulation.updateSimulation(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60 * 4), players: players, missions: [])
@@ -63,7 +63,7 @@ final class SimulationTests : XCTestCase {
         let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
         let mission = Mission(owningPlayerID: UUID())
         let component = mission.currentStage.components.first!
-        let buildingMission = try mission.startBuildingInStage(component, buildDate: Date())
+        let buildingMission = try mission.startBuildingInStage(component, buildDate: Date(), by: Player(emailAddress: "example@example.com", name: "testuser"))
         
         let missions = [buildingMission]
         
@@ -71,7 +71,7 @@ final class SimulationTests : XCTestCase {
         let updatedMission = updatedSimulationResult.updatedMissions.first!
         XCTAssertGreaterThan(updatedMission.percentageDone, mission.percentageDone)
         XCTAssertGreaterThan(updatedMission.currentStage.percentageComplete, mission.currentStage.percentageComplete)
-        XCTAssertGreaterThan(updatedMission.currentStage.currentlyBuildingComponent?.percentageCompleted ?? 0, mission.currentStage.currentlyBuildingComponent?.percentageCompleted ?? 0)
+        XCTAssertGreaterThan(updatedMission.currentStage.currentlyBuildingComponents.first?.percentageCompleted ?? 0, mission.currentStage.currentlyBuildingComponents.first?.percentageCompleted ?? 0)
         
     }
     
@@ -79,7 +79,7 @@ final class SimulationTests : XCTestCase {
         let gameDate = Date().addingTimeInterval(Double(SECONDS_IN_YEAR))
         let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
         
-        var player = Player(username: "testUser")
+        var player = Player(emailAddress: "example@example.com", name: "testUser")
         let improvement = Improvement.getImprovementByName(.Faculty)!
         player.debug_setCash(improvement.cost)
         let buildingPlayer = try player.startBuildImprovement(improvement, startDate: gameDate)
@@ -93,7 +93,7 @@ final class SimulationTests : XCTestCase {
         let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
         
         let improvement = Improvement.getImprovementByName(.PrefabFurniture)!
-        var player = try Player(username: "testUser").extraIncome(amount: improvement.cost).startBuildImprovement(improvement, startDate: Date())
+        var player = try Player(emailAddress: "example@example.com", name: "testUser").extraIncome(amount: improvement.cost).startBuildImprovement(improvement, startDate: Date())
         let extraCash = player.cashPerTick
         
         player = player.updatePlayer(ticks: improvement.buildTime + 1)

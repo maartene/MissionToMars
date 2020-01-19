@@ -72,9 +72,10 @@ public struct Component: Equatable, Codable {
     public let name: String
     public let description: String
     public let cost: Double
-    public let buildTime: Int // in days/ticks
+    public var buildTime: Int // in days/ticks
     public private(set) var buildStartedOn: Date?
     public private(set) var percentageCompleted: Double = 0
+    public private(set) var builtByPlayerID: UUID?
     public let requiredTechnologyShortnames: [Technology.ShortName]
     public var requiredTechnologies: [Technology] {
         return requiredTechnologyShortnames.compactMap { shortName in
@@ -82,20 +83,28 @@ public struct Component: Equatable, Codable {
         }
     }
     
-    public func startBuild(startDate: Date) throws -> Component {
+    public func startBuild(startDate: Date, by player: Player) throws -> Component {
         guard buildStartedOn == nil else {
             throw ComponentError.componentAlreadyBeingBuilt
         }
         
+        guard builtByPlayerID == nil else {
+            throw ComponentError.componentAlreadyBeingBuilt
+        }
+        
         var startedBuiltComponent = self
+        startedBuiltComponent.buildTime = Int(Double(buildTime) * player.componentBuildTimeFactor)
         startedBuiltComponent.buildStartedOn = startDate
+        startedBuiltComponent.builtByPlayerID = player.id
         return startedBuiltComponent
     }
     
     public func updateComponent(ticks: Int = 1) -> Component {
         var updatedComponent = self
+        
         if buildStartedOn != nil {
-            updatedComponent.percentageCompleted += 100.0 * Double(ticks) / Double(buildTime)
+            let progress = Double(ticks) / Double(buildTime)
+            updatedComponent.percentageCompleted += 100.0 * progress
         }
         
         if updatedComponent.percentageCompleted > 100.0 {

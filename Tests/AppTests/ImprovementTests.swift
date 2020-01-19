@@ -60,7 +60,7 @@ final class ImprovementTests : XCTestCase {
         
         let completedImprovement = try completeImprovement(improvement)
         
-        let player = Player(username: "testUser")
+        let player = Player(emailAddress: "example@example.com", name: "testUser")
         
         let updatedPlayer = completedImprovement.applyEffectForOwner(player: player)
         
@@ -77,7 +77,7 @@ final class ImprovementTests : XCTestCase {
     }
     
     /*func testTechFirmShouldIncreaseIncomeAndTechPoints() throws {
-        let player = Player(username: "testUser")
+        let player = Player(emailAddress: "example@example.com", name: "testUser")
         assert(player.improvements.count > 0)
         assert(player.improvements[0].shortName == .TechConsultancy)
         
@@ -88,7 +88,7 @@ final class ImprovementTests : XCTestCase {
     }*/
     
     func testUpdateOfPlayerImprovesBuildProgress() throws {
-        var player = Player(username: "testUser")
+        var player = Player(emailAddress: "example@example.com", name: "testUser")
         let improvement = Improvement.getImprovementByName(.CrowdFundingCampaign)!
         player.debug_setCash(improvement.cost)
         
@@ -99,7 +99,7 @@ final class ImprovementTests : XCTestCase {
     
     func testUpdateOfPlayerTriggersImprovementEffect() throws {
         let improvement = Improvement.getImprovementByName(.InvestmentPortfolio_S)!
-        let player = Player(username: "testUser").extraIncome(amount: improvement.cost)
+        let player = Player(emailAddress: "example@example.com", name: "testUser").extraIncome(amount: improvement.cost)
         let playerWouldGetCash = player.cashPerTick
         var buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
         buildingPlayer = buildingPlayer.updatePlayer(ticks: improvement.buildTime)
@@ -111,14 +111,14 @@ final class ImprovementTests : XCTestCase {
      }
     
     func testPlayerCannotBuildImprovementWithoutPrerequisiteTech() throws {
-        let player = Player(username: "testUser")
+        let player = Player(emailAddress: "example@example.com", name: "testUser")
         let improvement = Improvement.getImprovementByName(.DroneDeliveryService)!
         
         XCTAssertThrowsError(try player.startBuildImprovement(improvement, startDate: Date()), "Player should not be able to build this improvement because player misses prereq technology.")
     }
     
     func testPlayerCanBuildImprovementWithPrerequisiteTech() throws {
-        var player = Player(username: "testUser")
+        var player = Player(emailAddress: "example@example.com", name: "testUser")
         player = player.extraTech(amount: 1_000_000)
         
         let improvement = Improvement.getImprovementByName(.BioResearchFacility)!
@@ -130,7 +130,7 @@ final class ImprovementTests : XCTestCase {
     }
     
     func testPlayerIsBuildingImprovementCannotBuildAnother() throws {
-        var player = Player(username: "testUser")
+        var player = Player(emailAddress: "example@example.com", name: "testUser")
         let improvement = Improvement.getImprovementByName(.Faculty)!
         player = player.extraIncome(amount: improvement.cost)
         
@@ -144,7 +144,7 @@ final class ImprovementTests : XCTestCase {
     }
     
     func testPlayerCanRushImprovement() throws {
-        var player = Player(username: "testuser")
+        var player = Player(emailAddress: "example@example.com", name: "testUser")
         let improvement = Improvement.getImprovementByName(.Faculty)!
         player = player.extraIncome(amount: improvement.cost * 2)
         
@@ -159,7 +159,7 @@ final class ImprovementTests : XCTestCase {
     }
     
     func testPlayerCannotRushUnrushableImprovement() throws {
-        var player = Player(username: "testuser")
+        var player = Player(emailAddress: "example@example.com", name: "testUser")
         let improvement = Improvement.getImprovementByName(.InvestmentPortfolio_S)!
         player = player.extraIncome(amount: improvement.cost * 2)
         
@@ -170,7 +170,7 @@ final class ImprovementTests : XCTestCase {
     }
     
     func testPlayerCannotRushWithInsufficientFunds() throws {
-        var player = Player(username: "testuser")
+        var player = Player(emailAddress: "example@example.com", name: "testUser")
         let improvement = Improvement.getImprovementByName(.InvestmentPortfolio_S)!
         player = player.extraIncome(amount: improvement.cost)
         
@@ -186,12 +186,12 @@ final class ImprovementTests : XCTestCase {
         let improvement2 = Improvement.getImprovementByName(.CrowdFundingCampaign)!
         let ikea = Improvement.getImprovementByName(.PrefabFurniture)!
         
-        var player1 = Player(username: "testUser")
+        var player1 = Player(emailAddress: "example@example.com", name: "testUser")
         player1 = player1.extraIncome(amount: improvement1.cost)
         player1 = try player1.startBuildImprovement(improvement1, startDate: Date())
         XCTAssertEqual(player1.currentlyBuildingImprovement?.percentageCompleted ?? 1.0, 0.0, "%")
         
-        var player2 = Player(username: "testUser2")
+        var player2 = Player(emailAddress: "example2@example.com", name: "testUser2")
         player2 = player2.extraIncome(amount: improvement2.cost + ikea.cost)
         player2 = try player2.startBuildImprovement(ikea, startDate: Date())
         player2 = player2.updatePlayer(ticks: ikea.buildTime + 1)
@@ -207,7 +207,7 @@ final class ImprovementTests : XCTestCase {
     
     // test static effect
     func testBuildingCanIncreaseBuiltTimeFactor() throws {
-        let player = Player(username: "testUser")
+        let player = Player(emailAddress: "example@example.com", name: "testUser")
         XCTAssertEqual(player.buildTimeFactor, 1.0)
         
         // Build Ikea store

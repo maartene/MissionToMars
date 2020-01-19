@@ -3,8 +3,13 @@
 <div>
   <form action="/create/player" method="POST">
     <div class="form-group">
-        <label for="username">User name</label>
-        <input type="text" class="form-control" id="text" name="username" required minlength="3" pattern="^[a-zA-Z0-9_]*$"/>
+        <label for="emailAddress">Email address</label>
+        <input type="email" class="form-control" id="text" name="emailAddress"/>
+        <small id="emailHelp" class="form-text text-muted">Required, needs to be a valid email address.</small>
+    </div>
+    <div class="form-group">
+        <label for="emailAddress">Character name</label>
+        <input type="text" class="form-control" id="text" name="name" required minlength="3" pattern="^[a-zA-Z0-9_ ]*$"/>
         <small id="emailHelp" class="form-text text-muted">Required, minimum of three characters, letters, underscores and numbers only.</small>
     </div>
     <a href="/" type="cancel" class="btn btn-secondary">Cancel</a>
