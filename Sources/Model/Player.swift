@@ -342,6 +342,10 @@ public struct Player: Content, SQLiteUUIDModel {
     mutating public func debug_setCash(_ amount: Double) {
         self.cash = amount
     }
+    
+    mutating public func debug_setTech(_ amount: Double) {
+        self.technologyPoints = amount
+    }
 }
 
 extension Player: Migration { }

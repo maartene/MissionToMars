@@ -589,11 +589,27 @@ class FrontEndController: RouteCollection {
             return Player.query(on: req).all().flatMap(to: [Player].self) { players in
                 let richPlayers = players.map { player -> Player in
                     var changedPlayer = player
-                    changedPlayer.debug_setCash(1_000_000_000)
+                    changedPlayer.debug_setCash(4_000_000_000)
                     return changedPlayer
                 }
                 
                 return Player.savePlayers(richPlayers, on: req)
+            }
+        }
+        
+        router.post("debug", "tech") { req -> Future<[Player]> in
+            guard (Environment.get("DEBUG_MODE") ?? "inactive") == "active" else {
+                throw Abort(.notFound)
+            }
+            
+            return Player.query(on: req).all().flatMap(to: [Player].self) { players in
+                let smartPlayers = players.map { player -> Player in
+                    var changedPlayer = player
+                    changedPlayer.debug_setTech(1000)
+                    return changedPlayer
+                }
+                
+                return Player.savePlayers(smartPlayers, on: req)
             }
         }
         
