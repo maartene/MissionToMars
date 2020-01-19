@@ -14,7 +14,7 @@ let package = Package(
         .target(name: "Model", dependencies: ["Vapor", "FluentSQLite"]),
         .target(name: "App", dependencies: ["Vapor", "Model", "Leaf", "MailJet"]),
         .target(name: "Run", dependencies: ["App"]),
-        .testTarget(name: "AppTests", dependencies: ["App", "Model"]),
+        .testTarget(name: "AppTests", dependencies: ["App", "Model", "MailJet"]),
     ]
 )
 

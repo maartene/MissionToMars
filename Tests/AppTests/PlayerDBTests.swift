@@ -145,7 +145,7 @@ final class PlayerDBTests : XCTestCase {
         
         XCTAssertGreaterThanOrEqual(player.cash, component.cost, "cash")
         
-        let result = try app?.withPooledConnection(to: .sqlite) { conn -> Future<Result<(changedPlayer: Player, changedMission: Mission), Player.PlayerError>> in
+        let result = try app?.withPooledConnection(to: .sqlite) { conn -> Future<Result<(changedPlayer: Player, changedMission: Mission), Error>> in
             return try player.investInComponent(component, on: conn, date: Date())
         }.wait()
         
