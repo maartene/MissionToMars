@@ -480,42 +480,21 @@ class FrontEndController: RouteCollection {
             
             return try self.getPlayerFromSession(on: req).flatMap(to: View.self) {
             player in
-                if player.ownsMissionID != nil {
-                    return try player.getSupportedMission(on: req).flatMap(to: View.self) { mission in
-                        guard let mission = mission else {
-                            throw Abort(.notFound, reason: "No mission found for player \(player.name)")
-                        }
-                        return try mission.getSupportingPlayers(on: req).flatMap(to: View.self) { supportingPlayers in
-                            var result = supportingPlayers.map { player in
+                return try player.getSupportedMission(on: req).flatMap(to: View.self) { mission in
+                    guard let mission = mission else {
+                        throw Abort(.notFound, reason: "No mission found for player \(player.name)")
+                    }
+                    return try mission.getSupportingPlayers(on: req).flatMap(to: View.self) { supportingPlayers in
+                        var result = supportingPlayers.map { player -> String in
+                            if player.id == mission.owningPlayerID {
+                                return player.name + " (\(player.emailAddress) - owner)"
+                            } else {
                                 return player.name + " (\(player.emailAddress))"
                             }
-                            result.insert(player.name + " (owner)", at: 0)
-                            let context = SupportingPlayerContext(player: player, supportingPlayerNames: result, missionName: mission.missionName)
-                            return try req.view().render("mission_supportingPlayers", context)
                         }
+                        let context = SupportingPlayerContext(player: player, supportingPlayerNames: result, missionName: mission.missionName)
+                        return try req.view().render("mission_supportingPlayers", context)
                     }
-                } else if player.supportsPlayerID != nil {
-                    return try player.getSupportedPlayer(on: req).flatMap(to: View.self) { supportedPlayer in
-                        guard let supportedPlayer = supportedPlayer else {
-                            throw Abort(.notFound, reason: "No supported player found.")
-                        }
-                        
-                        return try supportedPlayer.getSupportedMission(on: req).flatMap(to: View.self) { mission in
-                            guard let mission = mission else {
-                                throw Abort(.notFound, reason: "No mission found.")
-                            }
-                            return try mission.getSupportingPlayers(on: req).flatMap(to: View.self) { supportingPlayers in
-                                var result = supportingPlayers.map { player in
-                                    return player.name
-                                }
-                                result.insert(supportedPlayer.name + " (\(supportedPlayer.emailAddress) - owner)", at: 0)
-                                let context = SupportingPlayerContext(player: player, supportingPlayerNames: result, missionName: mission.missionName)
-                                return try req.view().render("mission_supportingPlayers", context)
-                            }
-                        }
-                    }
-                } else {
-                    throw Abort(.notFound, reason: "No mission for player.")
                 }
             }
         }

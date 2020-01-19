@@ -56,9 +56,8 @@ class MailJetTests: XCTestCase {
             return
         }
         
-        
-        let mailJet = MailJetConfig(apiKey: publicKey, secretKey: privateKey, senderName: "Maarten", senderEmail: "maarten@mission2mars.space")
-        mailJet.sendMessage(to: "maarten@thedreamweb.eu", toName: "Maarten Engels", subject: "Test email", message: "Test message", htmlMessage: nil, on: app)
+        /*let mailJet = MailJetConfig(apiKey: publicKey, secretKey: privateKey, senderName: "Maarten", senderEmail: "maarten@mission2mars.space")
+        mailJet.sendMessage(to: "maarten@thedreamweb.eu", toName: "Maarten Engels", subject: "Test email", message: "Test message", htmlMessage: nil, on: app)*/
     }
         
 }

@@ -387,7 +387,7 @@ extension Player {
                 return Mission.find(missionID, on: conn)
             }
         } else {
-            throw PlayerError.noMission
+            return Future.map(on: conn) { return nil }
         }
     }
     
