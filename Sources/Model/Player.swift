@@ -92,6 +92,40 @@ public struct Player: Content, SQLiteUUIDModel {
         return max(rawBuildTimeFactor, 0.1)
     }
     
+    var componentDiscount: Double {
+        let allEffects = completedImprovements.map { improvement in
+            return improvement.staticEffects
+            }.joined()
+        
+        let rawDiscount = allEffects.reduce(1.0) { result, effect in
+            switch effect {
+            case .componentBuildDiscount(let percentage):
+                return result - (percentage / 100.0)
+            default:
+                return result
+            }
+        }
+        
+        return max(rawDiscount, 0.1)
+    }
+    
+    var componentBuildTimeFactor: Double {
+        let allEffects = completedImprovements.map { improvement in
+            return improvement.staticEffects
+            }.joined()
+        
+        let rawBuildTimeFactor = allEffects.reduce(1.0) { result, effect in
+            switch effect {
+            case .shortenComponentBuildTime(let percentage):
+                return result - (percentage / 100.0)
+            default:
+                return result
+            }
+        }
+        
+        return max(rawBuildTimeFactor, 0.1)
+    }
+    
     public func updatePlayer(ticks: Int = 1) -> Player {
         var updatedPlayer = self
         
@@ -204,7 +238,9 @@ public struct Player: Content, SQLiteUUIDModel {
             return (updatedPlayer, updatedMission)
         }
         
-        guard cash >= component.cost else {
+        let netCost = component.cost * componentDiscount
+        
+        guard cash >= netCost else {
             throw PlayerError.insufficientFunds
         }
         
@@ -212,8 +248,8 @@ public struct Player: Content, SQLiteUUIDModel {
             throw PlayerError.playerMissesPrerequisiteTechnology
         }
         
-        updatedMission = try updatedMission.startBuildingInStage(component, buildDate: date)
-        updatedPlayer.cash -= component.cost
+        updatedMission = try updatedMission.startBuildingInStage(component, buildDate: date, buildTimeFactor: componentBuildTimeFactor)
+        updatedPlayer.cash -= netCost
         
         return (updatedPlayer, updatedMission)
     }

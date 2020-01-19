@@ -488,7 +488,7 @@ class FrontEndController: RouteCollection {
                         }
                         return try mission.getSupportingPlayers(on: req).flatMap(to: View.self) { supportingPlayers in
                             var result = supportingPlayers.map { player in
-                                return player.name
+                                return player.name + " (\(player.emailAddress))"
                             }
                             result.insert(player.name + " (owner)", at: 0)
                             let context = SupportingPlayerContext(player: player, supportingPlayerNames: result, missionName: mission.missionName)
@@ -509,7 +509,7 @@ class FrontEndController: RouteCollection {
                                 var result = supportingPlayers.map { player in
                                     return player.name
                                 }
-                                result.insert(supportedPlayer.name + " (owner)", at: 0)
+                                result.insert(supportedPlayer.name + " (\(supportedPlayer.emailAddress) - owner)", at: 0)
                                 let context = SupportingPlayerContext(player: player, supportingPlayerNames: result, missionName: mission.missionName)
                                 return try req.view().render("mission_supportingPlayers", context)
                             }

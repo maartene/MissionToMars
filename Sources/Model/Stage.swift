@@ -75,7 +75,7 @@ public struct Stage: Equatable, Codable {
         return updatedStage
     }
     
-    public func startBuildingComponent(_ component: Component, buildDate: Date) throws -> Stage {
+    public func startBuildingComponent(_ component: Component, buildDate: Date, buildTimeFactor: Double = 1.0) throws -> Stage {
         var updatedStage = self
         
         guard currentlyBuildingComponent == nil else {
@@ -89,7 +89,7 @@ public struct Stage: Equatable, Codable {
         var updatedComponents = components
         
         if let componentIndex = updatedComponents.firstIndex(of: component) {
-            updatedComponents[componentIndex] = try component.startBuild(startDate: buildDate)
+            updatedComponents[componentIndex] = try component.startBuild(startDate: buildDate, buildTimeFactor: buildTimeFactor)
         }
          
         updatedStage.components = updatedComponents

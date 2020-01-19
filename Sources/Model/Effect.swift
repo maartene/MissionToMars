@@ -24,6 +24,8 @@ public enum Effect: Codable {
     case lowerProductionTimePercentage(percentage: Double)
     case extraIncomeDailyIncome(times: Double)
     case oneShot(shortName: Improvement.ShortName)
+    case shortenComponentBuildTime(percentage: Double)
+    case componentBuildDiscount(percentage: Double)
     
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: EffectCodingKeys.self)
@@ -47,6 +49,12 @@ public enum Effect: Codable {
         case "oneShot":
             let shortName = try values.decode(Improvement.ShortName.self, forKey: .value)
             self = .oneShot(shortName: shortName)
+        case "shortenComponentBuildTime":
+            let percentage = try values.decode(Double.self, forKey: .value)
+            self = .shortenComponentBuildTime(percentage: percentage)
+        case "componentBuildDiscount":
+            let percentage = try values.decode(Double.self, forKey: .value)
+            self = .componentBuildDiscount(percentage: percentage)
         default:
             throw EffectError.decodingUnknownEffectType
         }
@@ -74,6 +82,12 @@ public enum Effect: Codable {
         case .oneShot(let shortName):
             try container.encode("oneShot", forKey: .effectType)
             try container.encode(shortName, forKey: .value)
+        case .shortenComponentBuildTime(let percentage):
+            try container.encode("shortenComponentBuildTime", forKey: .effectType)
+            try container.encode(percentage, forKey: .value)
+        case .componentBuildDiscount(let percentage):
+            try container.encode("componentBuildDiscount", forKey: .effectType)
+            try container.encode(percentage, forKey: .value)
         }
     }
     

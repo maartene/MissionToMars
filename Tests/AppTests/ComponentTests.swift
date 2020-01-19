@@ -52,10 +52,69 @@ final class ComponentTests : XCTestCase {
         XCTAssertGreaterThanOrEqual(updatedComponent.percentageCompleted, 100.0, "Component should be done by now.")
     }
     
+    // discount tests
+    func testComponentShortenBuildTime() throws {
+        var player1 = Player(emailAddress: "example@example.com", name: "no discount")
+        player1.id = UUID()
+        let mission1 = Mission(owningPlayerID: player1.id!)
+        
+        var player2 = Player(emailAddress: "example2@example.com", name: "discount")
+        player2.id = UUID()
+        let mission2 = Mission(owningPlayerID: player2.id!)
+        
+        let component = Component.getComponentByName(.MissionControl)!
+        let orbit = Improvement.getImprovementByName(.OrbitalShipyard)!
+        
+        player1 = player1.extraIncome(amount: component.cost)
+        let result1 = try player1.investInComponent(component, in: mission1, date: Date())
+        
+        player2 = player2.extraIncome(amount: component.cost + orbit.cost)
+        player2 = try player2.startBuildImprovement(orbit, startDate: Date())
+        player2 = player2.updatePlayer(ticks: orbit.buildTime)
+        XCTAssert(player2.completedImprovements.contains(orbit))
+        
+        XCTAssertLessThan(player2.componentBuildTimeFactor, player1.componentBuildTimeFactor)
+        
+        let result2 = try player2.investInComponent(component, in: mission2, date: Date())
+        
+        XCTAssertLessThan(result2.changedMission.currentStage.currentlyBuildingComponent?.buildTime ?? 0, result1.changedMission.currentStage.currentlyBuildingComponent?.buildTime ?? -1)
+    }
+    
+    func testComponentDiscount() throws {
+        var player1 = Player(emailAddress: "example@example.com", name: "no discount")
+        player1.id = UUID()
+        let mission1 = Mission(owningPlayerID: player1.id!)
+        
+        var player2 = Player(emailAddress: "example2@example.com", name: "discount")
+        player2.id = UUID()
+        let mission2 = Mission(owningPlayerID: player2.id!)
+        
+        let component = Component.getComponentByName(.MissionControl)!
+        let orbit = Improvement.getImprovementByName(.OrbitalShipyard)!
+        
+        player1 = player1.extraIncome(amount: component.cost)
+        let result1 = try player1.investInComponent(component, in: mission1, date: Date())
+        let netCost1 = player1.cash - result1.changedPlayer.cash
+        
+        player2 = player2.extraIncome(amount: component.cost + orbit.cost)
+        player2 = try player2.startBuildImprovement(orbit, startDate: Date())
+        player2 = player2.updatePlayer(ticks: orbit.buildTime)
+        XCTAssert(player2.completedImprovements.contains(orbit))
+        
+        XCTAssertLessThan(player2.componentDiscount, player1.componentDiscount)
+        
+        let result2 = try player2.investInComponent(component, in: mission2, date: Date())
+        let netCost2 = player2.cash - result2.changedPlayer.cash
+        
+        XCTAssertLessThan(netCost2, netCost1)
+    }
+    
     static let allTests = [
         ("testStartBuildComponent", testStartBuildComponent),
         ("testGetComponentByName", testGetComponentByName),
         ("testUpdateShouldAdvancePercentageComplete", testUpdateShouldNotAdvancePercentageComplete),
         ("testComponentShouldComplete", testComponentShouldComplete),
+        ("testComponentShortenBuildTime", testComponentShortenBuildTime),
+        ("testComponentDiscount", testComponentDiscount),
     ]
 }

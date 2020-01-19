@@ -1,5 +1,6 @@
 #set("body") {
     <h2>Which mission do you want to support?</h2>
+    <p>Note: supporting a mission will share your e-mailaddress with the mission owner.</p>
     <div>
       <ul class="list-group">
         #for(mission in missions) {
