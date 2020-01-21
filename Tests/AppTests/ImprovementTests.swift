@@ -98,7 +98,7 @@ final class ImprovementTests : XCTestCase {
     }
     
     func testUpdateOfPlayerTriggersImprovementEffect() throws {
-        let improvement = Improvement.getImprovementByName(.InvestmentPortfolio_S)!
+        let improvement = Improvement.getImprovementByName(.InvestmentBank)!
         let player = Player(emailAddress: "example@example.com", name: "testUser").extraIncome(amount: improvement.cost)
         let playerWouldGetCash = player.cashPerTick
         var buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
@@ -160,7 +160,7 @@ final class ImprovementTests : XCTestCase {
     
     func testPlayerCannotRushUnrushableImprovement() throws {
         var player = Player(emailAddress: "example@example.com", name: "testUser")
-        let improvement = Improvement.getImprovementByName(.InvestmentPortfolio_S)!
+        let improvement = Improvement.getImprovementByName(.PrefabFurniture)!
         player = player.extraIncome(amount: improvement.cost * 2)
         
         let buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
@@ -171,7 +171,7 @@ final class ImprovementTests : XCTestCase {
     
     func testPlayerCannotRushWithInsufficientFunds() throws {
         var player = Player(emailAddress: "example@example.com", name: "testUser")
-        let improvement = Improvement.getImprovementByName(.InvestmentPortfolio_S)!
+        let improvement = Improvement.getImprovementByName(.PrefabFurniture)!
         player = player.extraIncome(amount: improvement.cost)
         
         let buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())

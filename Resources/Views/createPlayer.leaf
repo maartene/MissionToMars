@@ -12,6 +12,22 @@
         <input type="text" class="form-control" id="text" name="name" required minlength="3" pattern="^[a-zA-Z0-9_ ]*$"/>
         <small id="emailHelp" class="form-text text-muted">Required, minimum of three characters, letters, underscores and numbers only.</small>
     </div>
+    <fieldset class="form-group">
+      <legend>How will you start?</legend>
+      #for(improvement in startingImprovements) {
+        <div class="form-check">
+          <label class="form-check-label">
+            <input type="radio" class="form-check-input" name="startingImprovement" id="startingImprovement" value="#(improvement.shortName)" #if(improvement.shortName == 0) {checked}>
+            <div class="row">
+              <div class="col-md-auto">&nbsp;&nbsp;&nbsp;<img src="/images/Improvements/#(improvement.shortName)-w.png" alt="#(improvement.name)" width="24"/></div>
+              <div class="col-md">
+                  <b>#(improvement.name)</b> - #(improvement.description)
+              </div>
+            </div>
+          </label>
+        </div>
+      }
+    </fieldset>
     <a href="/" type="cancel" class="btn btn-secondary">Cancel</a>
     <button type="submit" class="btn btn-success">Save</button>
   </form>
