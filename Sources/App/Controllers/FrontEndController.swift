@@ -54,6 +54,7 @@ class FrontEndController: RouteCollection {
                             Have fun!
                             
                             - the Mission2Mars team
+                            Sent from: \(Environment.get("ENVIRONMENT") ?? "local test")
                             """, htmlMessage: """
                             <h1>Welcome \(player.name) to Mission2Mars</h1>
                             
@@ -63,6 +64,7 @@ class FrontEndController: RouteCollection {
                             <p>Have fun!</p>
                             <p>&nbsp;</p>
                             <p>- the Mission2Mars team</p>
+                            <p>Sent from: \(Environment.get("ENVIRONMENT") ?? "unknown")</p>
                             """, on: req)
                         }
                 case .failure(let error):
