@@ -56,15 +56,15 @@ public struct Player: Content, SQLiteUUIDModel {
         return currentlyBuildingImprovement != nil
     }
     
-    public init(emailAddress: String, name: String) {
+    public init(emailAddress: String, name: String, startImprovementShortName: Improvement.ShortName = .TechConsultancy) {
         self.emailAddress = emailAddress
         self.name = name
         self.improvements = []
         
-        let techConsultancy = Improvement.getImprovementByName(.TechConsultancy)!
-        if let completedConsultancy = try? techConsultancy.startBuild(startDate: Date()).updateImprovement(ticks: techConsultancy.buildTime) {
-            assert(completedConsultancy.isCompleted, "Your starting tech consultancy firm should be complete.")
-            self.improvements = [completedConsultancy]
+        let startImprovement = Improvement.getImprovementByName(startImprovementShortName)!
+        if let completedStartImprovement = try? startImprovement.startBuild(startDate: Date()).updateImprovement(ticks: startImprovement.buildTime) {
+            assert(completedStartImprovement.isCompleted, "Your starting tech consultancy firm should be complete.")
+            self.improvements = [completedStartImprovement]
         }
         
         self.unlockedTechnologyNames = [Technology.ShortName.LiIonBattery]
@@ -353,8 +353,8 @@ extension Player: Migration { }
 
 // Database aware actions for Player model
 extension Player {
-    public static func createUser(emailAddress: String, name: String, on conn: DatabaseConnectable) -> Future<Result<Player, PlayerError>> {
-        let player = Player(emailAddress: emailAddress, name: name)
+    public static func createUser(emailAddress: String, name: String, startImprovementShortName: Improvement.ShortName = .TechConsultancy, on conn: DatabaseConnectable) -> Future<Result<Player, PlayerError>> {
+        let player = Player(emailAddress: emailAddress, name: name, startImprovementShortName: startImprovementShortName)
         do {
             try player.validate()
             

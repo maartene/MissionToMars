@@ -124,7 +124,7 @@ class GameTests: XCTestCase {
         var mission: Mission!
         var players = [Player]()
         for i in 0 ..< 5 {
-            var player = Player(emailAddress: "example@example.com", name: "testUser")
+            var player = Player(emailAddress: "example@example.com", name: "testUser", startImprovementShortName: Improvement.startImprovements.randomElement()!.shortName)
             player.id = UUID()
             
             
@@ -193,7 +193,7 @@ class GameTests: XCTestCase {
                 }
                 
                 if player.isCurrentlyBuildingImprovement == false {
-                    if let improvement = Improvement.unlockedImprovementsForPlayer(player).filter({impr in player.improvements.contains(impr) == false}).first {
+                    if let improvement = Improvement.unlockedImprovementsForPlayer(player).filter({impr in player.improvements.contains(impr) == false}).randomElement() {
                         if player.cash >= improvement.cost {
                             player = try player.startBuildImprovement(improvement, startDate: Date())
                             if improvement.shortName != .CrowdFundingCampaign {

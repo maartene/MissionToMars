@@ -18,7 +18,7 @@ class FrontEndController: RouteCollection {
     
     func boot(router: Router) throws {
         router.get("create/player") { req -> Future<View> in
-            return try req.view().render("createPlayer")
+            return try req.view().render("createPlayer", ["startingImprovements": Improvement.startImprovements])
         }
         
         router.post("create/player") { req -> Future<View> in
@@ -29,8 +29,12 @@ class FrontEndController: RouteCollection {
             }
             let emailAddress: String = try req.content.syncGet(at: "emailAddress")
             let name: String = try req.content.syncGet(at: "name")
+            let shortNameForm: Int = try req.content.syncGet(at: "startingImprovement")
+            guard let startingImprovement = Improvement.ShortName.init(rawValue: shortNameForm) else {
+                throw Abort(.badRequest, reason: "Invalid starting improvement shortname \(shortNameForm).")
+            }
             
-            return Player.createUser(emailAddress: emailAddress, name: name, on: req).flatMap(to: View.self) { result in
+            return Player.createUser(emailAddress: emailAddress, name: name, startImprovementShortName: startingImprovement, on: req).flatMap(to: View.self) { result in
                 var context = CreateCharacterContext()
                 
                 switch result {

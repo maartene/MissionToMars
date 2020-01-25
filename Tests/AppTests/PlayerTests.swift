@@ -31,6 +31,17 @@ final class PlayerTests : XCTestCase {
         XCTAssertGreaterThan(updatedPlayers.receivingPlayer.cash, receivingPlayer.cash, " cash")
         XCTAssertLessThan(updatedPlayers.donatingPlayer.cash, givingPlayer.cash, " cash")
     }
+    
+    func testCreatePlayerWithStartingImprovement() throws {
+        let improvement = Improvement.getImprovementByName(.InvestmentBank)!
+        
+        let player = Player(emailAddress: "example@example.com", name: "Example User", startImprovementShortName: improvement.shortName)
+        
+        XCTAssert(player.completedImprovements.contains(improvement), "Player should have a completed \(improvement.name)")
+        
+        let techConsultancy = Improvement.getImprovementByName(.TechConsultancy)!
+        XCTAssert(player.improvements.contains(techConsultancy) == false, "Player should not have a tech consultancy.")
+    }
 
     func testDonateTechnologyToPlayer() throws {
         let givingPlayer = Player(emailAddress: "example@example.com", name: "giving player")
