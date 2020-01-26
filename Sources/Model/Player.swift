@@ -23,6 +23,8 @@ public struct Player: Content, SQLiteUUIDModel {
         case playerMissesPrerequisiteTechnology
         case playerIsAlreadyBuildingImprovement
         case playerNotFound
+        case playersNotInSameMission
+        case cannotDonateToYourself
     }
     
     public var id: UUID?
@@ -208,6 +210,10 @@ public struct Player: Content, SQLiteUUIDModel {
             throw PlayerError.insufficientFunds
         }
         
+        guard player.emailAddress != self.emailAddress else {
+            throw PlayerError.cannotDonateToYourself
+        }
+        
         var receivingPlayer = player
         var donatingPlayer = self
         
@@ -220,6 +226,10 @@ public struct Player: Content, SQLiteUUIDModel {
     func donate(techPoints amount: Double, to player: Player) throws -> (donatingPlayer: Player, receivingPlayer: Player) {
         guard amount <= self.technologyPoints else {
             throw PlayerError.insufficientTechPoints
+        }
+        
+        guard player.emailAddress != self.emailAddress else {
+            throw PlayerError.cannotDonateToYourself
         }
         
         var receivingPlayer = player
@@ -465,7 +475,7 @@ extension Player {
                             player.id == self.id }) && supportingPlayers.contains(where: { player in
                                 player.id == receivingPlayer.id }) else {
                             return Future.map(on: conn) {
-                                return .failure(PlayerError.noSupportedPlayer)
+                                return .failure(PlayerError.playersNotInSameMission)
                             }
                         }
                         
@@ -496,7 +506,7 @@ extension Player {
                             player.id == self.id }) && supportingPlayers.contains(where: { player in
                                 player.id == receivingPlayer.id }) else {
                             return Future.map(on: conn) {
-                                return .failure(PlayerError.noSupportedPlayer)
+                                return .failure(PlayerError.playersNotInSameMission)
                             }
                         }
                         

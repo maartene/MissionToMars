@@ -75,6 +75,12 @@ final class PlayerTests : XCTestCase {
         XCTAssertEqual(player.technologyPoints, updatedPlayer.technologyPoints)
     }
     
+    func testPlayerCannotDonateToSelf() throws {
+        let player = Player(emailAddress: "example@example.com", name: "testUser")
+        XCTAssertThrowsError(try player.donate(cash: player.cash - 1.0, to: player))
+        XCTAssertThrowsError(try player.donate(techPoints: player.technologyPoints - 1.0, to: player))
+    }
+    
     static let allTests = [
         ("testUpdatePlayer", testUpdatePlayer),
         ("testDonateCashToPlayer", testDonateCashToPlayer),
@@ -82,5 +88,6 @@ final class PlayerTests : XCTestCase {
         ("testCannotDonateMoreCashThanAvailable", testCannotDonateMoreCashThanAvailable),
         ("testCannotDonateMoreTechThanAvailable", testCannotDonateMoreTechThanAvailable),
         ("testUpdatePlayerWithoutImprovementsShouldNotChangePlayer", testUpdatePlayerWithoutImprovementsShouldNotChangePlayer),
+        ("testPlayerCannotDonateToSelf", testPlayerCannotDonateToSelf),
     ]
 }
