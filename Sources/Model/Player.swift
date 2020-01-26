@@ -415,6 +415,7 @@ extension Player {
         return Player.find(playerID, on: conn)
     }
     
+    @available(*, deprecated, message: "Use donateToPlayerSupportingSameMission(cash: receivingPlayer: on:) instead")
     public func donateToSupportedPlayer(cash amount: Double, on conn: DatabaseConnectable) throws -> Future<Result<(donatingPlayer: Player, receivingPlayer: Player), Error>> {
         return try getSupportedPlayer(on: conn).flatMap(to: Result<(donatingPlayer: Player, receivingPlayer: Player), Error>.self) { player in
             guard let supportedPlayer = player else {
@@ -434,6 +435,7 @@ extension Player {
         }
     }
     
+    @available(*, deprecated, message: "Use donateToPlayerSupportingSameMission(tech: receivingPlayer: on:) instead")
     public func donateToSupportedPlayer(techPoints amount: Double, on conn: DatabaseConnectable) throws -> Future<Result<(donatingPlayer: Player, receivingPlayer: Player), Error>> {
         return try getSupportedPlayer(on: conn).flatMap(to: Result<(donatingPlayer: Player, receivingPlayer: Player), Error>.self) { player in
             guard let supportedPlayer = player else {
@@ -451,6 +453,68 @@ extension Player {
             }
             return Future.map(on: conn) { return result }
         }
+    }
+    
+    public func donateToPlayerSupportingSameMission(cash amount: Double, receivingPlayer: Player, on conn: DatabaseConnectable) throws ->
+        Future<Result<(donatingPlayer: Player, receivingPlayer: Player), Error>> {
+            return try getSupportedMission(on: conn).flatMap(to: Result<(donatingPlayer: Player, receivingPlayer: Player), Error>.self) { missionResult in
+                switch missionResult {
+                case .success(let mission):
+                    return try mission.getSupportingPlayers(on: conn).flatMap(to: Result<(donatingPlayer: Player, receivingPlayer: Player), Error>.self) { supportingPlayers in
+                        guard supportingPlayers.contains(where: { player in
+                            player.id == self.id }) && supportingPlayers.contains(where: { player in
+                                player.id == receivingPlayer.id }) else {
+                            return Future.map(on: conn) {
+                                return .failure(PlayerError.noSupportedPlayer)
+                            }
+                        }
+                        
+                        var result: Result<(donatingPlayer: Player, receivingPlayer: Player), Error>
+                        do {
+                            let donatingResult = try self.donate(cash: amount, to: receivingPlayer)
+                            result = .success(donatingResult)
+                        } catch {
+                            result = .failure(error)
+                        }
+                        return Future.map(on: conn) { return result }
+                    }
+                case .failure(let error):
+                    return Future.map(on: conn) {
+                        return .failure(error)
+                    }
+                }
+            }
+    }
+    
+    public func donateToPlayerSupportingSameMission(tech amount: Double, receivingPlayer: Player, on conn: DatabaseConnectable) throws ->
+        Future<Result<(donatingPlayer: Player, receivingPlayer: Player), Error>> {
+            return try getSupportedMission(on: conn).flatMap(to: Result<(donatingPlayer: Player, receivingPlayer: Player), Error>.self) { missionResult in
+                switch missionResult {
+                case .success(let mission):
+                    return try mission.getSupportingPlayers(on: conn).flatMap(to: Result<(donatingPlayer: Player, receivingPlayer: Player), Error>.self) { supportingPlayers in
+                        guard supportingPlayers.contains(where: { player in
+                            player.id == self.id }) && supportingPlayers.contains(where: { player in
+                                player.id == receivingPlayer.id }) else {
+                            return Future.map(on: conn) {
+                                return .failure(PlayerError.noSupportedPlayer)
+                            }
+                        }
+                        
+                        var result: Result<(donatingPlayer: Player, receivingPlayer: Player), Error>
+                        do {
+                            let donatingResult = try self.donate(techPoints: amount, to: receivingPlayer)
+                            result = .success(donatingResult)
+                        } catch {
+                            result = .failure(error)
+                        }
+                        return Future.map(on: conn) { return result }
+                    }
+                case .failure(let error):
+                    return Future.map(on: conn) {
+                        return .failure(error)
+                    }
+                }
+            }
     }
     
     public func investInComponent(_ component: Component, on conn: DatabaseConnectable, date: Date) throws -> Future<Result<(changedPlayer: Player, changedMission: Mission), Error>> {

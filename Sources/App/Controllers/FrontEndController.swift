@@ -234,19 +234,130 @@ class FrontEndController: RouteCollection {
             }
         }
         
-        router.get("donate") { req -> Future<View> in
+        router.get("donate/to", String.parameter) { req -> Future<View> in
             struct DonateContext: Content {
                 let player: Player
-                let supportedPlayerName: String
+                let receivingPlayerName: String
+                let receivingPlayerEmail: String
             }
+            
+            let receivingPlayerEmail: String = try req.parameters.next()
+            
             return try self.getPlayerFromSession(on: req).flatMap(to: View.self) {
             player in
-                return try player.getSupportedPlayer(on: req).flatMap(to: View.self) { supportedPlayer in
-                    guard let supportedPlayer = supportedPlayer else {
-                        throw Abort(.notFound, reason: "No supported user found.")
+                return Player.query(on: req).filter(\.emailAddress, .equal, receivingPlayerEmail).first().flatMap(to: View.self) { receivingPlayer in
+                    guard let receivingPlayer = receivingPlayer else {
+                        throw Abort(.notFound, reason: "Could not find player with emailadress \(receivingPlayerEmail)")
                     }
-                    let context = DonateContext(player: player, supportedPlayerName: supportedPlayer.name)
-                    return try req.view().render("donate", context)
+                    
+                    let context = DonateContext(player: player, receivingPlayerName: receivingPlayer.name, receivingPlayerEmail: receivingPlayer.emailAddress)
+                        return try req.view().render("donate", context)
+                    }
+            }
+        }
+        
+        router.get("donate/to", String.parameter, "cash", String.parameter) { req -> Future<Response> in
+            guard let id = self.getPlayerIDFromSession(on: req) else {
+                throw Abort(.unauthorized)
+            }
+            
+            let receivingPlayerEmail: String = try req.parameters.next()
+            let donateString: String = try req.parameters.next()
+            
+            return Player.find(id, on: req).flatMap(to: Response.self) { player in
+                guard let donatingPlayer = player else {
+                    return Future.map(on: req) { return req.redirect(to: "/")}
+                }
+                
+                return Player.query(on: req).filter(\.emailAddress, .equal, receivingPlayerEmail).first().flatMap(to: Response.self) { receivingPlayer in
+                    guard let receivingPlayer = receivingPlayer else {
+                        return Future.map(on: req) { return req.redirect(to: "/")}
+                    }
+                    
+                    let cash: Double
+                    switch donateString {
+                    case "1k":
+                        cash = 1_000
+                    case "10k":
+                        cash = 10_000
+                    case "100k":
+                        cash = 100_000
+                    case "1m":
+                        cash = 1_000_000
+                    case "1b":
+                        cash = 1_000_000_000
+                    case "10b":
+                        cash = 10_000_000_000
+                    default:
+                        cash = 0
+                    }
+                    
+                    return try donatingPlayer.donateToPlayerSupportingSameMission(cash: cash, receivingPlayer: receivingPlayer, on: req).flatMap(to: Response.self) { donationResult in
+                        switch donationResult{
+                        case .success(let changedDonatingPlayer, let changedReceivingPlayer):
+                            return changedDonatingPlayer.update(on: req).flatMap(to: Response.self) { updatedDonatingPlayer in
+                                return changedReceivingPlayer.update(on: req).map(to: Response.self) { updatedReceivingPlayer in
+                                    self.infoMessages[changedDonatingPlayer.id!] = "You donated $\(Int(cash)) to \(changedReceivingPlayer.name)"
+                                    return req.redirect(to: "/mission")
+                                }
+                            }
+                        case .failure(let error):
+                            if let playerError = error as? Player.PlayerError {
+                                if playerError == .insufficientFunds {
+                                    self.errorMessages[donatingPlayer.id!] = "Insufficient funds to donate."
+                                    return Future.map(on: req) { return req.redirect(to: "/main") }
+                                } else {
+                                    throw error
+                                }
+                            } else {
+                                throw error
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        router.get("donate/to", String.parameter, "tech", Int.parameter) { req -> Future<Response> in
+            guard let id = self.getPlayerIDFromSession(on: req) else {
+                throw Abort(.unauthorized)
+            }
+            
+            let receivingPlayerEmail: String = try req.parameters.next()
+            let techPoints: Int = try req.parameters.next()
+            
+            return Player.find(id, on: req).flatMap(to: Response.self) { player in
+                guard let donatingPlayer = player else {
+                    return Future.map(on: req) { return req.redirect(to: "/")}
+                }
+                
+                return Player.query(on: req).filter(\.emailAddress, .equal, receivingPlayerEmail).first().flatMap(to: Response.self) { receivingPlayer in
+                    guard let receivingPlayer = receivingPlayer else {
+                        return Future.map(on: req) { return req.redirect(to: "/")}
+                    }
+                    
+                    return try donatingPlayer.donateToPlayerSupportingSameMission(tech: Double(techPoints), receivingPlayer: receivingPlayer, on: req).flatMap(to: Response.self) { donationResult in
+                        switch donationResult{
+                        case .success(let changedDonatingPlayer, let changedReceivingPlayer):
+                            return changedDonatingPlayer.update(on: req).flatMap(to: Response.self) { updatedDonatingPlayer in
+                                return changedReceivingPlayer.update(on: req).map(to: Response.self) { updatedReceivingPlayer in
+                                    self.infoMessages[changedDonatingPlayer.id!] = "You donated \(techPoints) technology points to \(changedReceivingPlayer.name)"
+                                    return req.redirect(to: "/mission")
+                                }
+                            }
+                        case .failure(let error):
+                            if let playerError = error as? Player.PlayerError {
+                                if playerError == .insufficientFunds {
+                                    self.errorMessages[donatingPlayer.id!] = "Insufficient technology points to donate."
+                                    return Future.map(on: req) { return req.redirect(to: "/main") }
+                                } else {
+                                    throw error
+                                }
+                            } else {
+                                throw error
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -488,8 +599,8 @@ class FrontEndController: RouteCollection {
         router.get("mission/supportingPlayers") { req -> Future<View> in
             struct SupportingPlayerContext: Content {
                 let player: Player
-                let supportingPlayerNames: [String]
-                let missionName: String
+                let supportingPlayers: [Player]
+                let mission: Mission
             }
             
             return try self.getPlayerFromSession(on: req).flatMap(to: View.self) {
@@ -498,15 +609,7 @@ class FrontEndController: RouteCollection {
                     switch missionResult {
                     case .success(let mission):
                         return try mission.getSupportingPlayers(on: req).flatMap(to: View.self) { supportingPlayers in
-                            let result = supportingPlayers.map { player -> String in
-                                if player.id == mission.owningPlayerID {
-                                    return player.name + " (\(player.emailAddress) - owner)"
-                                } else {
-                                    return player.name + " (\(player.emailAddress))"
-                                }
-                            }
-                            
-                            let context = SupportingPlayerContext(player: player, supportingPlayerNames: result, missionName: mission.missionName)
+                            let context = SupportingPlayerContext(player: player, supportingPlayers: supportingPlayers, mission: mission)
                             return try req.view().render("mission_supportingPlayers", context)
                         }
                     case .failure(let error):
