@@ -362,7 +362,7 @@ class FrontEndController: RouteCollection {
             }
         }
         
-        router.get("donate/to/supportedPlayer/cash", String.parameter) { req -> Future<Response> in
+        /*router.get("donate/to/supportedPlayer/cash", String.parameter) { req -> Future<Response> in
             guard let id = self.getPlayerIDFromSession(on: req) else {
                 throw Abort(.unauthorized)
             }
@@ -450,7 +450,7 @@ class FrontEndController: RouteCollection {
                     }
                 }
             }
-        }
+        }*/
         
         router.get("build/component", String.parameter) { req -> Future<Response> in
             let shortNameString: String = try req.parameters.next()

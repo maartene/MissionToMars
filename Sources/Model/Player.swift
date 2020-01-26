@@ -350,6 +350,20 @@ public struct Player: Content, SQLiteUUIDModel {
         return changedPlayer
     }
     
+    public func technologyToCash(techPoints amount: Double) throws -> Player {
+        guard cash >= amount else {
+            throw PlayerError.insufficientTechPoints
+        }
+        
+        let cashValue = amount * TECH_TO_CASH_CONVERSION_RATE
+        
+        var changedPlayer = self
+        changedPlayer.cash += cashValue
+        changedPlayer.technologyPoints -= amount
+        
+        return changedPlayer
+    }
+    
     mutating public func debug_setCash(_ amount: Double) {
         self.cash = amount
     }

@@ -21,7 +21,7 @@ public struct Improvement: Codable, Equatable {
         case DroneDeliveryService = 3
         case CrowdFundingCampaign = 4
         //case InvestmentPortfolio_S = 5
-        case ResearchGrant = 6
+        case BuyPatentPortfolio = 6
         case BioResearchFacility = 7
         case AIAssistedResearchPlant = 8
         case GrapheneSolarCellsPlant = 9
@@ -58,7 +58,7 @@ public struct Improvement: Codable, Equatable {
         // repeatable improvements - for testing purposes, keep these at the end of the array.
         // you should only be able to do this once per stage
         Improvement(shortName: .CrowdFundingCampaign, name: "Crowd Funding Campaign", description: "A reasonably fast way to get generate some extra income, but it requires your full attention (you can't built any other improvements during the duration of the campaign). When it completes, you receive 100x your current daily income.", cost: 20_000, buildTime: 365 / 12, allowsParrallelBuild: false, rushable: false, updateEffects: [.extraIncomeDailyIncome(times: 100), .oneShot(shortName: .CrowdFundingCampaign)]),
-        Improvement(shortName: .ResearchGrant, name: "Research Grant", description: "Investing a little money to sponsor research and development, provides you with some extra technology points (+75).", cost: 50_000, buildTime: 365 / 4, rushable: false, updateEffects: [.extraTechFlat(amount: 75), .oneShot(shortName: .ResearchGrant)]),
+        Improvement(shortName: .BuyPatentPortfolio, name: "Buy Patent Portfolio", description: "A quick, but expensive way to get some extra research points (+\(Int(150000.0 / CASH_TO_TECH_CONVERSION_RATE))).", cost: 150_000, buildTime: 7, allowsParrallelBuild: false, rushable: false, updateEffects: [.extraTechFlat(amount: 150000.0 / CASH_TO_TECH_CONVERSION_RATE), .oneShot(shortName: .BuyPatentPortfolio)]),
     ]
     
     public static var buildableImprovements: [Improvement] {
