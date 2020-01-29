@@ -175,7 +175,7 @@ class GameTests: XCTestCase {
                 if mission.currentStage.components.first(where: {c in c == component})!.percentageCompleted >= 100.0 {
                         if mission.currentStage.unstartedComponents.count > 0 {
                             component = mission.currentStage.unstartedComponents.first!
-                            //print("Step: \(steps): now starting on: \(component.name)")
+                            print("Step: \(steps): now starting on: \(component.name)")
                             //completeComponents.append(component)
                         } else {
                             do {

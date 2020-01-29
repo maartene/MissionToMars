@@ -21,7 +21,7 @@ public struct Improvement: Codable, Equatable {
         case DroneDeliveryService = 3
         case CrowdFundingCampaign = 4
         //case InvestmentPortfolio_S = 5
-        case ResearchGrant = 6
+        case BuyPatentPortfolio = 6
         case BioResearchFacility = 7
         case AIAssistedResearchPlant = 8
         case GrapheneSolarCellsPlant = 9
@@ -30,21 +30,22 @@ public struct Improvement: Codable, Equatable {
         case PrefabFurniture = 12
         case OrbitalShipyard = 13
         case InvestmentBank = 14
+        case AdvertisingCampaign = 15
     }
     
     public static let allImprovements = [
         // Start improvements
         Improvement(shortName: .TechConsultancy, name: "Technology Consultancy firm", description: "This firm provides a great versetile start if you don't want to commit to money making or researching new technologies. Good fit if you want to go solo, but in the long run specializing might be more attractive.\nCreates both extra technologypoints (+2), as well as a little extra income (+6500).", cost: 0, buildTime: 365 / 6, updateEffects: [.extraIncomeFlat(amount: 6500), .extraTechFlat(amount: 2)]),
         Improvement(shortName: .Faculty, name: "Faculty of Applied Sciences", description: "You start with a faculty on a prestigious University and assure yourself of a steady supply of extra technology points (+15) and a little income (+1k).", cost: 0, buildTime: 365 / 12, updateEffects: [.extraTechFlat(amount: 15), .extraIncomeFlat(amount: 1000)]),
-        Improvement(shortName: .InvestmentBank, name: "Investment Bank", description: "If you want to make it rain (become very VERY rich), starting an investment bank is a great start. The bank provides extra income (+15k) as well as ROI on your outstanding balance (+1% per day). However, it doesn't generate any technology. You will need to find other ways if you want to advance the tech tree.", cost: 0, buildTime: 365 / 12, updateEffects: [.extraIncomeFlat(amount: 15_000), .extraIncomePercentage(percentage: 1.0)]),
+        Improvement(shortName: .InvestmentBank, name: "Investment Bank", description: "If you want to make it rain (become very VERY rich), starting an investment bank is a great start. The bank provides extra income (+15k) as well as ROI on your outstanding balance (+0.1% per day). However, it doesn't generate any technology. You will need to find other ways if you want to advance the tech tree.", cost: 0, buildTime: 365 / 12, updateEffects: [.extraIncomeFlat(amount: 15_000), .interestOnCash(percentage: 0.1)]),
         
         // Economy improvements
         Improvement(shortName: .BatteryOutlet, name: "Batteries'r'Us", description: "Create an outlet selling your new battery tech in all units of all shapes and sizes. And make a little profit (+5k) as you go.", cost: 500_000, buildTime: 365 / 12, requiredTechnologyShortnames: [.LiIonBattery_HY], updateEffects: [.extraIncomeFlat(amount: 5000)]),
-        Improvement(shortName: .SpaceTourism, name: "Space Tourism Agency", description: "Allow the rich the opportunity to look at Earth from Space! As you are piggy backing on your existing technology, this is a very cost effective way of generating some extra income (+7500)", cost: 1_000_000, buildTime: 365 / 12, requiredTechnologyShortnames: [.FuelConservation_2], updateEffects: [.extraIncomeFlat(amount: 7500)]),
-        Improvement(shortName: .DroneDeliveryService, name: "Drone Delivery Service", description: "There's a lot of money to be made if you can delivery parcels more effeciently. Just make sure the drones don't get lost on their way. Extra income: +10k", cost: 500_000, buildTime: 365 / 6, requiredTechnologyShortnames: [.RecoverableAI, .LiIonBattery_HY], updateEffects: [.extraIncomeFlat(amount: 10_000)]),
-        Improvement(shortName: .GrapheneSolarCellsPlant, name: "Graphene Solar Plant", description: "While the regular solar cells market is highly saturated and has very small margins, the new graphene based ones create a new market, with comparatively interesting margins (+20k).", cost: 5_000_000, buildTime: 365, requiredTechnologyShortnames: [.GrapheneSolarCells], updateEffects: [.extraIncomeFlat(amount: 20_000)]),
+        Improvement(shortName: .DroneDeliveryService, name: "Drone Delivery Service", description: "There's a lot of money to be made if you can delivery parcels more effeciently. Just make sure the drones don't get lost on their way. Extra income: +10k", cost: 1_000_000, buildTime: 365 / 6, requiredTechnologyShortnames: [.RecoverableAI, .LiIonBattery_HY], updateEffects: [.extraIncomeFlat(amount: 10_000)]),
+        Improvement(shortName: .GrapheneSolarCellsPlant, name: "Graphene Solar Plant", description: "While the regular solar cells market is highly saturated and has very small margins, the new graphene based ones create a new market, with comparatively interesting margins (+50k).", cost: 5_000_000, buildTime: 365, requiredTechnologyShortnames: [.GrapheneSolarCells], updateEffects: [.extraIncomeFlat(amount: 50_000)]),
         Improvement(shortName: .SolarAirLine, name: "Solar Airline", description: "The world first commercial airline powered completely using solar aircraft. This is guaranteerd to provide a great and steady income (+100k).", cost: 10_000_000, buildTime: 365*2, requiredTechnologyShortnames: [.SolarFlight], updateEffects: [.extraIncomeFlat(amount: 100_000)]),
-        Improvement(shortName: .PrefabFurniture, name: "Prefab Furniture Store", description: "A Swedish innovation! Furniture you can immediately pick-up, take home in flat boxes. Some assembly required. Extra income (+25k). Also lowers improvement building time by 20%.", cost: 1_000_000, buildTime: 365 / 4, rushable: false, updateEffects: [.extraIncomeFlat(amount: 25_000)], staticEffects: [.lowerProductionTimePercentage(percentage: 20.0)]),
+        Improvement(shortName: .SpaceTourism, name: "Space Tourism Agency", description: "Allow the rich the opportunity to look at Earth from Space! As you are piggy backing on your existing technology, this is a very cost effective way of generating some extra income (+100_000)", cost: 100_000_000, buildTime: 365 / 12, requiredTechnologyShortnames: [.FuelConservation_2], updateEffects: [.extraIncomeFlat(amount: 1_000_000)]),
+        Improvement(shortName: .PrefabFurniture, name: "Prefab Furniture Store", description: "A Swedish innovation! Furniture you can immediately pick-up, take home in flat boxes. Some assembly required. Extra income (+25k). Also lowers improvement building time by 20%.", cost: 1_000_000, buildTime: 365 / 4, rushable: false, updateEffects: [.extraIncomeFlat(amount: 5_000)], staticEffects: [.lowerProductionTimePercentage(percentage: 20.0)]),
         
         // Technology improvements
         Improvement(shortName: .BioResearchFacility, name: "Bio Research Facility", description: "Use your advancements in ML for bio research and generate extra tech points (+10)", cost: 1_000_000, buildTime: 365, requiredTechnologyShortnames: [.AdaptiveML], updateEffects: [.extraTechFlat(amount: 10)]),
@@ -57,8 +58,9 @@ public struct Improvement: Codable, Equatable {
         
         // repeatable improvements - for testing purposes, keep these at the end of the array.
         // you should only be able to do this once per stage
-        Improvement(shortName: .CrowdFundingCampaign, name: "Crowd Funding Campaign", description: "A reasonably fast way to get generate some extra income, but it requires your full attention (you can't built any other improvements during the duration of the campaign). When it completes, you receive 100x your current daily income.", cost: 20_000, buildTime: 365 / 12, allowsParrallelBuild: false, rushable: false, updateEffects: [.extraIncomeDailyIncome(times: 100), .oneShot(shortName: .CrowdFundingCampaign)]),
-        Improvement(shortName: .ResearchGrant, name: "Research Grant", description: "Investing a little money to sponsor research and development, provides you with some extra technology points (+75).", cost: 50_000, buildTime: 365 / 4, rushable: false, updateEffects: [.extraTechFlat(amount: 75), .oneShot(shortName: .ResearchGrant)]),
+        Improvement(shortName: .CrowdFundingCampaign, name: "Crowd Funding Campaign", description: "A reasonably fast way to get generate some extra income, but it requires your full attention (you can't built any other improvements during the duration of the campaign). When it completes, you receive 10x your current daily income.", cost: 20_000, buildTime: 365 / 12, allowsParrallelBuild: false, rushable: false, updateEffects: [.extraIncomeDailyIncome(times: 10), .oneShot(shortName: .CrowdFundingCampaign)]),
+        Improvement(shortName: .AdvertisingCampaign, name: "Advertising Campaign", description: "Tripples income for the next 30 days. (you get your cash after 30 days)", cost: 2_000_000, buildTime: 30, rushable: false, updateEffects: [.extraIncomeDailyIncome(times: 60), .oneShot(shortName: .AdvertisingCampaign)]),
+        Improvement(shortName: .BuyPatentPortfolio, name: "Buy Patent Portfolio", description: "A quick, but expensive way to get some extra research points (+\(Int(150000.0 / CASH_TO_TECH_CONVERSION_RATE))).", cost: 150_000, buildTime: 7, allowsParrallelBuild: false, rushable: false, updateEffects: [.extraTechFlat(amount: 150000.0 / CASH_TO_TECH_CONVERSION_RATE), .oneShot(shortName: .BuyPatentPortfolio)]),
     ]
     
     public static var buildableImprovements: [Improvement] {

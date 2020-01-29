@@ -96,13 +96,26 @@ final class PlayerDBTests : XCTestCase {
     }
     
     func testDonateCashToPlayer() throws {
-        var player1 = try createTestPlayer(emailAddress: "player1@example.com")
-        let player2 = try createTestPlayer(emailAddress: "player2@example.com")
+        let playerAndMission = try createTestPlayerWithMission()
+        let player1 = playerAndMission.savedPlayer
+        var player2 = try createTestPlayer(emailAddress: "player2@example.com")
         
-        player1.supportsPlayerID = player2.id
+        let mission = playerAndMission.savedMission
+        player2.supportsPlayerID = player1.id
+        
+        player2 = try app!.withPooledConnection(to: .sqlite, closure: { conn -> Future<Player> in
+            return player2.save(on: conn)
+        }).wait()
+        
+        let supportingPlayers = try app!.withPooledConnection(to: .sqlite, closure: { conn -> Future<[Player]> in
+            return try mission.getSupportingPlayers(on: conn)
+        }).wait()
+        
+        XCTAssert(supportingPlayers.contains(where: {player in player.id == player1.id}))
+        XCTAssert(supportingPlayers.contains(where: {player in player.id == player2.id}))
         
         let result = try app?.withPooledConnection(to: .sqlite, closure: { conn -> Future<Result<(donatingPlayer: Player, receivingPlayer: Player), Error>> in
-            return try player1.donateToSupportedPlayer(cash: player1.cash - 1, on: conn)
+            return try player1.donateToPlayerSupportingSameMission(cash: player1.cash - 1.0, receivingPlayer: player2, on: conn)
         }).wait()
         
         XCTAssertNotNil(result, " result should not be nil")
@@ -116,13 +129,26 @@ final class PlayerDBTests : XCTestCase {
     }
     
     func testDonateTechToPlayer() throws {
-        var player1 = try createTestPlayer(emailAddress: "player1@example.com")
-        let player2 = try createTestPlayer(emailAddress: "player2@example.com")
+        let playerAndMission = try createTestPlayerWithMission()
+        let player1 = playerAndMission.savedPlayer
+        var player2 = try createTestPlayer(emailAddress: "player2@example.com")
         
-        player1.supportsPlayerID = player2.id
+        let mission = playerAndMission.savedMission
+        player2.supportsPlayerID = player1.id
+        
+        player2 = try app!.withPooledConnection(to: .sqlite, closure: { conn -> Future<Player> in
+            return player2.save(on: conn)
+        }).wait()
+        
+        let supportingPlayers = try app!.withPooledConnection(to: .sqlite, closure: { conn -> Future<[Player]> in
+            return try mission.getSupportingPlayers(on: conn)
+        }).wait()
+        
+        XCTAssert(supportingPlayers.contains(where: {player in player.id == player1.id}))
+        XCTAssert(supportingPlayers.contains(where: {player in player.id == player2.id}))
         
         let result = try app?.withPooledConnection(to: .sqlite, closure: { conn -> Future<Result<(donatingPlayer: Player, receivingPlayer: Player), Error>> in
-            return try player1.donateToSupportedPlayer(techPoints: player1.technologyPoints - 1, on: conn)
+            return try player1.donateToPlayerSupportingSameMission(tech: player1.technologyPoints - 1.0, receivingPlayer: player2, on: conn)
         }).wait()
         
         XCTAssertNotNil(result, " result should not be nil")
@@ -130,8 +156,35 @@ final class PlayerDBTests : XCTestCase {
         case .failure(let error):
             XCTFail("Received a failure from test \(error)")
         case .success(let donationResult):
-            XCTAssertGreaterThan(donationResult.receivingPlayer.technologyPoints, player2.technologyPoints, " technologyPoints")
-            XCTAssertLessThan(donationResult.donatingPlayer.technologyPoints, player1.technologyPoints, " technologyPoints")
+            XCTAssertGreaterThan(donationResult.receivingPlayer.technologyPoints, player2.technologyPoints, " techPoints")
+            XCTAssertLessThan(donationResult.donatingPlayer.technologyPoints, player1.technologyPoints, " techPoints")
+        }
+    }
+    
+    func testCannotDonateToPlayerNotSupportingSameMission() throws {
+        let playerAndMission = try createTestPlayerWithMission()
+        let player1 = playerAndMission.savedPlayer
+        let player2 = try createTestPlayer(emailAddress: "player2@example.com")
+        
+        let mission = playerAndMission.savedMission
+            
+        let supportingPlayers = try app!.withPooledConnection(to: .sqlite, closure: { conn -> Future<[Player]> in
+            return try mission.getSupportingPlayers(on: conn)
+        }).wait()
+        
+        XCTAssert(supportingPlayers.contains(where: {player in player.id == player1.id}))
+        XCTAssert(supportingPlayers.contains(where: {player in player.id == player2.id}) == false)
+        
+        let result = try app?.withPooledConnection(to: .sqlite, closure: { conn -> Future<Result<(donatingPlayer: Player, receivingPlayer: Player), Error>> in
+            return try player1.donateToPlayerSupportingSameMission(tech: player1.technologyPoints - 1.0, receivingPlayer: player2, on: conn)
+        }).wait()
+        
+        XCTAssertNotNil(result, " result should not be nil")
+        switch result! {
+        case .failure(let error):
+            print(error)
+        case .success:
+            XCTFail("Donation should not succeed.")
         }
     }
     
@@ -219,6 +272,7 @@ final class PlayerDBTests : XCTestCase {
         ("testDonateCashToPlayer", testDonateCashToPlayer),
         ("testDonateTechToPlayer", testDonateTechToPlayer),
         ("testSaveUpdatedPlayer", testSaveUpdatedPlayer),
-        ("testBuildComponent", testBuildComponent)
+        ("testBuildComponent", testBuildComponent),
+        ("testCannotDonateToPlayerNotSupportingSameMission", testCannotDonateToPlayerNotSupportingSameMission)
     ]
 }

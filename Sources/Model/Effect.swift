@@ -19,7 +19,7 @@ public enum Effect: Codable {
     
     case extraIncomeFlat(amount: Double)
     case extraTechFlat(amount: Double)
-    case extraIncomePercentage(percentage: Double)
+    case interestOnCash(percentage: Double)
     //case extraTechPercentage(percentage: Double)
     case lowerProductionTimePercentage(percentage: Double)
     case extraIncomeDailyIncome(times: Double)
@@ -39,7 +39,7 @@ public enum Effect: Codable {
             self = .extraTechFlat(amount: amount)
         case "extraIncomePercentage":
             let percentage = try values.decode(Double.self, forKey: .value)
-            self = .extraIncomePercentage(percentage: percentage)
+            self = .interestOnCash(percentage: percentage)
         case "lowerProductionTimePercentage":
             let percentage = try values.decode(Double.self, forKey: .value)
             self = .lowerProductionTimePercentage(percentage: percentage)
@@ -70,7 +70,7 @@ public enum Effect: Codable {
         case .extraTechFlat(let amount):
             try container.encode("extraTechFlat", forKey: .effectType)
             try container.encode(amount, forKey: .value)
-        case .extraIncomePercentage(let percentage):
+        case .interestOnCash(let percentage):
             try container.encode("extraIncomePercentage", forKey: .effectType)
             try container.encode(percentage, forKey: .value)
         case .lowerProductionTimePercentage(let percentage):
@@ -97,7 +97,7 @@ public enum Effect: Codable {
             return player.extraIncome(amount: amount)
         case .extraTechFlat(let amount):
             return player.extraTech(amount: amount)
-        case .extraIncomePercentage(let percentage):
+        case .interestOnCash(let percentage):
             return player.extraIncome(amount: player.cash * (percentage / 100.0))
         case .extraIncomeDailyIncome(let times):
             return player.extraIncome(amount: player.cashPerTick * times)

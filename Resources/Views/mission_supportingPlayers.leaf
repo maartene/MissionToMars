@@ -1,11 +1,22 @@
 #set("body") {
-    <h2>Players supporting mission <b>#(missionName)</b></h2>
+    <h2>Players supporting mission <b>#(mission.missionName)</b></h2>
     <div class="py-3">
-      <ul class="list-group">
-        #for(player in supportingPlayerNames) {
-          <li class="list-group-item">#(player)</li>
+      <table class="table table-striped">
+        <tr>
+          <th class="table-dark">Player name</th>
+          <th class="table-dark">E-mail</th>
+          <th class="table-dark">Tags</th>
+          <th class="table-dark">Actions</th>
+        </tr>
+        #for(supportingPlayer in supportingPlayers) {
+          <tr class="table-dark">
+            <td>#(supportingPlayer.name)</td>
+            <td>#(supportingPlayer.emailAddress)</td>
+            <td>#if(player.id == supportingPlayer.id) { <span class="badge badge-success">You</span> } #if(supportingPlayer.id == mission.owningPlayerID) { <span class="badge badge-danger">Mission owner</span> } </td>
+            <td>#if(player.id != supportingPlayer.id) {<a href="/donate/to/#(supportingPlayer.emailAddress)" class="btn btn-sm btn-primary">Donate to this player</a>}</td>
+          </tr>
         } 
-      </ul>
+      </table>
       <a href="/mission" class="btn btn-secondary mt-3">Back</a>
     </div>
 }
