@@ -166,7 +166,7 @@ public struct Player: Content, SQLiteUUIDModel {
         
         let interestPerTick = allEffects.reduce(0.0) { result, effect in
             switch effect {
-            case .extraIncomePercentage(let percentage):
+            case .interestOnCash(let percentage):
                 return result + (percentage / 100.0)
             default:
                 return result
