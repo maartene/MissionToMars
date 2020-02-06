@@ -89,7 +89,7 @@ final class ImprovementTests : XCTestCase {
     
     func testUpdateOfPlayerImprovesBuildProgress() throws {
         var player = Player(emailAddress: "example@example.com", name: "testUser")
-        let improvement = Improvement.getImprovementByName(.CrowdFundingCampaign)!
+        let improvement = Improvement.getImprovementByName(.BioTech_TAG)!
         player.debug_setCash(improvement.cost)
         
         let buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
@@ -129,7 +129,7 @@ final class ImprovementTests : XCTestCase {
         _ = try player.startBuildImprovement(improvement, startDate: Date())
     }
     
-    func testPlayerIsBuildingImprovementCannotBuildAnother() throws {
+    /*func testPlayerIsBuildingImprovementCannotBuildAnother() throws {
         var player = Player(emailAddress: "example@example.com", name: "testUser")
         let improvement = Improvement.getImprovementByName(.Faculty)!
         player = player.extraIncome(amount: improvement.cost)
@@ -137,11 +137,11 @@ final class ImprovementTests : XCTestCase {
         var buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
         XCTAssertTrue(buildingPlayer.isCurrentlyBuildingImprovement)
         
-        let improvement2 = Improvement.getImprovementByName(.CrowdFundingCampaign)!
+        let improvement2 = Improvement.getImprovementByName(.AI_TAG)!
         buildingPlayer = buildingPlayer.extraIncome(amount: improvement2.cost)
         
         XCTAssertThrowsError(try buildingPlayer.startBuildImprovement(improvement2, startDate: Date())) { error in print(error) }
-    }
+    }*/
     
     func testPlayerCanRushImprovement() throws {
         var player = Player(emailAddress: "example@example.com", name: "testUser")
@@ -182,8 +182,8 @@ final class ImprovementTests : XCTestCase {
     
     // test static effect
     func testBuildTimeFactorShortensBuildTime() throws {
-        let improvement1 = Improvement.getImprovementByName(.CrowdFundingCampaign)!
-        let improvement2 = Improvement.getImprovementByName(.CrowdFundingCampaign)!
+        let improvement1 = Improvement.getImprovementByName(.AI_TAG)!
+        let improvement2 = Improvement.getImprovementByName(.AI_TAG)!
         let ikea = Improvement.getImprovementByName(.PrefabFurniture)!
         
         var player1 = Player(emailAddress: "example@example.com", name: "testUser")
@@ -219,6 +219,50 @@ final class ImprovementTests : XCTestCase {
         XCTAssertLessThan(ikeaPlayer.buildTimeFactor, player.buildTimeFactor)
     }
     
+    func testRushingImprovementDoesNotRemoveExistingImprovement() throws {
+        var player = Player(emailAddress: "example@example.com", name: "testUser")
+        
+        let improvement = Improvement.getImprovementByName(.AI_TAG)!
+        player = player.extraIncome(amount: improvement.cost * 4)
+        
+        player = try player.startBuildImprovement(improvement, startDate: Date())
+        player = player.updatePlayer(ticks: improvement.buildTime + 1)
+        XCTAssertEqual(player.completedImprovements.filter({$0 == improvement}).count, 1)
+        
+        player = try player.startBuildImprovement(improvement, startDate: Date())
+        player = try player.rushImprovement(improvement)
+        
+        XCTAssertEqual(player.completedImprovements.filter({$0 == improvement}).count, 2)
+        
+    }
+    
+    func testCannotBuildMoreImprovementsThanNumberOfSlots() throws {
+        var player = Player(emailAddress: "example@example.com", name: "testUser")
+        player = try player.removeImprovementInSlot(0)
+        
+        let improvement = Improvement.getImprovementByName(.AI_TAG)!
+        player = player.extraIncome(amount: improvement.cost * Double(player.improvementSlotsCount + 1))
+        
+        for _ in 0 ..< player.improvementSlotsCount {
+            player = try player.startBuildImprovement(improvement, startDate: Date())
+        }
+        
+        XCTAssertThrowsError(try player.startBuildImprovement(improvement, startDate: Date()))
+    }
+    
+    func testSellImprovement() throws {
+        var player = Player(emailAddress: "example@example.com", name: "testUser")
+        let improvement = Improvement.getImprovementByName(.AI_TAG)!
+        player = try player.startBuildImprovement(improvement, startDate: Date())
+        player = player.updatePlayer(ticks: improvement.buildTime + 1)
+        XCTAssert(player.completedImprovements.contains(improvement))
+        let cashBeforeSale = player.cash
+        let sellingPlayer = try player.sellImprovement(improvement)
+        XCTAssert(sellingPlayer.improvements.contains(improvement) == false)
+        XCTAssertGreaterThan(sellingPlayer.cash, cashBeforeSale, "Cash")
+        
+    }
+    
     static let allTests = [
         ("testStartBuildImprovement", testStartBuildImprovement),
         ("testGetImprovementByName", testGetImprovementByName),
@@ -229,12 +273,15 @@ final class ImprovementTests : XCTestCase {
         ("testUpdateOfPlayerTriggersImprovementEffect", testUpdateOfPlayerTriggersImprovementEffect),
         ("testPlayerCannotBuildImprovementWithoutPrerequisiteTech", testPlayerCannotBuildImprovementWithoutPrerequisiteTech),
         ("testPlayerCanBuildImprovementWithPrerequisiteTech", testPlayerCanBuildImprovementWithPrerequisiteTech),
-        ("testPlayerIsBuildingImprovementCannotBuildAnother", testPlayerIsBuildingImprovementCannotBuildAnother),
+        //("testPlayerIsBuildingImprovementCannotBuildAnother", testPlayerIsBuildingImprovementCannotBuildAnother),
         ("testPlayerCanRushImprovement", testPlayerCanRushImprovement),
         ("testPlayerCannotRushUnrushableImprovement", testPlayerCannotRushUnrushableImprovement),
         ("testPlayerCannotRushWithInsufficientFunds", testPlayerCannotRushWithInsufficientFunds),
         ("testBuildTimeFactorShortensBuildTime", testBuildTimeFactorShortensBuildTime),
         ("testBuildingCanIncreaseBuiltTimeFactor", testBuildingCanIncreaseBuiltTimeFactor),
+        ("testRushingImprovementDoesNotRemoveExistingImprovement", testRushingImprovementDoesNotRemoveExistingImprovement),
+        ("testCannotBuildMoreImprovementsThanNumberOfSlots", testCannotBuildMoreImprovementsThanNumberOfSlots),
+        ("testSellImprovement", testSellImprovement)
     ]
 
 }

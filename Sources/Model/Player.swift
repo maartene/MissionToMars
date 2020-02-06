@@ -16,15 +16,20 @@ public struct Player: Content, SQLiteUUIDModel {
         case insufficientTechPoints
         case noSupportedPlayer
         case userAlreadyExists
+        
         case userDoesNotExist
         case playerAlreadyHasImprovement
         case usernameFailedValidation
         case playerAlreadyUnlockedTechnology
         case playerMissesPrerequisiteTechnology
+        
         case playerIsAlreadyBuildingImprovement
         case playerNotFound
         case playersNotInSameMission
         case cannotDonateToYourself
+        case illegalImprovementSlot
+        
+        case insufficientImprovementSlots
     }
     
     public var id: UUID?
@@ -43,7 +48,7 @@ public struct Player: Content, SQLiteUUIDModel {
     }
     
     // resources
-    public private(set) var cash: Double = 250_000
+    public private(set) var cash: Double = 2_500_000
     public private(set) var technologyPoints: Double = 75
         
     public private(set) var improvements: [Improvement]
@@ -151,29 +156,8 @@ public struct Player: Content, SQLiteUUIDModel {
     }
     
     public var cashPerTick: Double {
-        let allEffects = completedImprovements.map { improvement in
-            return improvement.updateEffects
-            }.joined()
-        
-        let flatIncomePerTick = allEffects.reduce(0.0) { result, effect in
-            switch effect {
-            case .extraIncomeFlat(let amount):
-                return result + amount
-            default:
-                return result
-            }
-        }
-        
-        let interestPerTick = allEffects.reduce(0.0) { result, effect in
-            switch effect {
-            case .interestOnCash(let percentage):
-                return result + (percentage / 100.0)
-            default:
-                return result
-            }
-        }
-        
-        return flatIncomePerTick + cash * interestPerTick
+        let updatedPlayer = self.updatePlayer()
+        return updatedPlayer.cash - cash
     }
     
     public var techPerTick: Double {
@@ -191,6 +175,10 @@ public struct Player: Content, SQLiteUUIDModel {
         }
         
         return flatTechPerTick
+    }
+
+    public var improvementSlotsCount: Int {
+        return 5
     }
     
     func extraIncome(amount: Double) -> Player {
@@ -266,8 +254,13 @@ public struct Player: Content, SQLiteUUIDModel {
     }
         
     public func startBuildImprovement(_ improvement: Improvement, startDate: Date) throws -> Player {
-        guard improvements.contains(improvement) == false else {
+        // This is no longer relevant if we want to allow the same building built more than once. 
+        /*guard improvements.contains(improvement) == false else {
             throw PlayerError.playerAlreadyHasImprovement
+        }*/
+        
+        guard improvements.count < improvementSlotsCount else {
+            throw PlayerError.insufficientImprovementSlots
         }
         
         guard improvement.playerHasPrerequisitesForImprovement(self) else {
@@ -296,23 +289,39 @@ public struct Player: Content, SQLiteUUIDModel {
         return changedPlayer
     }
     
-    func removeImprovement(_ improvement: Improvement) -> Player {
-        var changedPlayer = self
-        
-        if let index = changedPlayer.improvements.firstIndex(of: improvement) {
-            _ = changedPlayer.improvements.remove(at: index)
-            //print("removing \()")
+    func replaceImprovementInSlot(_ slot: Int, with improvement: Improvement) throws -> Player {
+        guard (0 ..< improvements.count).contains(slot) else {
+            print("Slot \(slot) outside of improvement slot range.")
+            throw PlayerError.illegalImprovementSlot
         }
-        assert(changedPlayer.improvements.contains(improvement) == false)
+        
+        var changedPlayer = self
+        changedPlayer.improvements[slot] = improvement
         return changedPlayer
     }
     
-    func removeImprovement(_ shortName: Improvement.ShortName) -> Player {
-        guard let improvement = Improvement.getImprovementByName(shortName) else {
-            return self
+    func removeImprovementInSlot(_ slot: Int) throws -> Player {
+        guard (0 ..< improvements.count).contains(slot) else {
+            print("Slot \(slot) outside of improvement slot range.")
+            throw PlayerError.illegalImprovementSlot
         }
         
-        return removeImprovement(improvement)
+        var changedPlayer = self
+        changedPlayer.improvements.remove(at: slot)
+        return changedPlayer
+    }
+    
+    public func sellImprovement(_ improvement: Improvement) throws -> Player {
+        guard completedImprovements.contains(improvement) else {
+            throw Improvement.ImprovementError.improvementIncomplete
+        }
+        
+        if let slot = improvements.firstIndex(of: improvement) {
+            let changedPlayer = try removeImprovementInSlot(slot)
+            return changedPlayer.extraIncome(amount: improvement.cost * IMPROVEMENT_SELL_RATIO)
+        } else {
+            throw PlayerError.illegalImprovementSlot
+        }
     }
     
     public func rushImprovement(_ improvement: Improvement) throws -> Player {
@@ -320,15 +329,15 @@ public struct Player: Content, SQLiteUUIDModel {
             throw PlayerError.insufficientFunds
         }
         
-        var changedPlayer = self
-        
         let rushedImprovement = try improvement.rush()
         
-        changedPlayer = changedPlayer.removeImprovement(improvement)
-        changedPlayer.improvements.append(rushedImprovement)
+        if let slot = self.improvements.firstIndex(where: { existingImprovement in
+            existingImprovement == improvement && existingImprovement.isCompleted == false
+        }) {
+            return try self.replaceImprovementInSlot(slot, with: rushedImprovement)
+        }
         
-        assert(changedPlayer.improvements.contains(improvement))
-        return changedPlayer
+        return self
     }
     
     public func investInTechnology(_ technology: Technology) throws -> Player {
@@ -437,46 +446,6 @@ extension Player {
         }
         
         return Player.find(playerID, on: conn)
-    }
-    
-    @available(*, deprecated, message: "Use donateToPlayerSupportingSameMission(cash: receivingPlayer: on:) instead")
-    public func donateToSupportedPlayer(cash amount: Double, on conn: DatabaseConnectable) throws -> Future<Result<(donatingPlayer: Player, receivingPlayer: Player), Error>> {
-        return try getSupportedPlayer(on: conn).flatMap(to: Result<(donatingPlayer: Player, receivingPlayer: Player), Error>.self) { player in
-            guard let supportedPlayer = player else {
-                return Future.map(on: conn) {
-                    return .failure(PlayerError.noSupportedPlayer)
-                }
-            }
-            
-            var result: Result<(donatingPlayer: Player, receivingPlayer: Player), Error>
-            do {
-                let donatingResult = try self.donate(cash: amount, to: supportedPlayer)
-                result = .success(donatingResult)
-            } catch {
-                result = .failure(error)
-            }
-            return Future.map(on: conn) { return result }
-        }
-    }
-    
-    @available(*, deprecated, message: "Use donateToPlayerSupportingSameMission(tech: receivingPlayer: on:) instead")
-    public func donateToSupportedPlayer(techPoints amount: Double, on conn: DatabaseConnectable) throws -> Future<Result<(donatingPlayer: Player, receivingPlayer: Player), Error>> {
-        return try getSupportedPlayer(on: conn).flatMap(to: Result<(donatingPlayer: Player, receivingPlayer: Player), Error>.self) { player in
-            guard let supportedPlayer = player else {
-                return Future.map(on: conn) {
-                    return .failure(PlayerError.noSupportedPlayer)
-                }
-            }
-            
-            var result: Result<(donatingPlayer: Player, receivingPlayer: Player), Error>
-            do {
-                let donatingResult = try self.donate(techPoints: amount, to: supportedPlayer)
-                result = .success(donatingResult)
-            } catch {
-                result = .failure(error)
-            }
-            return Future.map(on: conn) { return result }
-        }
     }
     
     public func donateToPlayerSupportingSameMission(cash amount: Double, receivingPlayer: Player, on conn: DatabaseConnectable) throws ->

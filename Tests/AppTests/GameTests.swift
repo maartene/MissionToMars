@@ -18,7 +18,7 @@ class GameTests: XCTestCase {
         // Put teardown code here. This method is called after the invocation of each test method in the class.
     }
 
-    func testGame() throws {
+    func disable_testGame() throws {
         var stepsTech: Int?
         var stepsImprovement: Int?
         var stepsCompoment: Int?
@@ -77,8 +77,7 @@ class GameTests: XCTestCase {
                 if let improvement = Improvement.unlockedImprovementsForPlayer(player).filter({impr in player.improvements.contains(impr) == false}).first {
                     if player.cash >= improvement.cost {
                         player = try player.startBuildImprovement(improvement, startDate: Date())
-                        if improvement.shortName != .CrowdFundingCampaign {
-                            print("Step \(steps): Now starting on build of: \(improvement.name), cash: \(player.cash)") }
+                            print("Step \(steps): Now starting on build of: \(improvement.name), cash: \(player.cash)")
                         if stepsImprovement == nil { stepsImprovement = steps }
                     }
                 }
@@ -116,7 +115,7 @@ class GameTests: XCTestCase {
         //print("Player: \(player)")
     }
     
-    func testGameMP() throws {
+    func disable_testGameMP() throws {
         var stepsTech: Int?
         var stepsImprovement: Int?
         var stepsCompoment: Int?
@@ -196,8 +195,7 @@ class GameTests: XCTestCase {
                     if let improvement = Improvement.unlockedImprovementsForPlayer(player).filter({impr in player.improvements.contains(impr) == false}).randomElement() {
                         if player.cash >= improvement.cost {
                             player = try player.startBuildImprovement(improvement, startDate: Date())
-                            if improvement.shortName != .CrowdFundingCampaign {
-                                print("Step \(steps): Now starting on build of: \(improvement.name), cash: \(player.cash)") }
+                            print("Step \(steps): Now starting on build of: \(improvement.name), cash: \(player.cash)")
                             if stepsImprovement == nil { stepsImprovement = steps }
                         }
                     }

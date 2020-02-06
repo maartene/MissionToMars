@@ -43,6 +43,7 @@ final class SimulationTests : XCTestCase {
         let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
         let update = simulation.updateSimulation(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60 * 4), players: [], missions: [])
         
+        // if this fails, it is usually because simulation update time was hardcoded to a different value (in 'Simulation.swift')
         XCTAssertEqual(update.updatedSimulation.tickCount, 5, " ticks")
     }
     

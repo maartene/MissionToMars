@@ -362,96 +362,6 @@ class FrontEndController: RouteCollection {
             }
         }
         
-        /*router.get("donate/to/supportedPlayer/cash", String.parameter) { req -> Future<Response> in
-            guard let id = self.getPlayerIDFromSession(on: req) else {
-                throw Abort(.unauthorized)
-            }
-            
-            let donateString: String = try req.parameters.next()
-            
-            return Player.find(id, on: req).flatMap(to: Response.self) { player in
-                guard let changedPlayer = player else {
-                    return Future.map(on: req) { return req.redirect(to: "/")}
-                }
-                
-                let cash: Double
-                switch donateString {
-                case "1k":
-                    cash = 1_000
-                case "10k":
-                    cash = 10_000
-                case "100k":
-                    cash = 100_000
-                case "1m":
-                    cash = 1_000_000
-                case "1b":
-                    cash = 1_000_000_000
-                case "10b":
-                    cash = 10_000_000_000
-                default:
-                    cash = 0
-                }
-                
-                return try changedPlayer.donateToSupportedPlayer(cash: cash, on: req).flatMap(to: Response.self) { result in
-                    switch result {
-                    case .success(let result):
-                        return result.donatingPlayer.update(on: req).flatMap(to: Response.self) { updatedDonatingPlayer in
-                            return result.receivingPlayer.update(on: req).map(to: Response.self) { updatedReceivingPlayer in
-                                return req.redirect(to: "/mission")
-                            }
-                        }
-                    case .failure(let error):
-                        if let playerError = error as? Player.PlayerError {
-                            if playerError == .insufficientFunds {
-                                self.errorMessages[changedPlayer.id!] = "Insufficient funds to donate."
-                                return Future.map(on: req) { return req.redirect(to: "/main") }
-                            } else {
-                                throw error
-                            }
-                        } else {
-                            throw error
-                        }
-                    }
-                }
-            }
-        }
-        
-        router.get("donate/to/supportedPlayer/tech", Int.parameter) { req -> Future<Response> in
-            guard let id = self.getPlayerIDFromSession(on: req) else {
-                throw Abort(.unauthorized)
-            }
-            
-            let techPoints: Int = try req.parameters.next()
-            
-            return Player.find(id, on: req).flatMap(to: Response.self) { player in
-                guard let changedPlayer = player else {
-                    return Future.map(on: req) { return req.redirect(to: "/")}
-                }
-                
-                return try changedPlayer.donateToSupportedPlayer(techPoints: Double(techPoints), on: req).flatMap(to: Response.self) { result in
-                    switch result {
-                    case .success(let result):
-                        return result.donatingPlayer.update(on: req).flatMap(to: Response.self) { updatedDonatingPlayer in
-                            return result.receivingPlayer.update(on: req).map(to: Response.self) { updatedReceivingPlayer in
-                                return req.redirect(to: "/mission")
-                            }
-                        }
-                    case .failure(let error):
-                        if let playerError = error as? Player.PlayerError {
-                            if playerError == .insufficientTechPoints {
-                                self.errorMessages[changedPlayer.id!] = "Insufficient technology points to donate."
-                                return Future.map(on: req) { return req.redirect(to: "/main") }
-                            } else {
-                                throw error
-                            }
-                        } else {
-                            throw error
-                        }
-                    }
-                }
-            }
-        }*/
-        
         router.get("build/component", String.parameter) { req -> Future<Response> in
             let shortNameString: String = try req.parameters.next()
             
@@ -509,10 +419,10 @@ class FrontEndController: RouteCollection {
             return try self.getPlayerFromSession(on: req).flatMap(to: View.self) {
             player in
                 
-                let possibleImprovements = Improvement.unlockedImprovementsForPlayer(player).filter { improvement in
+                let possibleImprovements = Improvement.unlockedImprovementsForPlayer(player)/*.filter { improvement in
                     // filter out the improvements the player has already built
                     player.improvements.contains(improvement) == false
-                }
+                }*/
                 
                 let context = ImprovementBuildContext(player: player, possibleImprovements: possibleImprovements)
                 
@@ -543,8 +453,8 @@ class FrontEndController: RouteCollection {
                     }
                 } catch {
                     switch error {
-                    case Player.PlayerError.playerAlreadyHasImprovement:
-                        self.errorMessages[player.id!] = "You can have only one \(improvement.name)."
+                    case Player.PlayerError.insufficientImprovementSlots:
+                        self.errorMessages[player.id!] = "You can have a maximum of \(player.improvementSlotsCount) improvements."
                     case Player.PlayerError.insufficientFunds:
                         self.errorMessages[player.id!] = "Insufficient funds to build \(improvement.name)."
                         return Future.map(on: req) { return req.redirect(to: "/main") }
@@ -586,6 +496,40 @@ class FrontEndController: RouteCollection {
                         return Future.map(on: req) { return req.redirect(to: "/main") }
                     case Improvement.ImprovementError.improvementCannotBeRushed:
                         self.errorMessages[player.id!] = "\(improvement.name) cannot be rushed."
+                        return Future.map(on: req) { return req.redirect(to: "/main") }
+                    default:
+                        self.errorMessages[player.id!] = error.localizedDescription
+                        return Future.map(on: req) { return req.redirect(to: "/main") }
+                    }
+                    //return Future.map(on: req) { return req.redirect(to: "/main") }
+                }
+            }
+        }
+        
+        router.get("sell/improvement", Int.parameter) { req -> Future<Response> in
+            let number: Int = try req.parameters.next()
+            
+            guard let shortName = Improvement.ShortName(rawValue: number) else {
+                return Future.map(on: req) { return req.redirect(to: "/main")}
+            }
+            
+            return try self.getPlayerFromSession(on: req).flatMap(to: Response.self) {
+            player in
+                guard let improvement = Improvement.getImprovementByName(shortName) else {
+                    self.errorMessages[player.id!] = "No improvement with shortName \(shortName) found."
+                    return Future.map(on: req) { return req.redirect(to: "/main")}
+                }
+                
+                do {
+                    let sellingPlayer = try player.sellImprovement(improvement)
+                    return sellingPlayer.save(on: req).map(to: Response.self) { savedPlayer in
+                        self.infoMessages[savedPlayer.id!] = "Succesfully sold \(improvement.name)."
+                        return req.redirect(to: "/improvements")
+                    }
+                } catch {
+                    switch error {
+                    case Improvement.ImprovementError.improvementIncomplete:
+                        self.errorMessages[player.id!] = "You can only sell completed improvements."
                         return Future.map(on: req) { return req.redirect(to: "/main") }
                     default:
                         self.errorMessages[player.id!] = error.localizedDescription
