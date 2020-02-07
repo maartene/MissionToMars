@@ -93,17 +93,17 @@ public struct Component: Equatable, Codable {
         }
         
         var startedBuiltComponent = self
-        startedBuiltComponent.buildTime = Int(Double(buildTime) * player.componentBuildTimeFactor)
+        startedBuiltComponent.buildTime = Int(Double(buildTime) * 1.0)
         startedBuiltComponent.buildStartedOn = startDate
         startedBuiltComponent.builtByPlayerID = player.id
         return startedBuiltComponent
     }
     
-    public func updateComponent(ticks: Int = 1) -> Component {
+    public func updateComponent(buildPoints: Double ) -> Component {
         var updatedComponent = self
         
-        if buildStartedOn != nil {
-            let progress = Double(ticks) / Double(buildTime)
+        if buildStartedOn != nil && percentageCompleted < 100.0 {
+            let progress = buildPoints / Double(buildTime)
             updatedComponent.percentageCompleted += 100.0 * progress
         }
         

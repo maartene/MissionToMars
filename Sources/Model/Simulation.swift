@@ -42,7 +42,8 @@ public struct Simulation {
             }
             
             updatedMissions = updatedMissions.map { mission in
-                mission.updateMission()
+                let supportingPlayers = mission.getSupportingPlayers(from: updatedPlayers)
+                return mission.updateMission(supportingPlayers: supportingPlayers)
             }
             
             updatedSimulation = Simulation(id: self.id, tickCount: tickCount, gameDate: gameDate, nextUpdateDate: nextUpdateDate)

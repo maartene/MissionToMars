@@ -27,6 +27,8 @@ public enum Effect: Codable {
     case shortenComponentBuildTime(percentage: Double)
     case componentBuildDiscount(percentage: Double)
     case tagEffectDoubler(tag: Tag)
+    case extraBuildPointsFlat(amount: Double)
+    case extraComponentBuildPointsFlat(amount: Double)
     
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: EffectCodingKeys.self)
@@ -59,6 +61,12 @@ public enum Effect: Codable {
         case "tagEffectDoubler":
             let tag = try values.decode(Tag.self, forKey: .value)
             self = .tagEffectDoubler(tag: tag)
+        case "extraBuildPointsFlat":
+            let amount = try values.decode(Double.self, forKey: .value)
+            self = .extraBuildPointsFlat(amount: amount)
+        case "extraComponentBuildPointsFlat":
+            let amount = try values.decode(Double.self, forKey: .value)
+            self = .extraComponentBuildPointsFlat(amount: amount)
         default:
             throw EffectError.decodingUnknownEffectType
         }
@@ -95,6 +103,12 @@ public enum Effect: Codable {
         case .tagEffectDoubler(let tag):
             try container.encode("tagEffectDoubler", forKey: .effectType)
             try container.encode(tag, forKey: .value)
+        case .extraBuildPointsFlat(let amount):
+            try container.encode("extraBuildPointsFlat", forKey: .effectType)
+            try container.encode(amount, forKey: .value)
+        case .extraComponentBuildPointsFlat(let amount):
+            try container.encode("extraComponentBuildPointsFlat", forKey: .effectType)
+            try container.encode(amount, forKey: .value)
         }
     }
     
@@ -117,6 +131,14 @@ public enum Effect: Codable {
                 changedPlayer = improvement.applyEffectForOwner(player: changedPlayer)
             }
             return changedPlayer
+        case .extraBuildPointsFlat(let amount):
+            if player.isCurrentlyBuildingImprovement {
+                return player.extraBuildPoints(amount: amount)
+            } else {
+                return player
+            }
+        case .extraComponentBuildPointsFlat(let amount):
+            return player.extraComponentBuildPoints(amount: amount)
         default:
             return player
         }

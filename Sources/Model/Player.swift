@@ -50,7 +50,9 @@ public struct Player: Content, SQLiteUUIDModel {
     // resources
     public private(set) var cash: Double = 2_500_000
     public private(set) var technologyPoints: Double = 75
-        
+    public private(set) var buildPoints: Double = 0
+    public private(set) var componentBuildPoints: Double = 0
+    
     public private(set) var improvements: [Improvement]
     public var currentlyBuildingImprovement: Improvement? {
         let unfinishedImprovements = improvements.filter { improvement in
@@ -69,9 +71,9 @@ public struct Player: Content, SQLiteUUIDModel {
         self.improvements = []
         
         let startImprovement = Improvement.getImprovementByName(startImprovementShortName)!
-        if let completedStartImprovement = try? startImprovement.startBuild(startDate: Date()).updateImprovement(ticks: startImprovement.buildTime) {
-            assert(completedStartImprovement.isCompleted, "Your starting tech consultancy firm should be complete.")
-            self.improvements = [completedStartImprovement]
+        if let completedStartImprovement = try? startImprovement.startBuild(startDate: Date()).updateImprovement(buildPoints: Double(startImprovement.buildTime)) {
+            assert(completedStartImprovement.updatedImprovement.isCompleted, "Your starting tech consultancy firm should be complete.")
+            self.improvements = [completedStartImprovement.updatedImprovement]
         }
         
         self.unlockedTechnologyNames = [Technology.ShortName.LiIonBattery]
@@ -83,7 +85,7 @@ public struct Player: Content, SQLiteUUIDModel {
         }
     }
     
-    var buildTimeFactor: Double {
+    /*var buildTimeFactor: Double {
         let allEffects = completedImprovements.map { improvement in
             return improvement.staticEffects
             }.joined()
@@ -98,9 +100,9 @@ public struct Player: Content, SQLiteUUIDModel {
         }
         
         return max(rawBuildTimeFactor, 0.1)
-    }
+    }*/
     
-    var componentDiscount: Double {
+    /*var componentDiscount: Double {
         let allEffects = completedImprovements.map { improvement in
             return improvement.staticEffects
             }.joined()
@@ -115,9 +117,9 @@ public struct Player: Content, SQLiteUUIDModel {
         }
         
         return max(rawDiscount, 0.1)
-    }
+    }*/
     
-    var componentBuildTimeFactor: Double {
+    /*var componentBuildTimeFactor: Double {
         let allEffects = completedImprovements.map { improvement in
             return improvement.staticEffects
             }.joined()
@@ -132,22 +134,30 @@ public struct Player: Content, SQLiteUUIDModel {
         }
         
         return max(rawBuildTimeFactor, 0.1)
-    }
+    }*/
     
     public func updatePlayer(ticks: Int = 1) -> Player {
         var updatedPlayer = self
+        updatedPlayer.componentBuildPoints = 1
         
         for _ in 0 ..< ticks {
-            //updatedPlayer.cash += cashPerTick
-            //updatedPlayer.technologyPoints += 7
-            
-            let updatedImprovements = updatedPlayer.improvements.map { improvement in
-                return improvement.updateImprovement(buildTimeFactor: buildTimeFactor)}
-            updatedPlayer.improvements = updatedImprovements
+            if isCurrentlyBuildingImprovement { updatedPlayer.buildPoints += 1 }
             
             for improvement in updatedPlayer.improvements {
                 updatedPlayer = improvement.applyEffectForOwner(player: updatedPlayer)
             }
+            //print("Player build points before: \(updatedPlayer.componentBuildPoints)")
+            
+            var updatedImprovements = updatedPlayer.improvements
+            
+            for i in 0 ..< updatedPlayer.improvements.count {
+                let result = updatedImprovements[i].updateImprovement(buildPoints: updatedPlayer.buildPoints)
+                updatedImprovements[i] = result.updatedImprovement
+                updatedPlayer.buildPoints = result.remainingBuildPoints
+            }
+            
+            updatedPlayer.improvements = updatedImprovements
+            //print("Player build points after: \(updatedPlayer.buildPoints)")
         }
         
         //print("cashPerTick: \(cashPerTick)")
@@ -190,6 +200,18 @@ public struct Player: Content, SQLiteUUIDModel {
     func extraTech(amount: Double) -> Player {
         var changedPlayer = self
         changedPlayer.technologyPoints += amount
+        return changedPlayer
+    }
+    
+    func extraBuildPoints(amount: Double) -> Player {
+        var changedPlayer = self
+        changedPlayer.buildPoints += amount
+        return changedPlayer
+    }
+    
+    func extraComponentBuildPoints(amount: Double) -> Player {
+        var changedPlayer = self
+        changedPlayer.componentBuildPoints += amount
         return changedPlayer
     }
     
@@ -237,7 +259,7 @@ public struct Player: Content, SQLiteUUIDModel {
             return (updatedPlayer, updatedMission)
         }
         
-        let netCost = component.cost * componentDiscount
+        let netCost = component.cost * 1.0
         
         guard cash >= netCost else {
             throw PlayerError.insufficientFunds

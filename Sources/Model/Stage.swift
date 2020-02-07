@@ -65,9 +65,13 @@ public struct Stage: Equatable, Codable {
         }
     }
     
-    public func updateStage(ticks: Int = 1) -> Stage {
-        let updatedComponents = self.components.map { component in
-            component.updateComponent(ticks: ticks)
+    public func updateStage(supportingPlayers: [Player]) -> Stage {
+        let updatedComponents = self.components.map { component -> Component in
+            if let supportingPlayer = supportingPlayers.first(where: { $0.id == component.builtByPlayerID }) {
+                return component.updateComponent(buildPoints: supportingPlayer.componentBuildPoints)
+            } else {
+                return component.updateComponent(buildPoints: 1)
+            }
         }
         
         var updatedStage = self

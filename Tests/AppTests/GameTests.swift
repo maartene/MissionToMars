@@ -38,7 +38,7 @@ class GameTests: XCTestCase {
         var steps = 0
         while mission.missionComplete == false && steps < maxSteps {
             player = player.updatePlayer()
-            mission = mission.updateMission()
+            mission = mission.updateMission(supportingPlayers: [player])
             
             if player.cash >= component.cost && mission.currentStage.currentlyBuildingComponents.first == nil && mission.currentStage.currentlyBuildingComponents.first?.percentageCompleted ?? 0 < 100 && mission.currentStage.percentageComplete < 100.0 && completeComponents.contains("\(String(component.shortName.rawValue)+String(mission.currentStage.level))") == false {
                 do {
@@ -144,7 +144,7 @@ class GameTests: XCTestCase {
         let maxSteps = 1_000_000
         var steps = 0
         while mission.missionComplete == false && steps < maxSteps {
-            mission = mission.updateMission()
+            mission = mission.updateMission(supportingPlayers: players)
             for i in 0 ..< players.count {
                 var player = players[i]
                 player = player.updatePlayer()

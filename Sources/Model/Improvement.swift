@@ -43,7 +43,7 @@ public struct Improvement: Codable, Equatable {
         //case AdvertisingCampaign = 15
         case AI_TAG = 16
         case Construction_TAG = 17
-        case BioTech_TAG = 18
+        case BioTech_TAG = 18		
         case SpaceTravel_TAG = 19
         case Retail_TAG = 20
     }
@@ -60,7 +60,7 @@ public struct Improvement: Codable, Equatable {
         Improvement(shortName: .GrapheneSolarCellsPlant, name: "Graphene Solar Plant", description: "While the regular solar cells market is highly saturated and has very small margins, the new graphene based ones create a new market, with comparatively interesting margins (+50k).", cost: 5_000_000, buildTime: 365, requiredTechnologyShortnames: [.GrapheneSolarCells], updateEffects: [.extraIncomeFlat(amount: 50_000)], tags: [.Construction]),
         Improvement(shortName: .SolarAirLine, name: "Solar Airline", description: "The world first commercial airline powered completely using solar aircraft. This is guaranteerd to provide a great and steady income (+100k).", cost: 10_000_000, buildTime: 365*2, requiredTechnologyShortnames: [.SolarFlight], updateEffects: [.extraIncomeFlat(amount: 100_000)], tags: []),
         Improvement(shortName: .SpaceTourism, name: "Space Tourism Agency", description: "Allow the rich the opportunity to look at Earth from Space! As you are piggy backing on your existing technology, this is a very cost effective way of generating some extra income (+100_000)", cost: 100_000_000, buildTime: 365 / 12, requiredTechnologyShortnames: [.FuelConservation_2], updateEffects: [.extraIncomeFlat(amount: 1_000_000)], tags: [.SpaceTravel]),
-        Improvement(shortName: .PrefabFurniture, name: "Prefab Furniture Store", description: "A Swedish innovation! Furniture you can immediately pick-up, take home in flat boxes. Some assembly required. Extra income (+25k). Also lowers improvement building time by 20%.", cost: 1_000_000, buildTime: 365 / 4, requiredTechnologyShortnames: [], rushable: false,  updateEffects: [.extraIncomeFlat(amount: 5_000)], staticEffects: [.lowerProductionTimePercentage(percentage: 20.0)], tags: [.Retail, .Construction]),
+        Improvement(shortName: .PrefabFurniture, name: "Prefab Furniture Store", description: "A Swedish innovation! Furniture you can immediately pick-up, take home in flat boxes. Some assembly required. Extra income (+25k). Also lowers improvement building time by 20%.", cost: 1_000_000, buildTime: 365 / 4, requiredTechnologyShortnames: [], rushable: false,  updateEffects: [.extraIncomeFlat(amount: 5_000), .extraBuildPointsFlat(amount: 0.2)], tags: [.Retail, .Construction]),
         
         // Technology improvements
         Improvement(shortName: .BioResearchFacility, name: "Bio Research Facility", description: "Use your advancements in ML for bio research and generate extra tech points (+10)", cost: 1_000_000, buildTime: 365, requiredTechnologyShortnames: [.AdaptiveML], updateEffects: [.extraTechFlat(amount: 10)], tags: [.AI, .Biotech]),
@@ -68,7 +68,7 @@ public struct Improvement: Codable, Equatable {
         
         
         // Mission improvements
-        Improvement(shortName: .OrbitalShipyard, name: "Orbital Shipyard", description: "Although very expensive to construct, it will make building components much easier. Component build time is reduced by 40% and components are 10% cheaper to build.", cost: 750_000_000, buildTime: 365, rushable: false, updateEffects: [], staticEffects: [.componentBuildDiscount(percentage: 10.0), .shortenComponentBuildTime(percentage: 40.0)], tags: [.Construction, .SpaceTravel]),
+        Improvement(shortName: .OrbitalShipyard, name: "Orbital Shipyard", description: "Although very expensive to construct, it will make building components much easier. Component build time is reduced by 40%.", cost: 750_000_000, buildTime: 365, rushable: false, updateEffects: [.extraComponentBuildPointsFlat(amount: 0.4)], tags: [.Construction, .SpaceTravel]),
         
         // Tag based improvements
         Improvement(shortName: .AI_TAG, name: "AI specilization", description: "Your focus on AI related improvements makes these improvements twice as effective.", cost: 100_000, buildTime: 7, updateEffects: [.tagEffectDoubler(tag: .AI)]),
@@ -112,10 +112,9 @@ public struct Improvement: Codable, Equatable {
     public let allowsParrallelBuild: Bool
     public let rushable: Bool
     public let updateEffects: [Effect]
-    public let staticEffects: [Effect]
     public let tags: [Tag]
     
-    init(shortName: ShortName, name: String, description: String, cost: Double, buildTime: Int, requiredTechnologyShortnames: [Technology.ShortName] = [], allowsParrallelBuild: Bool = true, rushable: Bool = true, updateEffects: [Effect] = [], staticEffects: [Effect] = [], tags: [Tag] = []) {
+    init(shortName: ShortName, name: String, description: String, cost: Double, buildTime: Int, requiredTechnologyShortnames: [Technology.ShortName] = [], allowsParrallelBuild: Bool = true, rushable: Bool = true, updateEffects: [Effect] = [], tags: [Tag] = []) {
         self.shortName = shortName
         self.name = name
         self.description = description
@@ -125,7 +124,6 @@ public struct Improvement: Codable, Equatable {
         self.allowsParrallelBuild = allowsParrallelBuild
         self.rushable = rushable
         self.updateEffects = updateEffects
-        self.staticEffects = staticEffects
         self.tags = tags
     }
     
@@ -150,20 +148,21 @@ public struct Improvement: Codable, Equatable {
         return startedBuiltImprovement
     }
     
-    public func updateImprovement(ticks: Int = 1, buildTimeFactor: Double = 1.0) -> Improvement {
+    public func updateImprovement(buildPoints: Double) -> (updatedImprovement: Improvement, remainingBuildPoints: Double) {
         var changedImprovement = self
+        var updatedBuildPoints = buildPoints
         
-        if buildStartedOn != nil {
-            let netBuildTime = Double(buildTime) * buildTimeFactor
-            let progress = Double(ticks) / netBuildTime
+        if buildStartedOn != nil && changedImprovement.percentageCompleted < 100.0 {
+            let progress = buildPoints / Double(buildTime)
             changedImprovement.percentageCompleted += 100.0 * progress
+            updatedBuildPoints = 0
         }
         
         if changedImprovement.percentageCompleted > 100.0 {
             changedImprovement.percentageCompleted = 100.0
         }
         
-        return changedImprovement
+        return (changedImprovement, updatedBuildPoints)
     }
     
     public func applyEffectForOwner(player: Player) -> Player {

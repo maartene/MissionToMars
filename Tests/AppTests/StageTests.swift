@@ -31,7 +31,7 @@ class StageTests: XCTestCase {
     
     func testUpdateStageShouldNotIncreasePercentageComplete() throws {
         let stage = try Stage.getStageByLevel(1)
-        let updatedStage = stage.updateStage()
+        let updatedStage = stage.updateStage(supportingPlayers: [])
         XCTAssertEqual(updatedStage.percentageComplete, 0.0, "Without explicitly starting a build, percentageComplete should not increase.")
     }
     
@@ -54,8 +54,15 @@ class StageTests: XCTestCase {
         XCTAssertEqual(0, stage.currentlyBuildingComponents.count, "No component should be building.")
         
         let componentToBuild = stage.components.randomElement()!
-        let changedStage = try stage.startBuildingComponent(componentToBuild, buildDate: Date(), by: Player(emailAddress: "", name: ""))
-        let updatedStage = changedStage.updateStage(ticks: changedStage.currentlyBuildingComponents.first?.buildTime ?? 0)
+        var player = Player(emailAddress: "", name: "")
+        player.id = UUID()
+        let changedStage = try stage.startBuildingComponent(componentToBuild, buildDate: Date(), by: player)
+        XCTAssertEqual(1, changedStage.currentlyBuildingComponents.count, "One component should be building.")
+        var updatedStage = changedStage
+        for _ in 0 ..< componentToBuild.buildTime {
+            player = player.updatePlayer()
+            updatedStage = updatedStage.updateStage(supportingPlayers: [player])
+        }
         XCTAssertEqual(0, updatedStage.currentlyBuildingComponents.count, "A component should not be building.")
         XCTAssertEqual(1, updatedStage.completedComponents.count, "One component should be completed.")
         XCTAssert(updatedStage.completedComponents.contains(componentToBuild), "The component to build should be part of completedComponents")
