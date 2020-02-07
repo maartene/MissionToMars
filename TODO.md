@@ -1,9 +1,9 @@
 ### To do - current branch
 * Can build more than one of a single improvement; DONE
 * Improvements have tags, improvements that provide benefit for other improvements with that tag; DONE
-* Refactor build time discounts to work during update instead of seperate (hard coded calculation);
+* Refactor build time discounts to work during update instead of seperate (hard coded calculation); DONE
 * Maximum number of improvement slots; DONE
-* Icons for tag based improvements;
+* Icons for tag based improvements; DONE
 * Sell improvements. DONE
 
 ### To do:
