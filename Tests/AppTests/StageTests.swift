@@ -59,7 +59,7 @@ class StageTests: XCTestCase {
         let changedStage = try stage.startBuildingComponent(componentToBuild, buildDate: Date(), by: player)
         XCTAssertEqual(1, changedStage.currentlyBuildingComponents.count, "One component should be building.")
         var updatedStage = changedStage
-        for _ in 0 ..< componentToBuild.buildTime {
+        for _ in 0 ... componentToBuild.buildTime {
             player = player.updatePlayer()
             updatedStage = updatedStage.updateStage(supportingPlayers: [player])
         }
