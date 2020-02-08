@@ -7,7 +7,8 @@
 
 import Foundation
 
-public enum Effect: Codable {
+public enum Effect: Codable, CustomStringConvertible {
+    
     enum EffectError: Error {
         case decodingUnknownEffectType
     }
@@ -141,6 +142,25 @@ public enum Effect: Codable {
             return player.extraComponentBuildPoints(amount: amount)
         default:
             return player
+        }
+    }
+    
+    public var description: String {
+        switch self {
+        case .extraIncomeFlat(let amount):
+            return "+$\(amount) per day"
+        case .extraTechFlat(let amount):
+            return "+\(amount) technology points per day"
+        case .interestOnCash(let percentage):
+            return "+\(percentage) on your total cash per day"
+        case .tagEffectDoubler(let tag):
+            return "Receive double benefits from all improvements with tag '\(tag)'"
+        case .extraBuildPointsFlat(let amount):
+            return "Build improvements \(amount * 100.0)% faster"
+        case .extraComponentBuildPointsFlat(let amount):
+            return "Build improvements \(amount * 100.0)% faster"
+        default:
+            return "Effect \(self). Add a description for a more descriptive message."
         }
     }
 }

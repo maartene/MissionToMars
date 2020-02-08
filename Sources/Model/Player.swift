@@ -165,6 +165,11 @@ public struct Player: Content, SQLiteUUIDModel {
         return updatedPlayer
     }
     
+    @available(*, deprecated, message: "This function is for internal, testing purposes only.")
+    mutating func forceUnlockTechnology(shortName: Technology.ShortName) {
+        unlockedTechnologyNames.append(shortName)
+    }
+    
     public var cashPerTick: Double {
         let updatedPlayer = self.updatePlayer()
         return updatedPlayer.cash - cash

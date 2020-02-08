@@ -21,7 +21,8 @@
             <div class="row">
               <div class="col-md-auto">&nbsp;&nbsp;&nbsp;<img src="/images/Improvements/#(improvement.shortName)-w.png" alt="#(improvement.name)" width="24"/></div>
               <div class="col-md">
-                  <b>#(improvement.name)</b> - #(improvement.description)
+                  <p><b>#(improvement.name)</b> - #(improvement.description)<br/>
+                  <span class="text-info">#improvementEffects(improvement.shortName)</span></p>
               </div>
             </div>
           </label>

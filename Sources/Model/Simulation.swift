@@ -10,7 +10,7 @@ import FluentSQLite
 import Vapor
 
 public struct Simulation {
-    public static let UPDATE_INTERVAL_IN_MINUTES = 30.0
+    public static let UPDATE_INTERVAL_IN_MINUTES = 15.0
     public static var GLOBAL_SIMULATION_ID: UUID?
     
     public var id: UUID?

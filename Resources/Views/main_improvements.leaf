@@ -15,6 +15,7 @@
             <div class="row align-items-center">
             <div class="col-md-1 justify-content-center"><img src="/images/Improvements/#(improvement.shortName)-w.png"/></div>
             <div class="col"><b>#(improvement.name)</b> #(improvement.description) <br/>
+            <span class="text-info">#improvementEffects(improvement.shortName)</span><br/>
             #for(tag in improvement.tags) { <span class="badge badge-success">#tag(tag)</span> }<br/>
             
             #if(improvement.percentageCompleted < 100) { <br/>Currently building: 

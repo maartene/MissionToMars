@@ -11,9 +11,6 @@ import Foundation
 public struct Technology: Equatable, Codable {
     
     public enum ShortName: Int, Codable {
-        //case AutonomousDriving
-        //case AdvancedRocketry
-        //case RadiationShielding
         case RecoverableAI = 0
         case FuelConservation_1 = 1
         case FuelConservation_2 = 2
@@ -26,15 +23,19 @@ public struct Technology: Equatable, Codable {
         case SolarFlight = 9
         case RenewableRocketFuel = 10
         case FuelExtraction = 11
+        case PackageOptimization = 12
+        //case AdvancedRocketry
+        case RadiationShielding = 13
+        case AutonomousDriving = 14
     }
     
     public static let allTechnologies = [
         //Technology(shortName: .AdvancedRocketry, name: "Advanced Rocketry", description: "Lorem Ipsum", cost: 50, prerequisites: [.RecoverableAI]),
-        //Technology(shortName: .RadiationShielding, name: "Cosmic Radiationg Shielding", description: "Lorem ipsum", cost: 75, prerequisites: []),
+        Technology(shortName: .RadiationShielding, name: "Cosmic Radiationg Shielding", description: "Lorem ipsum", cost: 600, prerequisites: [.GrapheneMaterials]),
         Technology(shortName: .FuelConservation_1, name: "Fuel Conservation 1", description: "Launching rockets to space is still very costly both in terms of the cost of fuel as the environmental impact. Improvements in fuel efficiency will undoubtedly pay themselves back many fold.", cost: 50, prerequisites: []),
         Technology(shortName: .RecoverableAI, name: "Recoverable AI", description: "The most difficult aspect of Artificial Intelligence is for an AI to respond to unexpected circumstances. Due to advances in Machine Learning, AI are now able to (eventually) get out of situation where they would remain stuck in the past. This makes application of AI possible in all sorts of new markets.", cost: 150, prerequisites: [.AdaptiveML]),
         Technology(shortName: .FuelConservation_2, name: "Fuel Conservation 2", description: "Further improvements in fuel efficiency are required to asprire to make the trip to Mars and back.", cost: 150, prerequisites: [.FuelConservation_1]),
-        //Technology(shortName: .AutonomousDriving, name: "Autonomous Driving (terristrial)", description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.", cost: 100, prerequisites: []),
+        Technology(shortName: .AutonomousDriving, name: "Autonomous Driving (terristrial)", description: "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat.", cost: 300, prerequisites: [.RecoverableAI]),
         Technology(shortName: .AdaptiveML, name: "Adaptive Machine Learning", description: "The benefits of Machine Learning well known and understood. The next step is Machine Learning that can adapt to changing circumstances and detect internal bias. This technology has many medical applications.", cost: 50, prerequisites: []),
         Technology(shortName: .LiIonBattery, name: "Litium-Ion Battery", description: "Mature battery technology based on the well known LiIon technology. You start with this technology.", cost: 50, prerequisites: []),
         Technology(shortName: .LiIonBattery_HY, name: "High-yield LiIon Battery", description: "There is still more efficiency to get out of LiIon batteries. More efficiency leads to a higher energy density meaning either smaller batteries or longer battery life.", cost: 150, prerequisites: [.LiIonBattery]),
@@ -44,6 +45,8 @@ public struct Technology: Equatable, Codable {
         Technology(shortName: .SolarFlight, name: "Solar Energy Flight", description: "The development of graphene based solar panels and batteries finally made commercial solar flight possible, decreasing the cost and energy footprint of flight dramatically. Will you create the first commercial solar airline?", cost: 800, prerequisites: [.GrapheneBatteries, .GrapheneSolarCells]),
         Technology(shortName: .RenewableRocketFuel, name: "Renewable Rocket Fuel", description: "Renewable rocket fuel alleviates many of the disadvantages of rocket fuel and makes sending your first rocket to Mars a possibility.", cost: 150, prerequisites: [.FuelConservation_2]),
         Technology(shortName: .FuelExtraction, name: "Fuel Extraction", description: "The Mars soil and atmosphere contain substances that when correctly extracted and processed can be used as rocket fuel. To create a self sustaining colony and Mars economy, creating fuel locally is of paramount importance.", cost: 300, prerequisites: [.FuelExtraction]),
+        Technology(shortName: .PackageOptimization, name: "Optimized Packing", description: "Packing might sound simple, but packing with as high as possible densite while keeping packages small, standard size and manageble in weight in a very complex puzzle to solve.", cost: 200, prerequisites: []),
+        
     ]
     
     public static func getTechnologyByName(_ shortName: ShortName) -> Technology? {

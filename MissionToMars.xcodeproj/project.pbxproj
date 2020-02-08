@@ -23,6 +23,7 @@
 /* Begin PBXBuildFile section */
 		DE14362823EB2B9200EC3077 /* LeafTagTag.swift in Sources */ = {isa = PBXBuildFile; fileRef = DE14362723EB2B9200EC3077 /* LeafTagTag.swift */; };
 		DE8C2A3123D3A2E400A14E40 /* MailJet.swift in Sources */ = {isa = PBXBuildFile; fileRef = OBJ_19 /* MailJet.swift */; };
+		DECA8F0523EEB0B0006980B5 /* LeafEffectTags.swift in Sources */ = {isa = PBXBuildFile; fileRef = DECA8F0423EEB0B0006980B5 /* LeafEffectTags.swift */; };
 		OBJ_1000 /* CNIOZlib.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "swift-nio::CNIOZlib::Product" /* CNIOZlib.framework */; };
 		OBJ_1001 /* CNIOHTTPParser.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "swift-nio::CNIOHTTPParser::Product" /* CNIOHTTPParser.framework */; };
 		OBJ_1002 /* NIOOpenSSL.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = "swift-nio-ssl::NIOOpenSSL::Product" /* NIOOpenSSL.framework */; };
@@ -5953,6 +5954,7 @@
 		"Crypto::Crypto::Product" /* Crypto.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Crypto.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Crypto::Random::Product" /* Random.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Random.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		DE14362723EB2B9200EC3077 /* LeafTagTag.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeafTagTag.swift; sourceTree = "<group>"; };
+		DECA8F0423EEB0B0006980B5 /* LeafEffectTags.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LeafEffectTags.swift; sourceTree = "<group>"; };
 		"DatabaseKit::DatabaseKit::Product" /* DatabaseKit.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = DatabaseKit.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Fluent::Fluent::Product" /* Fluent.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = Fluent.framework; sourceTree = BUILT_PRODUCTS_DIR; };
 		"Fluent::FluentSQL::Product" /* FluentSQL.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; path = FluentSQL.framework; sourceTree = BUILT_PRODUCTS_DIR; };
@@ -9978,6 +9980,7 @@
 				OBJ_13 /* LeafDateTag.swift */,
 				OBJ_14 /* LeafDecimalTag.swift */,
 				DE14362723EB2B9200EC3077 /* LeafTagTag.swift */,
+				DECA8F0423EEB0B0006980B5 /* LeafEffectTags.swift */,
 			);
 			path = Controllers;
 			sourceTree = "<group>";
@@ -13142,6 +13145,7 @@
 				OBJ_974 /* LeafCashFormatter.swift in Sources */,
 				OBJ_975 /* LeafComponentTag.swift in Sources */,
 				OBJ_976 /* LeafDateTag.swift in Sources */,
+				DECA8F0523EEB0B0006980B5 /* LeafEffectTags.swift in Sources */,
 				OBJ_977 /* LeafDecimalTag.swift in Sources */,
 				OBJ_978 /* boot.swift in Sources */,
 				OBJ_979 /* configure.swift in Sources */,
