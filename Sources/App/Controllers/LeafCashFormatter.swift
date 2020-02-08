@@ -14,15 +14,15 @@ public final class CashTag: TagRenderer {
         
         return Future.map(on: tag.container) {
             if let double = tag.parameters[0].double {
-                let cashInt = Int(min(double, Double(Int.max - 1)))
-                if cashInt / 1_000_000_000 > 1 {
-                    return .string(String("\(cashInt / 1_000_000_000) billion"))
-                } else if cashInt / 1_000_000 > 1 {
-                    return .string(String("\(cashInt / 1_000_000) million"))
-                } else if cashInt / 1_000 > 1 {
-                    return .string(String("\(cashInt / 1_000) thousand"))
+                
+                if double / 1_000_000_000.0 > 1 {
+                    return .string("\(String(format: "%.2f", double / 1_000_000_000.0)) billion")
+                } else if double / 1_000_000.0 > 1 {
+                    return .string("\(String(format: "%.2f", double / 1_000_000.0)) million")
+                } else if double / 1_000.0 > 1 {
+                    return .string("\(String(format: "%.2f", double / 1_000.0)) thousand")
                 } else {
-                    return .string(String(cashInt))
+                    return .string(String(format: "%.2f", double))
                 }
             } else {
                 return .null

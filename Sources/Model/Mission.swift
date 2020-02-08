@@ -56,11 +56,11 @@ public struct Mission: Content, SQLiteUUIDModel {
         return changedMission
     }
     
-    public func updateMission(ticks: Int = 1) -> Mission {
+    public func updateMission(supportingPlayers: [Player]) -> Mission {
         var updatedMission = self
         
         let updatedStages = stages.map { stage in
-            stage.updateStage(ticks: ticks)
+            stage.updateStage(supportingPlayers: supportingPlayers)
         }
         
         updatedMission.stages = updatedStages
@@ -87,6 +87,18 @@ public struct Mission: Content, SQLiteUUIDModel {
     
     public var missionComplete: Bool {
         return currentStageLevel == Stage.allStages.count && currentStage.uncompletedComponents.count == 0
+    }
+    
+    func getSupportingPlayers(from allPlayers: [Player]) -> [Player] {
+        var result = [Player]()
+        if let owner = allPlayers.first(where: {$0.id == owningPlayerID}) {
+            result.append(owner)
+            
+            let supportingPlayers = allPlayers.filter { player in player.supportsPlayerID == owner.id}
+            result.append(contentsOf: supportingPlayers)
+        }
+        
+        return result
     }
 }
 

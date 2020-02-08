@@ -16,15 +16,20 @@ public struct Player: Content, SQLiteUUIDModel {
         case insufficientTechPoints
         case noSupportedPlayer
         case userAlreadyExists
+        
         case userDoesNotExist
         case playerAlreadyHasImprovement
         case usernameFailedValidation
         case playerAlreadyUnlockedTechnology
         case playerMissesPrerequisiteTechnology
+        
         case playerIsAlreadyBuildingImprovement
         case playerNotFound
         case playersNotInSameMission
         case cannotDonateToYourself
+        case illegalImprovementSlot
+        
+        case insufficientImprovementSlots
     }
     
     public var id: UUID?
@@ -43,9 +48,11 @@ public struct Player: Content, SQLiteUUIDModel {
     }
     
     // resources
-    public private(set) var cash: Double = 250_000
+    public private(set) var cash: Double = 2_500_000
     public private(set) var technologyPoints: Double = 75
-        
+    public private(set) var buildPoints: Double = 0
+    public private(set) var componentBuildPoints: Double = 0
+    
     public private(set) var improvements: [Improvement]
     public var currentlyBuildingImprovement: Improvement? {
         let unfinishedImprovements = improvements.filter { improvement in
@@ -64,9 +71,9 @@ public struct Player: Content, SQLiteUUIDModel {
         self.improvements = []
         
         let startImprovement = Improvement.getImprovementByName(startImprovementShortName)!
-        if let completedStartImprovement = try? startImprovement.startBuild(startDate: Date()).updateImprovement(ticks: startImprovement.buildTime) {
-            assert(completedStartImprovement.isCompleted, "Your starting tech consultancy firm should be complete.")
-            self.improvements = [completedStartImprovement]
+        if let completedStartImprovement = try? startImprovement.startBuild(startDate: Date()).updateImprovement(buildPoints: Double(startImprovement.buildTime)) {
+            assert(completedStartImprovement.updatedImprovement.isCompleted, "Your starting tech consultancy firm should be complete.")
+            self.improvements = [completedStartImprovement.updatedImprovement]
         }
         
         self.unlockedTechnologyNames = [Technology.ShortName.LiIonBattery]
@@ -78,7 +85,7 @@ public struct Player: Content, SQLiteUUIDModel {
         }
     }
     
-    var buildTimeFactor: Double {
+    /*var buildTimeFactor: Double {
         let allEffects = completedImprovements.map { improvement in
             return improvement.staticEffects
             }.joined()
@@ -93,9 +100,9 @@ public struct Player: Content, SQLiteUUIDModel {
         }
         
         return max(rawBuildTimeFactor, 0.1)
-    }
+    }*/
     
-    var componentDiscount: Double {
+    /*var componentDiscount: Double {
         let allEffects = completedImprovements.map { improvement in
             return improvement.staticEffects
             }.joined()
@@ -110,9 +117,9 @@ public struct Player: Content, SQLiteUUIDModel {
         }
         
         return max(rawDiscount, 0.1)
-    }
+    }*/
     
-    var componentBuildTimeFactor: Double {
+    /*var componentBuildTimeFactor: Double {
         let allEffects = completedImprovements.map { improvement in
             return improvement.staticEffects
             }.joined()
@@ -127,22 +134,30 @@ public struct Player: Content, SQLiteUUIDModel {
         }
         
         return max(rawBuildTimeFactor, 0.1)
-    }
+    }*/
     
     public func updatePlayer(ticks: Int = 1) -> Player {
         var updatedPlayer = self
+        updatedPlayer.componentBuildPoints = 1
         
         for _ in 0 ..< ticks {
-            //updatedPlayer.cash += cashPerTick
-            //updatedPlayer.technologyPoints += 7
-            
-            let updatedImprovements = updatedPlayer.improvements.map { improvement in
-                return improvement.updateImprovement(buildTimeFactor: buildTimeFactor)}
-            updatedPlayer.improvements = updatedImprovements
+            if isCurrentlyBuildingImprovement { updatedPlayer.buildPoints += 1 }
             
             for improvement in updatedPlayer.improvements {
                 updatedPlayer = improvement.applyEffectForOwner(player: updatedPlayer)
             }
+            //print("Player build points before: \(updatedPlayer.componentBuildPoints)")
+            
+            var updatedImprovements = updatedPlayer.improvements
+            
+            for i in 0 ..< updatedPlayer.improvements.count {
+                let result = updatedImprovements[i].updateImprovement(buildPoints: updatedPlayer.buildPoints)
+                updatedImprovements[i] = result.updatedImprovement
+                updatedPlayer.buildPoints = result.remainingBuildPoints
+            }
+            
+            updatedPlayer.improvements = updatedImprovements
+            //print("Player build points after: \(updatedPlayer.buildPoints)")
         }
         
         //print("cashPerTick: \(cashPerTick)")
@@ -150,30 +165,14 @@ public struct Player: Content, SQLiteUUIDModel {
         return updatedPlayer
     }
     
+    @available(*, deprecated, message: "This function is for internal, testing purposes only.")
+    mutating func forceUnlockTechnology(shortName: Technology.ShortName) {
+        unlockedTechnologyNames.append(shortName)
+    }
+    
     public var cashPerTick: Double {
-        let allEffects = completedImprovements.map { improvement in
-            return improvement.updateEffects
-            }.joined()
-        
-        let flatIncomePerTick = allEffects.reduce(0.0) { result, effect in
-            switch effect {
-            case .extraIncomeFlat(let amount):
-                return result + amount
-            default:
-                return result
-            }
-        }
-        
-        let interestPerTick = allEffects.reduce(0.0) { result, effect in
-            switch effect {
-            case .interestOnCash(let percentage):
-                return result + (percentage / 100.0)
-            default:
-                return result
-            }
-        }
-        
-        return flatIncomePerTick + cash * interestPerTick
+        let updatedPlayer = self.updatePlayer()
+        return updatedPlayer.cash - cash
     }
     
     public var techPerTick: Double {
@@ -192,6 +191,10 @@ public struct Player: Content, SQLiteUUIDModel {
         
         return flatTechPerTick
     }
+
+    public var improvementSlotsCount: Int {
+        return 5
+    }
     
     func extraIncome(amount: Double) -> Player {
         var changedPlayer = self
@@ -202,6 +205,18 @@ public struct Player: Content, SQLiteUUIDModel {
     func extraTech(amount: Double) -> Player {
         var changedPlayer = self
         changedPlayer.technologyPoints += amount
+        return changedPlayer
+    }
+    
+    func extraBuildPoints(amount: Double) -> Player {
+        var changedPlayer = self
+        changedPlayer.buildPoints += amount
+        return changedPlayer
+    }
+    
+    func extraComponentBuildPoints(amount: Double) -> Player {
+        var changedPlayer = self
+        changedPlayer.componentBuildPoints += amount
         return changedPlayer
     }
     
@@ -249,7 +264,7 @@ public struct Player: Content, SQLiteUUIDModel {
             return (updatedPlayer, updatedMission)
         }
         
-        let netCost = component.cost * componentDiscount
+        let netCost = component.cost * 1.0
         
         guard cash >= netCost else {
             throw PlayerError.insufficientFunds
@@ -266,8 +281,13 @@ public struct Player: Content, SQLiteUUIDModel {
     }
         
     public func startBuildImprovement(_ improvement: Improvement, startDate: Date) throws -> Player {
-        guard improvements.contains(improvement) == false else {
+        // This is no longer relevant if we want to allow the same building built more than once. 
+        /*guard improvements.contains(improvement) == false else {
             throw PlayerError.playerAlreadyHasImprovement
+        }*/
+        
+        guard improvements.count < improvementSlotsCount else {
+            throw PlayerError.insufficientImprovementSlots
         }
         
         guard improvement.playerHasPrerequisitesForImprovement(self) else {
@@ -296,23 +316,39 @@ public struct Player: Content, SQLiteUUIDModel {
         return changedPlayer
     }
     
-    func removeImprovement(_ improvement: Improvement) -> Player {
-        var changedPlayer = self
-        
-        if let index = changedPlayer.improvements.firstIndex(of: improvement) {
-            _ = changedPlayer.improvements.remove(at: index)
-            //print("removing \()")
+    func replaceImprovementInSlot(_ slot: Int, with improvement: Improvement) throws -> Player {
+        guard (0 ..< improvements.count).contains(slot) else {
+            print("Slot \(slot) outside of improvement slot range.")
+            throw PlayerError.illegalImprovementSlot
         }
-        assert(changedPlayer.improvements.contains(improvement) == false)
+        
+        var changedPlayer = self
+        changedPlayer.improvements[slot] = improvement
         return changedPlayer
     }
     
-    func removeImprovement(_ shortName: Improvement.ShortName) -> Player {
-        guard let improvement = Improvement.getImprovementByName(shortName) else {
-            return self
+    func removeImprovementInSlot(_ slot: Int) throws -> Player {
+        guard (0 ..< improvements.count).contains(slot) else {
+            print("Slot \(slot) outside of improvement slot range.")
+            throw PlayerError.illegalImprovementSlot
         }
         
-        return removeImprovement(improvement)
+        var changedPlayer = self
+        changedPlayer.improvements.remove(at: slot)
+        return changedPlayer
+    }
+    
+    public func sellImprovement(_ improvement: Improvement) throws -> Player {
+        guard completedImprovements.contains(improvement) else {
+            throw Improvement.ImprovementError.improvementIncomplete
+        }
+        
+        if let slot = improvements.firstIndex(of: improvement) {
+            let changedPlayer = try removeImprovementInSlot(slot)
+            return changedPlayer.extraIncome(amount: improvement.cost * IMPROVEMENT_SELL_RATIO)
+        } else {
+            throw PlayerError.illegalImprovementSlot
+        }
     }
     
     public func rushImprovement(_ improvement: Improvement) throws -> Player {
@@ -320,15 +356,15 @@ public struct Player: Content, SQLiteUUIDModel {
             throw PlayerError.insufficientFunds
         }
         
-        var changedPlayer = self
-        
         let rushedImprovement = try improvement.rush()
         
-        changedPlayer = changedPlayer.removeImprovement(improvement)
-        changedPlayer.improvements.append(rushedImprovement)
+        if let slot = self.improvements.firstIndex(where: { existingImprovement in
+            existingImprovement == improvement && existingImprovement.isCompleted == false
+        }) {
+            return try self.replaceImprovementInSlot(slot, with: rushedImprovement)
+        }
         
-        assert(changedPlayer.improvements.contains(improvement))
-        return changedPlayer
+        return self
     }
     
     public func investInTechnology(_ technology: Technology) throws -> Player {
@@ -437,46 +473,6 @@ extension Player {
         }
         
         return Player.find(playerID, on: conn)
-    }
-    
-    @available(*, deprecated, message: "Use donateToPlayerSupportingSameMission(cash: receivingPlayer: on:) instead")
-    public func donateToSupportedPlayer(cash amount: Double, on conn: DatabaseConnectable) throws -> Future<Result<(donatingPlayer: Player, receivingPlayer: Player), Error>> {
-        return try getSupportedPlayer(on: conn).flatMap(to: Result<(donatingPlayer: Player, receivingPlayer: Player), Error>.self) { player in
-            guard let supportedPlayer = player else {
-                return Future.map(on: conn) {
-                    return .failure(PlayerError.noSupportedPlayer)
-                }
-            }
-            
-            var result: Result<(donatingPlayer: Player, receivingPlayer: Player), Error>
-            do {
-                let donatingResult = try self.donate(cash: amount, to: supportedPlayer)
-                result = .success(donatingResult)
-            } catch {
-                result = .failure(error)
-            }
-            return Future.map(on: conn) { return result }
-        }
-    }
-    
-    @available(*, deprecated, message: "Use donateToPlayerSupportingSameMission(tech: receivingPlayer: on:) instead")
-    public func donateToSupportedPlayer(techPoints amount: Double, on conn: DatabaseConnectable) throws -> Future<Result<(donatingPlayer: Player, receivingPlayer: Player), Error>> {
-        return try getSupportedPlayer(on: conn).flatMap(to: Result<(donatingPlayer: Player, receivingPlayer: Player), Error>.self) { player in
-            guard let supportedPlayer = player else {
-                return Future.map(on: conn) {
-                    return .failure(PlayerError.noSupportedPlayer)
-                }
-            }
-            
-            var result: Result<(donatingPlayer: Player, receivingPlayer: Player), Error>
-            do {
-                let donatingResult = try self.donate(techPoints: amount, to: supportedPlayer)
-                result = .success(donatingResult)
-            } catch {
-                result = .failure(error)
-            }
-            return Future.map(on: conn) { return result }
-        }
     }
     
     public func donateToPlayerSupportingSameMission(cash amount: Double, receivingPlayer: Player, on conn: DatabaseConnectable) throws ->

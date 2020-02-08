@@ -43,6 +43,7 @@ final class SimulationTests : XCTestCase {
         let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
         let update = simulation.updateSimulation(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60 * 4), players: [], missions: [])
         
+        // if this fails, it is usually because simulation update time was hardcoded to a different value (in 'Simulation.swift')
         XCTAssertEqual(update.updatedSimulation.tickCount, 5, " ticks")
     }
     
@@ -93,7 +94,9 @@ final class SimulationTests : XCTestCase {
         let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
         
         let improvement = Improvement.getImprovementByName(.PrefabFurniture)!
-        var player = try Player(emailAddress: "example@example.com", name: "testUser").extraIncome(amount: improvement.cost).startBuildImprovement(improvement, startDate: Date())
+        var player = Player(emailAddress: "example@example.com", name: "testUser").extraIncome(amount: improvement.cost)
+        player = unlockTechnologiesForImprovement(player: player, improvement: improvement)
+        player = try player.startBuildImprovement(improvement, startDate: Date())
         let extraCash = player.cashPerTick
         
         player = player.updatePlayer(ticks: improvement.buildTime + 1)
@@ -101,6 +104,14 @@ final class SimulationTests : XCTestCase {
         
         let updateResult = simulation.updateSimulation(currentDate: Date(), players: [player], missions: [])
         XCTAssertGreaterThan(updateResult.updatedPlayers[0].cash, player.cash + extraCash, " cash")
+    }
+    
+    func unlockTechnologiesForImprovement(player: Player, improvement: Improvement) -> Player {
+        var changedPlayer = player
+        for tech in improvement.requiredTechnologyShortnames {
+            changedPlayer.forceUnlockTechnology(shortName: tech)
+        }
+        return changedPlayer
     }
 
     static let allTests = [

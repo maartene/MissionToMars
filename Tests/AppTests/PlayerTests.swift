@@ -69,7 +69,7 @@ final class PlayerTests : XCTestCase {
     
     func testUpdatePlayerWithoutImprovementsShouldNotChangePlayer() throws {
         var player = Player(emailAddress: "example@example.com", name: "testUser")
-        player = player.removeImprovement(.TechConsultancy)
+        player = try player.removeImprovementInSlot(0)
         let updatedPlayer = player.updatePlayer()
         XCTAssertEqual(player.cash, updatedPlayer.cash)
         XCTAssertEqual(player.technologyPoints, updatedPlayer.technologyPoints)

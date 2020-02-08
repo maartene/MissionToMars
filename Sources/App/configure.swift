@@ -51,6 +51,8 @@ public func configure(
     tags.use(ZeroDecimalTag(), as: "dec0")
     tags.use(CashTag(), as: "cash")
     tags.use(ComponentPrereqTag(), as: "compPrereqs")
+    tags.use(ImprovementTagTag(), as: "tag")
+    tags.use(ImprovementEffectTag(), as: "improvementEffects")
     services.register(tags)
 
     // Register middleware (file serving and sessions)

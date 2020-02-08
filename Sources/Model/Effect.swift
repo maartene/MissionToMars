@@ -7,7 +7,8 @@
 
 import Foundation
 
-public enum Effect: Codable {
+public enum Effect: Codable, CustomStringConvertible {
+    
     enum EffectError: Error {
         case decodingUnknownEffectType
     }
@@ -23,9 +24,12 @@ public enum Effect: Codable {
     //case extraTechPercentage(percentage: Double)
     case lowerProductionTimePercentage(percentage: Double)
     case extraIncomeDailyIncome(times: Double)
-    case oneShot(shortName: Improvement.ShortName)
+    //case oneShot(shortName: Improvement.ShortName)
     case shortenComponentBuildTime(percentage: Double)
     case componentBuildDiscount(percentage: Double)
+    case tagEffectDoubler(tag: Tag)
+    case extraBuildPointsFlat(amount: Double)
+    case extraComponentBuildPointsFlat(amount: Double)
     
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: EffectCodingKeys.self)
@@ -46,15 +50,24 @@ public enum Effect: Codable {
         case "extraIncomeDailyIncome":
             let times = try values.decode(Double.self, forKey: .value)
             self = .extraIncomeDailyIncome(times: times)
-        case "oneShot":
+        /*case "oneShot":
             let shortName = try values.decode(Improvement.ShortName.self, forKey: .value)
-            self = .oneShot(shortName: shortName)
+            self = .oneShot(shortName: shortName)*/
         case "shortenComponentBuildTime":
             let percentage = try values.decode(Double.self, forKey: .value)
             self = .shortenComponentBuildTime(percentage: percentage)
         case "componentBuildDiscount":
             let percentage = try values.decode(Double.self, forKey: .value)
             self = .componentBuildDiscount(percentage: percentage)
+        case "tagEffectDoubler":
+            let tag = try values.decode(Tag.self, forKey: .value)
+            self = .tagEffectDoubler(tag: tag)
+        case "extraBuildPointsFlat":
+            let amount = try values.decode(Double.self, forKey: .value)
+            self = .extraBuildPointsFlat(amount: amount)
+        case "extraComponentBuildPointsFlat":
+            let amount = try values.decode(Double.self, forKey: .value)
+            self = .extraComponentBuildPointsFlat(amount: amount)
         default:
             throw EffectError.decodingUnknownEffectType
         }
@@ -79,15 +92,24 @@ public enum Effect: Codable {
         case .extraIncomeDailyIncome(let times):
             try container.encode("extraIncomeDailyIncome", forKey: .effectType)
             try container.encode(times, forKey: .value)
-        case .oneShot(let shortName):
+        /*case .oneShot(let shortName):
             try container.encode("oneShot", forKey: .effectType)
-            try container.encode(shortName, forKey: .value)
+            try container.encode(shortName, forKey: .value)*/
         case .shortenComponentBuildTime(let percentage):
             try container.encode("shortenComponentBuildTime", forKey: .effectType)
             try container.encode(percentage, forKey: .value)
         case .componentBuildDiscount(let percentage):
             try container.encode("componentBuildDiscount", forKey: .effectType)
             try container.encode(percentage, forKey: .value)
+        case .tagEffectDoubler(let tag):
+            try container.encode("tagEffectDoubler", forKey: .effectType)
+            try container.encode(tag, forKey: .value)
+        case .extraBuildPointsFlat(let amount):
+            try container.encode("extraBuildPointsFlat", forKey: .effectType)
+            try container.encode(amount, forKey: .value)
+        case .extraComponentBuildPointsFlat(let amount):
+            try container.encode("extraComponentBuildPointsFlat", forKey: .effectType)
+            try container.encode(amount, forKey: .value)
         }
     }
     
@@ -101,10 +123,44 @@ public enum Effect: Codable {
             return player.extraIncome(amount: player.cash * (percentage / 100.0))
         case .extraIncomeDailyIncome(let times):
             return player.extraIncome(amount: player.cashPerTick * times)
-        case .oneShot(let shortName):
-            return player.removeImprovement(shortName)
+        /*case .oneShot(let shortName):
+            return player.removeImprovement(shortName)*/
+        case .tagEffectDoubler(let tag):
+            let improvements = player.completedImprovements.filter {$0.tags.contains(tag)}
+            var changedPlayer = player
+            for improvement in improvements {
+                changedPlayer = improvement.applyEffectForOwner(player: changedPlayer)
+            }
+            return changedPlayer
+        case .extraBuildPointsFlat(let amount):
+            if player.isCurrentlyBuildingImprovement {
+                return player.extraBuildPoints(amount: amount)
+            } else {
+                return player
+            }
+        case .extraComponentBuildPointsFlat(let amount):
+            return player.extraComponentBuildPoints(amount: amount)
         default:
             return player
+        }
+    }
+    
+    public var description: String {
+        switch self {
+        case .extraIncomeFlat(let amount):
+            return "+$\(amount) per day"
+        case .extraTechFlat(let amount):
+            return "+\(amount) technology points per day"
+        case .interestOnCash(let percentage):
+            return "+\(percentage) on your total cash per day"
+        case .tagEffectDoubler(let tag):
+            return "Receive double benefits from all improvements with tag '\(tag)'"
+        case .extraBuildPointsFlat(let amount):
+            return "Build improvements \(amount * 100.0)% faster"
+        case .extraComponentBuildPointsFlat(let amount):
+            return "Build improvements \(amount * 100.0)% faster"
+        default:
+            return "Effect \(self). Add a description for a more descriptive message."
         }
     }
 }
