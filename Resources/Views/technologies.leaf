@@ -11,7 +11,7 @@
                   #if(techUnlocksImprovements(tech.shortName) != "-") {<span class="text-info">Unlocks improvements: #techUnlocksImprovements(tech.shortName)<br/></span>}
                   #if(techUnlocksTechnologies(tech.shortName) != "-") {<span class="text-info">Unlocks technologies: #techUnlocksTechnologies(tech.shortName)<br/></span>}
                   #if(techUnlocksComponents(tech.shortName) != "-") {<span class="text-info">Unlocks components: #techUnlocksComponents(tech.shortName)<br/></span>}
-                  This technology costs #dec0(tech.cost) points. <a href="/unlock/technologies/#(tech.shortName)" class="btn btn-sm btn-primary #if(tech.cost > player.technologyPoints) { disabled }">Unlock this technology</a>
+                  <span class="text-primary">This technology costs #dec0(tech.cost) points.</span> <a href="/unlock/technologies/#(tech.shortName)" class="btn btn-sm btn-primary #if(tech.cost > player.technologyPoints) { disabled }">Unlock this technology</a>
               </div>
             </div>
           </li>

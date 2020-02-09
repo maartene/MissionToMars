@@ -125,7 +125,10 @@ public struct Player: Content, SQLiteUUIDModel {
     }
     
     public var techPerTick: Double {
-        let allEffects = completedImprovements.map { improvement in
+        let updatedPlayer = self.updatePlayer()
+        return updatedPlayer.technologyPoints - technologyPoints
+        
+        /*let allEffects = completedImprovements.map { improvement in
             return improvement.updateEffects
             }.joined()
         
@@ -138,7 +141,7 @@ public struct Player: Content, SQLiteUUIDModel {
             }
         }
         
-        return flatTechPerTick
+        return flatTechPerTick*/
     }
 
     public var improvementSlotsCount: Int {
