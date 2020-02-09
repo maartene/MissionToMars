@@ -666,6 +666,37 @@ class FrontEndController: RouteCollection {
             let missions: [Mission]
         }
         
+        router.get("debug/backup") { req -> Future<String> in
+            guard (Environment.get("DEBUG_MODE") ?? "inactive") == "active" else {
+                throw Abort(.notFound)
+            }
+            
+            return self.getSimulation(on: req).flatMap(to: String.self) { simulation in
+                return Player.query(on: req).all().flatMap(to: String.self) { players in
+                    return Mission.query(on: req).all().map(to: String.self) { missions in
+                        do {
+                            let dataDump = DataDump(simulation: simulation, players: players, missions: missions)
+                            let encoder = JSONEncoder()
+                            encoder.outputFormatting = .prettyPrinted
+                            let data = try encoder.encode(dataDump)
+                            let backupDir = Environment.get("BACKUP_PATH") ?? ""
+                            let formatter = DateFormatter()
+                            formatter.dateFormat = "YYYYMMdd_HHmmss"
+                            
+                            let formattedDate = formatter.string(from: Date())
+                            print(formattedDate)
+                            let url = URL(fileURLWithPath: "\(backupDir)backup_\(formattedDate).json")
+                            try data.write(to: url)
+                            return "Done"
+                        } catch {
+                            print(error)
+                            return("Error while backup up: \(error).")
+                        }
+                    }
+                }
+            }
+        }
+        
         router.get("debug/dataDump") { req -> Future<DataDump> in
             guard (Environment.get("DEBUG_MODE") ?? "inactive") == "active" else {
                 throw Abort(.notFound)

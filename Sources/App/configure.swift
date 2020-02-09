@@ -53,6 +53,9 @@ public func configure(
     tags.use(ComponentPrereqTag(), as: "compPrereqs")
     tags.use(ImprovementTagTag(), as: "tag")
     tags.use(ImprovementEffectTag(), as: "improvementEffects")
+    tags.use(TechnologyUnlocksImprovementsTag(), as: "techUnlocksImprovements")
+    tags.use(TechnologyUnlocksTechnologiesTag(), as: "techUnlocksTechnologies")
+    tags.use(TechnologyUnlocksComponentsTag(), as: "techUnlocksComponents")
     services.register(tags)
 
     // Register middleware (file serving and sessions)

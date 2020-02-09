@@ -8,6 +8,9 @@
               <div class="col-md-1"><img src="/images/Technologies/#(tech.shortName)-w.png" alt="#(tech.name)"/></div>
               <div class="col-md">
                   <b>#(tech.name)</b> - #(tech.description)<br/>
+                  #if(techUnlocksImprovements(tech.shortName) != "-") {<span class="text-info">Unlocks improvements: #techUnlocksImprovements(tech.shortName)<br/></span>}
+                  #if(techUnlocksTechnologies(tech.shortName) != "-") {<span class="text-info">Unlocks technologies: #techUnlocksTechnologies(tech.shortName)<br/></span>}
+                  #if(techUnlocksComponents(tech.shortName) != "-") {<span class="text-info">Unlocks components: #techUnlocksComponents(tech.shortName)<br/></span>}
                   This technology costs #dec0(tech.cost) points. <a href="/unlock/technologies/#(tech.shortName)" class="btn btn-sm btn-primary #if(tech.cost > player.technologyPoints) { disabled }">Unlock this technology</a>
               </div>
             </div>
