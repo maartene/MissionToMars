@@ -90,6 +90,14 @@ The UI is Leaf based. The most important Leaf view is `main.leaf` (called from `
 3. It checks whether the mission for the current player (either owning or supporting) is complete. If so, the "Win screen" is shown;
 4. There is an `errorMessages` dictionary ([UUID: String?]), you can use to show an error message to players. See `donate/to/supportedPlayer` route in `routes.swift` for an exmaple.
 
+## About performance
+After testing, I find the application doesn't scale linear. I.e.:
+* 1 player update takes 0.1s;
+* 1000 players update takes 3.5s;
+* 5000 players update takes 30s;
+* 6000 players update takes 50s.
+This is using SQLite as database backend. Not yet sure whether this is CPU bound or IO bound, but this will not scale to really large number of players.
+
 ## Debug features
 The game provides some debug features:
 * There a routes specifically intented for debug functionality. These need to be deleted for production work (or otherwise disabled);

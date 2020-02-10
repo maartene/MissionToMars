@@ -13,8 +13,11 @@ import MailJet
 
 class FrontEndController: RouteCollection {
     
+    // this is an ugly hack to get the application (we need it as a worker to do the DB actions for the update of the simulation)
+    static var app: Application!
     var errorMessages = [UUID: String?]()
     var infoMessages = [UUID: String?]()
+    var simulationIsUpdating = false
     
     func boot(router: Router) throws {
         router.get("create/player") { req -> Future<View> in
@@ -114,23 +117,47 @@ class FrontEndController: RouteCollection {
                 return try req.view().render("index")
             }
             
+            if simulationIsUpdating {
+                self.infoMessages[id] = "Simulation updated. Thanks for your patience!"
+                return try req.view().render("simulationUpdating")
+            }
+            
+            // NOTE: updating 1000 players takes ~3.5 seconds
+            // 5000 players takes ~35 seconds
+            // 6000 players takes ~53 seconds
+            // NON LINEAR behaviour
             return self.getSimulation(on: req).flatMap(to: View.self) { simulation in
+                let startUpdateTime = Date()
                 if simulation.simulationShouldUpdate(currentDate: Date()) {
-                    return Player.query(on: req).all().flatMap(to: View.self) { players in
-                        return Mission.query(on: req).all().flatMap(to: View.self) { missions in
-                            let result = simulation.updateSimulation(currentDate: Date(), players: players, missions: missions)
-                            assert(simulation.id != nil)
-                            assert(result.updatedSimulation.id != nil)
-                            assert(simulation.id == result.updatedSimulation.id)
-                            return result.updatedSimulation.update(on: req).flatMap(to: View.self) { savedSimulation in
-                                return Player.savePlayers(result.updatedPlayers, on: req).flatMap(to: View.self) { players in
-                                    return Mission.saveMissions(result.updatedMissions, on: req).flatMap(to: View.self) { missions in
-                                        return self.getMainViewForPlayer(with: id, simulation: savedSimulation, on: req, page: page)
+                    self.simulationIsUpdating = true
+                    self.infoMessages[id] = "Simulation updated. Thanks for your patience!"
+                    
+                    _ = FrontEndController.app.withPooledConnection(to: .sqlite) { conn -> Future<Void> in
+                        return Player.query(on: conn).all().flatMap(to: Void.self) { players in
+                            return Mission.query(on: conn).all().flatMap(to: Void.self) { missions in
+                                let result = simulation.updateSimulation(currentDate: Date(), players: players, missions: missions)
+                                assert(simulation.id != nil)
+                                assert(result.updatedSimulation.id != nil)
+                                assert(simulation.id == result.updatedSimulation.id)
+                                return result.updatedSimulation.update(on: conn).flatMap(to: Void.self) { savedSimulation in
+                                    return Player.savePlayers(result.updatedPlayers, on: conn).flatMap(to: Void.self) { players in
+                                        /*print("Start sleep")
+                                        sleep(10)
+                                        print("End sleep")*/
+                                        return Mission.saveMissions(result.updatedMissions, on: conn).map(to: Void.self) { [weak self] missions in
+                                            assert(self != nil)
+                                            self!.simulationIsUpdating = false
+                                            self?.infoMessages[id] = "Simulation updated. Thanks for your patience!"
+                                            print("Update took: \(startUpdateTime.timeIntervalSinceNow.magnitude) seconds.")
+                                        }
                                     }
                                 }
                             }
                         }
                     }
+                    
+                    return try req.view().render("simulationUpdating")
+                    
                 } else {
                     return self.getMainViewForPlayer(with: id, simulation: simulation, on: req, page: page)
                 }
@@ -654,6 +681,26 @@ class FrontEndController: RouteCollection {
                 
                 return Player.savePlayers(smartPlayers, on: req)
             }
+        }
+        
+        router.post("debug", "createDummyUsers") { req -> Future<[Player]> in
+            guard (Environment.get("DEBUG_MODE") ?? "inactive") == "active" else {
+                throw Abort(.notFound)
+            }
+            
+            var futures = [Future<Player>]()
+            for i in 0 ..< 1_000 {
+                let playerFuture = Player.createUser(emailAddress: "dummyUser\(i)\(Int.random(in: 0...1_000_000))@example.com", name: "dummyUser\(i)\(Int.random(in: 0...1_000_000))", on: req).map(to: Player.self) { result in
+                    switch result {
+                    case .success(let player):
+                        return player
+                    case .failure(let error):
+                        throw error
+                    }
+                }
+                futures.append(playerFuture)
+            }
+            return futures.flatten(on: req)
         }
         
         router.get() { req in

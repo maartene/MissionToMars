@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <!--<link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">-->
+    <link rel="stylesheet" href="/styles/bootstrap.min.css">
+    <link rel="icon" type="image/png" href="/images/favicon-64x64.png" sizes="64x64">
+    <title>Mission To Mars</title>
+
+    <script type="text/JavaScript">
+        <!--
+        function TimedRefresh( t ) {
+        setTimeout("location.reload(true);", t);
+        }
+        //   -->
+    </script>
+</head>
+<body onload="JavaScript:TimedRefresh(5000);">
+    <div class="container mt-3">
+        <p><a href="/"><img src="/images/streamline-icon-earth-3@48x48.png"/><img src="/images/logo.png" alt="Mission To Mars" width="50%"></a></p>
+        <div class="jumbotron">
+            <h1>Updating simulation</h1>
+            <p>Please wait while we start another day.</p>
+            <p>This page autorefreshes every 5 seconds.</p>
+            <a class="btn btn-primary m-3" href="javascript:location.reload(true)">Refresh now!</a></p>
+        </div>
+     <div class="container p-3 mt-3 border-top">
+        #embed("footer")
+    </div>
+</body>
+</html>

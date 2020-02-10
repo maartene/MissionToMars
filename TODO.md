@@ -1,5 +1,8 @@
 ### To do:
 * UI: improvements should look better
+    * * Table for improvements
+    * * Unlocks visible for technologies
+* Update simulation now a "background job" (hacked solution using static variable)
 
 ### Done:
 * Supporting players should be able to build components
