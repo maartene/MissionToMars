@@ -30,7 +30,7 @@
                                         <div class="progress-bar" role="progressbar" style="width: #decimal(component.percentageCompleted)%" aria-valuenow="#decimal(improvement.percentageCompleted)" aria-valuemin="0" aria-valuemax="100"></div>
                                     </div>
                                     #decimal(component.percentageCompleted)% complete. } else {
-                                    <a href="/build/component/#(component.shortName)" class="btn btn-sm btn-primary #if(component.cost > player.cash || playerIsBuildingComponent) {disabled}">Start build</a>
+                                    <a href="/build/component/#(component.shortName)" class="btn btn-sm btn-primary #if(component.cost > player.cash || playerIsBuildingComponent || simulationIsUpdating) {disabled}">Start build</a>
                                 }
                             </div>
                         </div>
@@ -58,8 +58,8 @@
                 #if(currentStageComplete == true) { <div class="row m-2"><a href="/advance/stage" class="btn btn-light mt-1">Advance to the next stage</a></div> }
         </div>
     } else {
-        <div class="col"><a href="/create/mission" class="btn btn-primary">Create mission</a> <span class="text-info">Note: players who support your mission will be able to see your email address.</span></div>
-        <div class="col mt-2"><a href="/support/mission" class="btn btn-primary" onClick="showMissions">Support a mission</a></div>
+        <div class="col"><a href="/create/mission" class="btn btn-primary #if(simulationIsUpdating) {disabled}">Create mission</a> <span class="text-info">Note: players who support your mission will be able to see your email address.</span></div>
+        <div class="col mt-2"><a href="/support/mission" class="btn btn-primary #if(simulationIsUpdating) {disabled}" onClick="showMissions">Support a mission</a></div>
     }
     </div>
 </div>

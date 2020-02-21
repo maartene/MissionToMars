@@ -21,7 +21,7 @@ public func configure(
     try services.register(FluentSQLiteProvider())
     
     let sqlite: SQLiteDatabase
-    if (Environment.get("USE_MEMORY_STORAGE") ?? "disadled") == "enabled" {
+    if (Environment.get("USE_MEMORY_STORAGE") ?? "disabled") == "enabled" {
         print("Using memory storage.")
         sqlite = try SQLiteDatabase(storage: .memory)
     } else {

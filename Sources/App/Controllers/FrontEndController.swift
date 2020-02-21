@@ -118,8 +118,7 @@ class FrontEndController: RouteCollection {
             }
             
             if simulationIsUpdating {
-                self.infoMessages[id] = "Simulation updated. Thanks for your patience!"
-                return try req.view().render("simulationUpdating")
+                self.infoMessages[id] = "Simulation is updating. Thanks for your patience!"
             }
             
             // NOTE: updating 1000 players takes ~3.5 seconds
@@ -128,23 +127,30 @@ class FrontEndController: RouteCollection {
             // NON LINEAR behaviour
             return self.getSimulation(on: req).flatMap(to: View.self) { simulation in
                 let startUpdateTime = Date()
-                if simulation.simulationShouldUpdate(currentDate: Date()) {
+                if simulation.simulationShouldUpdate(currentDate: Date()) && self.simulationIsUpdating == false {
                     self.simulationIsUpdating = true
-                    self.infoMessages[id] = "Simulation updated. Thanks for your patience!"
                     
                     _ = FrontEndController.app.withPooledConnection(to: .sqlite) { conn -> Future<Void> in
                         return Player.query(on: conn).all().flatMap(to: Void.self) { players in
                             return Mission.query(on: conn).all().flatMap(to: Void.self) { missions in
+                                
+                                print("Loading all data took: \(startUpdateTime.timeIntervalSinceNow.magnitude) seconds.")
+                                //var stopWatch = Date()
                                 let result = simulation.updateSimulation(currentDate: Date(), players: players, missions: missions)
+                                //print("Updating simulation struct took: \(stopWatch.timeIntervalSinceNow.magnitude) seconds.")
                                 assert(simulation.id != nil)
                                 assert(result.updatedSimulation.id != nil)
                                 assert(simulation.id == result.updatedSimulation.id)
+                                //stopWatch = Date()
                                 return result.updatedSimulation.update(on: conn).flatMap(to: Void.self) { savedSimulation in
                                     return Player.savePlayers(result.updatedPlayers, on: conn).flatMap(to: Void.self) { players in
+                                        //print("Saving players took: \(stopWatch.timeIntervalSinceNow.magnitude) seconds")
                                         /*print("Start sleep")
                                         sleep(10)
                                         print("End sleep")*/
+                                        //stopWatch = Date()
                                         return Mission.saveMissions(result.updatedMissions, on: conn).map(to: Void.self) { [weak self] missions in
+                                            //print("Saving missions took: \(stopWatch.timeIntervalSinceNow.magnitude) seconds")
                                             assert(self != nil)
                                             self!.simulationIsUpdating = false
                                             self?.infoMessages[id] = "Simulation updated. Thanks for your patience!"
@@ -155,13 +161,8 @@ class FrontEndController: RouteCollection {
                             }
                         }
                     }
-                    
-                    return try req.view().render("simulationUpdating")
-                    
-                } else {
-                    return self.getMainViewForPlayer(with: id, simulation: simulation, on: req, page: page)
                 }
-                
+                return self.getMainViewForPlayer(with: id, simulation: simulation, on: req, page: page)
             }
         }
         
@@ -816,6 +817,7 @@ class FrontEndController: RouteCollection {
             let cashPerDay: Double
             let techPerDay: Double
             let page: String
+            let simulationIsUpdating: Bool
         }
         
         return Player.find(id, on: req).flatMap(to: View.self) { player in
@@ -847,14 +849,14 @@ class FrontEndController: RouteCollection {
                         }
                     }
                     
-                    let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponents: mission.currentStage.currentlyBuildingComponents, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage, currentStageComplete: mission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: unlockedComponents, techlockedComponents: techlockedComponents, playerIsBuildingComponent: mission.currentStage.playerIsBuildingComponentInStage(player), cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, page: page)
+                    let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponents: mission.currentStage.currentlyBuildingComponents, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage, currentStageComplete: mission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: unlockedComponents, techlockedComponents: techlockedComponents, playerIsBuildingComponent: mission.currentStage.playerIsBuildingComponentInStage(player), cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, page: page, simulationIsUpdating: self.simulationIsUpdating)
                     
                     return try req.view().render("main", context)
                 case .failure(let error):
                     if let error = error as? Player.PlayerError {
                         switch error {
                         case .noMission:
-                            let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponents: [], simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage,  currentStageComplete: false, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: [], techlockedComponents: [], playerIsBuildingComponent: false, cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, page: page)
+                            let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponents: [], simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage,  currentStageComplete: false, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: [], techlockedComponents: [], playerIsBuildingComponent: false, cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, page: page, simulationIsUpdating: self.simulationIsUpdating)
                             
                                 return try req.view().render("main", context)
                         default:
