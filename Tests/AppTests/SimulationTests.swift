@@ -119,9 +119,165 @@ final class SimulationTests : XCTestCase {
         XCTAssertGreaterThan(updateResult.players[0].cash, player.cash + extraCash, " cash")
     }
     
+    func testPlayerInvestsInComponent() throws {
+        let gameDate = Date().addingTimeInterval(Double(SECONDS_IN_YEAR))
+        var simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
+        let playerCreateResult = try simulation.createPlayer(emailAddress: "test@test.com", name: "test")
+        var player = playerCreateResult.newPlayer
+        simulation = playerCreateResult.updatedSimulation
+        
+        simulation = try simulation.createMission(for: player)
+        let mission = simulation.missions[0]
+        XCTAssertEqual(mission.currentStage.currentlyBuildingComponents.count, 0)
+        
+        let component = mission.currentStage.components.first!
+        player = simulation.players[0]
+        player = unlockTechnologiesForComponent(player: player, component: component)
+        player = player.extraIncome(amount: component.cost)
+        simulation = try simulation.replacePlayer(player)
+        let buildingSimulation = try simulation.playerInvestsInComponent(player: player, component: component)
+        let buildingMission = buildingSimulation.missions[0]
+        
+        XCTAssertTrue(buildingMission.currentStage.currentlyBuildingComponents.contains(component))
+    }
+    
+    func testDonateCashToPlayerInSameMission() throws {
+        // public func donateToPlayerInSameMission(donatingPlayer: Player, receivingPlayer: Player, techPoints: Int)
+        
+        var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date())
+        
+        let playerCreateResult1 = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1")
+        var player1 = playerCreateResult1.newPlayer
+        simulation = playerCreateResult1.updatedSimulation
+        
+        let playerCreateResult2 = try simulation.createPlayer(emailAddress: "test2@test.com", name: "test2")
+        var player2 = playerCreateResult2.newPlayer
+        simulation = playerCreateResult2.updatedSimulation
+        
+        simulation = try simulation.createMission(for: player1)
+        player1 = simulation.players[0]
+        player2.supportsPlayerID = player1.id
+        simulation = try simulation.replacePlayer(player2)
+        
+        let donationResult = try simulation.donateToPlayerInSameMission(donatingPlayer: player1, receivingPlayer: player2, cash: player1.cash)
+        
+        XCTAssertLessThan(donationResult.players[0].cash, player1.cash, "cash")
+        XCTAssertGreaterThan(donationResult.players[1].cash, player2.cash, "cash")
+        
+    }
+    
+    func testDonateTechToPlayerInSameMission() throws {
+        var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date())
+        
+        let playerCreateResult1 = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1")
+        var player1 = playerCreateResult1.newPlayer
+        simulation = playerCreateResult1.updatedSimulation
+        
+        let playerCreateResult2 = try simulation.createPlayer(emailAddress: "test2@test.com", name: "test2")
+        var player2 = playerCreateResult2.newPlayer
+        simulation = playerCreateResult2.updatedSimulation
+        
+        simulation = try simulation.createMission(for: player1)
+        player1 = simulation.players[0]
+        player2.supportsPlayerID = player1.id
+        simulation = try simulation.replacePlayer(player2)
+        
+        let donationResult = try simulation.donateToPlayerInSameMission(donatingPlayer: player1, receivingPlayer: player2, techPoints: Int(player1.technologyPoints))
+        
+        XCTAssertLessThan(donationResult.players[0].technologyPoints, player1.technologyPoints, "techpoints")
+        XCTAssertGreaterThan(donationResult.players[1].technologyPoints, player2.technologyPoints, "techpoints")
+    }
+    
+    func testCreateMission() throws {
+        var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date())
+        
+        let playerCreateResult = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1")
+        let player = playerCreateResult.newPlayer
+        simulation = playerCreateResult.updatedSimulation
+        XCTAssertEqual(simulation.missions.count, 0, "missions")
+        
+        simulation = try simulation.createMission(for: player)
+        XCTAssertNotNil(simulation.players[0].ownsMissionID)
+        XCTAssertEqual(simulation.missions.count, 1, "missions")
+    }
+    
+    func testReplacePlayer() throws {
+        var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date())
+        
+        let playerCreateResult = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1")
+        let player = playerCreateResult.newPlayer
+        simulation = playerCreateResult.updatedSimulation
+        
+        let updatedPlayer = player.extraIncome(amount: 100)
+        
+        XCTAssertEqual(simulation.players[0].cash, player.cash, "cash")
+        XCTAssertGreaterThan(updatedPlayer.cash, simulation.players[0].cash, "cash")
+        
+        simulation = try simulation.replacePlayer(updatedPlayer)
+        
+        XCTAssertEqual(simulation.players[0].cash, updatedPlayer.cash, "cash")
+        XCTAssertGreaterThan(simulation.players[0].cash, player.cash, "cash")
+        
+    }
+    
+    func testReplaceMission() throws {
+        var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date())
+        
+        let playerCreateResult = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1")
+        let player = playerCreateResult.newPlayer
+        simulation = playerCreateResult.updatedSimulation
+        
+        simulation = try simulation.createMission(for: player)
+        let mission = simulation.missions[0]
+        
+        var changedMission = mission
+        changedMission.missionName = "foo"
+        
+        XCTAssertEqual(simulation.missions[0].missionName, mission.missionName)
+        XCTAssertNotEqual(changedMission.missionName, mission.missionName)
+        
+        simulation = try simulation.replaceMission(changedMission)
+        
+        XCTAssertEqual(simulation.missions[0].missionName, changedMission.missionName)
+        XCTAssertNotEqual(simulation.missions[0].missionName, mission.missionName)
+    }
+    
+    func testGetSupportedMissionForPlayer() throws {
+        var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date())
+        
+        let playerCreateResult = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1")
+        var player = playerCreateResult.newPlayer
+        simulation = playerCreateResult.updatedSimulation
+        
+        simulation = try simulation.createMission(for: player)
+        player = simulation.players[0]
+        let mission = simulation.missions[0]
+        let receivedMission = simulation.getSupportedMissionForPlayer(player)
+        XCTAssertNotNil(receivedMission)
+        XCTAssertEqual(simulation.getSupportedMissionForPlayer(player)?.id ?? UUID(), mission.id, "mission")
+    }
+    
+    func testCreatePlayer() throws {
+        var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date())
+        XCTAssertEqual(simulation.players.count, 0, "players")
+        
+        let playerCreateResult = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1")
+        simulation = playerCreateResult.updatedSimulation
+        XCTAssertEqual(simulation.players.count, 1, "players")
+        XCTAssertEqual(simulation.players[0].id, playerCreateResult.newPlayer.id)
+    }
+    
     func unlockTechnologiesForImprovement(player: Player, improvement: Improvement) -> Player {
         var changedPlayer = player
         for tech in improvement.requiredTechnologyShortnames {
+            changedPlayer.forceUnlockTechnology(shortName: tech)
+        }
+        return changedPlayer
+    }
+    
+    func unlockTechnologiesForComponent(player: Player, component: Component) -> Player {
+        var changedPlayer = player
+        for tech in component.requiredTechnologyShortnames {
             changedPlayer.forceUnlockTechnology(shortName: tech)
         }
         return changedPlayer
@@ -135,5 +291,13 @@ final class SimulationTests : XCTestCase {
         ("testUpdateMission", testUpdateMission),
         ("testUpdateAdvancesPlayerImprovementBuildProgress", testUpdateAdvancesPlayerImprovementBuildProgress),
         ("testUpdateTriggersImprovementEffectInPlayer", testUpdateTriggersImprovementEffectInPlayer),
+        ("testPlayerInvestsInComponent", testPlayerInvestsInComponent),
+        ("testDonateCashToPlayerInSameMission", testDonateCashToPlayerInSameMission),
+        ("testDonateTechToPlayerInSameMission", testDonateTechToPlayerInSameMission),
+        ("testCreateMission", testCreateMission),
+        ("testReplacePlayer", testReplacePlayer),
+        ("testReplaceMission", testReplaceMission),
+        ("testGetSupportedMissionForPlayer", testGetSupportedMissionForPlayer),
+        ("testCreatePlayer", testCreatePlayer),
     ]
 }
