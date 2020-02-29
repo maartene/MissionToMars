@@ -6,7 +6,6 @@
 //
 
 import Foundation
-import FluentSQLite
 import Vapor
 
 public struct Mission: Content {
