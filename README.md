@@ -14,7 +14,7 @@ You can play a playable build of version 0.0.12 on https://mission2mars.space
 ### Whats available
 * In the current state, this "game" is only a model with very little simulation;
 * Persistent step-based simulation (where for instance a real-world hour translates to a day in game time);
-* Model is database-backed (currently: SQLite);
+* Model is file-backed;
 * There is a simple Leaf based UI: completely server-side rendered, no JS/AJAX whatsoever;
 * Mission stages and components;
 * Build improvements to get more cash per day, more value from research, improved production and the possibility to build mission parts
@@ -37,24 +37,16 @@ You can play a playable build of version 0.0.12 on https://mission2mars.space
 This game is built on the Vapor Server-side Swift framework.
 The actual simulation/model is in the `Sources/Model` folder. To reference it's types, use `import Model`
 Currently the model contains three types:
-1. A `Player` struct (Player has sub-structures for `Improvements`, but these are not database aware, just plain strucs.)
-2. A `Mission` struct (Mission has sub-structures for `Stages` and ``Components`, but these are not database aware, just plain strucs.)
-3. A `Simulation` struct
+1. A `Player` struct that represents users of the game;
+3. An `Improvement` struct that describes "buildings" players can build that have various beneficial effects. Instances of Players have their improvements as values;
+4. The `Technology` struct is mostly a static and immutable data carrier: both an array of all technologies in the game (i.e. tech tree), as well as the basic data we need to know about. By themselves, the technology has no behaviour. Behaviour is added with players (which technologies does the player know about? is the player able to unlock this technology?), components (which technology is required to build the component?) and improvements (which technology is required to build the improvement?). Instances of Players store their unlocked technologies by reference to the technology's ShortName;
+5. A `Mission` struct: Missions are build up of `Stages`. `Stages` struct: stages are built up from `Components`. Stages and Components are stored as values in a mission.
+(Mission has sub-structures for `Stages` and ``Components`, but these are not database aware, just plain strucs.)
+6. A `Simulation` struct that ties Players and Missions together. It contains arrays for all Players and all Simulation and contains operations where you need to interact with both at the same time. Note: the entire game state is kept in memory at all times!
 
 ### Structure
-The structures contain two parts:
-* A "pure struct" (`internal`) part;
-* A database/persistance (`public`) aware part.
-The database/persistance functions can be recognised by the `conn: DatabaseConnectable` attribute and return a `Future`.
-
-#### Example:
-```
-// from Player.swift:
-public func getSupportedMission(on conn: DatabaseConnectable) throws -> Future<Mission?>
-```
-This allows to get the supported mission for a player (if one exists)
-* this requires an associated mission (i.e. `ownsMissionID` cannot be `nil` and a `Mission` with this ID needs to exist in the database.). The function throws an error if this condition is not met;
-* the function returns a Future with an optional Mission. If a mission exists, it is returned, `nil` otherwise.
+All struct tend to follow the same pattern:
+* they are immutable. Functions that change state return *new instances* of the affected instance. Please take care not to lose these.
 
 ### Usage
 These structs do not contain any mutable functions. All functions that should change the state of the game return a copy of the struct (including any others that might be changed) with the changes applied. 
@@ -62,41 +54,36 @@ It is your responsibility to take this result, use it and if necesarry persist i
 
 An example:
 ```
-// assume we have a player "player" and a database connection from a request "req": 
+// assume we have a player "player" that is part of simulation "simulation": 
 // this player performs an action:
 let changedPlayer = try player.investInNextLevelOfTechnology()
-// persist changed state due to the action performed
-let savedPlayer = try changedPlayer.save(on: req)
+// store the changed player in the simulation
+simulation = simulation.replacePlayer(changedPlayer)
 ```
 
-### Simulation.swift
-The `Simulation` struct only contains meta data about the Simulation: when it should update (in real time), how often it was updates and the "game date": a fictional date representing in game time. 
+### Simulation update cycle
+With arrays of [Players] and [Mission], `Simulation` struct also contains meta data about the Simulation: when it should update (in real time), how often it was updates and the "game date": a fictional date representing in game time. 
 
-It also contains an updateSimulation function that takes care of updating data elements in the game. This function performs enough updates to compensate for the actual time that passed since the last simulation update, the current time and the length of a simulation "tick". Note that other data elements are passed as parameters to the function, they are not members of the Simulation itself.
+It also contains an updateSimulation function that takes care of updating data elements in the game. This function performs enough updates to compensate for the actual time that passed since the last simulation update, the current time and the length of a simulation "tick". 
 
 ```
- public func updateSimulation(currentDate: Date, players: [Player], missions: [Mission]) -> (updatedSimulation: Simulation, updatedPlayers: [Player], updatedMissions: [Mission])
+ public func updateSimulation(currentDate: Date) -> Simulation
 ```
 
-There should only be one simulation in the database at any time. To prevent unnecessary database lookups, the simulation ID (as it is known in the database) is cashed as a global variable: `Simulation.GLOBAL_SIMULATION_ID`.
+In principle, there should only be one simulation active in your game at any time. But more are allowed. In this version, the FrontEndController contains the single instance of Simulation that represents the entire game state.
 
-### Technology.swift
-The `Technology` struct is mostly a static and immutable data carrier: both an array of all technologies in the game (i.e. tech tree), as well as the basic data we need to know about. By themselves, the technology has no behaviour. Behaviour is added with players (which technologies does the player know about? is the player able to unlock this technology?), components (which technology is required to build the component?) and improvements (which technology is required to build the improvement?)
+### Persistence
+Earlier versions of this game used SQLite and PostgreSQL as persistence backend. However, after performance testing I found that simply writing the game state to a JSON file was way faster than using database operations, especially for the update cycle that might (one day!) need to update millions of players! You can see [this spreadsheet](Documentation/SQLite vs PostgreSQL performance.xlsx) for details.
+
+Persistance is now the task of `Simulation.swift` that contains `load()` and `save()` functions. The initiazer in `FrontEndController.swift` first tries to load a simulation. If it fails, it creates a new one. Everytime the simulation update is triggered in the FrontEndController, the simulation.save() method is called to persist the game state.
+THIS MEANS THAT GAME STATE IS ONLY PERSISTED EVERY SO OFTEN AS THE GAME UPDATES. IF THE GAME CRASHES BETWEEN UPDATES, ALL CHANGES SINCE THE LAST UPDATE ARE LOST!
 
 ## Architecture - UI
 The UI is Leaf based. The most important Leaf view is `main.leaf` (called from `\main`). This shows the game dashboard, but also performs the following tasks:
 1. Calling `/main` checks  whether enough real time has passed to update the simulation;
 2. If the simulation needs to update, all players and missions are also updated;
 3. It checks whether the mission for the current player (either owning or supporting) is complete. If so, the "Win screen" is shown;
-4. There is an `errorMessages` dictionary ([UUID: String?]), you can use to show an error message to players. See `donate/to/supportedPlayer` route in `routes.swift` for an exmaple.
-
-## About performance
-After testing, I find the application doesn't scale linear. I.e.:
-* 1 player update takes 0.1s;
-* 1000 players update takes 3.5s;
-* 5000 players update takes 30s;
-* 6000 players update takes 50s.
-This is using SQLite as database backend. Not yet sure whether this is CPU bound or IO bound, but this will not scale to really large number of players.
+4. There is an `errorMessages` dictionary ([UUID: String?]), you can use to show an error message to players. See `donate/to/supportedPlayer` route in `FrontEndController.swift` for an exmaple.
 
 ## Debug features
 The game provides some debug features:

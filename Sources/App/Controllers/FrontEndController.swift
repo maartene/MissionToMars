@@ -13,11 +13,21 @@ import MailJet
 
 class FrontEndController: RouteCollection {
     
-    // this is an ugly hack to get the application (we need it as a worker to do the DB actions for the update of the simulation)
-    static var app: Application!
     var errorMessages = [UUID: String?]()
     var infoMessages = [UUID: String?]()
+    var simulation: Simulation
     var simulationIsUpdating = false
+    
+    let queue = OperationQueue()
+    
+    init() {
+        if let loadedSimulation = Simulation.load() {
+            simulation = loadedSimulation
+        } else {
+            print("Could not load simulation, generating a new one.")
+            simulation = Simulation(tickCount: 0, gameDate: Date().addingTimeInterval(TimeInterval(SECONDS_IN_YEAR)), nextUpdateDate: Date())
+        }
+    }
     
     func boot(router: Router) throws {
         router.get("create/player") { req -> Future<View> in
@@ -37,48 +47,48 @@ class FrontEndController: RouteCollection {
                 throw Abort(.badRequest, reason: "Invalid starting improvement shortname \(shortNameForm).")
             }
             
-            return Player.createUser(emailAddress: emailAddress, name: name, startImprovementShortName: startingImprovement, on: req).flatMap(to: View.self) { result in
-                var context = CreateCharacterContext()
+            var context = CreateCharacterContext()
+            do {
+                let result = try self.simulation.createPlayer(emailAddress: emailAddress, name: name)
+                self.simulation = result.updatedSimulation
                 
-                switch result {
-                case .success(let player):
-                    context.uuid = String(player.id!)
-                    context.email = player.emailAddress
-                    
-                    if let publicKey = Environment.get("MAILJET_API_KEY"), let privateKey = Environment.get("MAILJET_SECRET_KEY") {
-                    
-                        let mailJetConfig = MailJetConfig(apiKey: publicKey, secretKey: privateKey, senderName: "Mission2Mars Support", senderEmail: "support@mission2mars.space")
-                        mailJetConfig.sendMessage(to: emailAddress, toName: name, subject: "Your login id", message: """
-                            Welcome \(player.name) to Mission2Mars
-                            
-                            Your login id is: \(player.id!)
-                            Please keep this code secret, as there is no other authentication method at this time!
-                            
-                            Have fun!
-                            
-                            - the Mission2Mars team
-                            Sent from: \(Environment.get("ENVIRONMENT") ?? "local test")
-                            """, htmlMessage: """
-                            <h1>Welcome \(player.name) to Mission2Mars</h1>
-                            
-                            <h3>Your login id is: <b>\(player.id!)</b></h3>
-                            <p>Please keep this code secret, as there is no other authentication method at this time!</p>
-                            <p>&nbsp;</p>
-                            <p>Have fun!</p>
-                            <p>&nbsp;</p>
-                            <p>- the Mission2Mars team</p>
-                            <p>Sent from: \(Environment.get("ENVIRONMENT") ?? "unknown")</p>
-                            """, on: req)
-                        }
-                case .failure(let error):
-                    switch error {
-                    case .userAlreadyExists:
-                        context.errorMessage = "A user with email address '\(emailAddress)' already exists. Please choose another one."
-                    default:
-                        context.errorMessage = error.localizedDescription
+                context.email = emailAddress
+                context.uuid = String(result.newPlayer.id)
+                
+                if let publicKey = Environment.get("MAILJET_API_KEY"), let privateKey = Environment.get("MAILJET_SECRET_KEY") {
+                
+                    let mailJetConfig = MailJetConfig(apiKey: publicKey, secretKey: privateKey, senderName: "Mission2Mars Support", senderEmail: "support@mission2mars.space")
+                    mailJetConfig.sendMessage(to: emailAddress, toName: name, subject: "Your login id", message: """
+                        Welcome \(result.newPlayer.name) to Mission2Mars
+                        
+                        Your login id is: \(result.newPlayer.id)
+                        Please keep this code secret, as there is no other authentication method at this time!
+                        
+                        Have fun!
+                        
+                        - the Mission2Mars team
+                        Sent from: \(Environment.get("ENVIRONMENT") ?? "local test")
+                        """, htmlMessage: """
+                        <h1>Welcome \(result.newPlayer.name) to Mission2Mars</h1>
+                        
+                        <h3>Your login id is: <b>\(result.newPlayer.id)</b></h3>
+                        <p>Please keep this code secret, as there is no other authentication method at this time!</p>
+                        <p>&nbsp;</p>
+                        <p>Have fun!</p>
+                        <p>&nbsp;</p>
+                        <p>- the Mission2Mars team</p>
+                        <p>Sent from: \(Environment.get("ENVIRONMENT") ?? "unknown")</p>
+                        """, on: req)
                     }
+
+                return try req.view().render("userCreated", context)
+            } catch {
+                switch error {
+                case Simulation.SimulationError.userAlreadyExists:
+                    context.errorMessage = "A user with email address '\(emailAddress)' already exists. Please choose another one."
+                default:
+                    context.errorMessage = error.localizedDescription
                 }
-                
                 return try req.view().render("userCreated", context)
             }
         }
@@ -121,148 +131,90 @@ class FrontEndController: RouteCollection {
                 self.infoMessages[id] = "Simulation is updating. Thanks for your patience!"
             }
             
-            // NOTE: updating 1000 players takes ~3.5 seconds
-            // 5000 players takes ~35 seconds
-            // 6000 players takes ~53 seconds
-            // NON LINEAR behaviour
-            return self.getSimulation(on: req).flatMap(to: View.self) { simulation in
-                let startUpdateTime = Date()
-                if simulation.simulationShouldUpdate(currentDate: Date()) && self.simulationIsUpdating == false {
-                    self.simulationIsUpdating = true
-                    
-                    _ = FrontEndController.app.withPooledConnection(to: .sqlite) { conn -> Future<Void> in
-                        return Player.query(on: conn).all().flatMap(to: Void.self) { players in
-                            return Mission.query(on: conn).all().flatMap(to: Void.self) { missions in
-                                
-                                print("Loading all data took: \(startUpdateTime.timeIntervalSinceNow.magnitude) seconds.")
-                                //var stopWatch = Date()
-                                let result = simulation.updateSimulation(currentDate: Date(), players: players, missions: missions)
-                                //print("Updating simulation struct took: \(stopWatch.timeIntervalSinceNow.magnitude) seconds.")
-                                assert(simulation.id != nil)
-                                assert(result.updatedSimulation.id != nil)
-                                assert(simulation.id == result.updatedSimulation.id)
-                                //stopWatch = Date()
-                                return result.updatedSimulation.update(on: conn).flatMap(to: Void.self) { savedSimulation in
-                                    return Player.savePlayers(result.updatedPlayers, on: conn).flatMap(to: Void.self) { players in
-                                        //print("Saving players took: \(stopWatch.timeIntervalSinceNow.magnitude) seconds")
-                                        /*print("Start sleep")
-                                        sleep(10)
-                                        print("End sleep")*/
-                                        //stopWatch = Date()
-                                        return Mission.saveMissions(result.updatedMissions, on: conn).map(to: Void.self) { [weak self] missions in
-                                            //print("Saving missions took: \(stopWatch.timeIntervalSinceNow.magnitude) seconds")
-                                            assert(self != nil)
-                                            self!.simulationIsUpdating = false
-                                            self?.infoMessages[id] = "Simulation updated. Thanks for your patience!"
-                                            print("Update took: \(startUpdateTime.timeIntervalSinceNow.magnitude) seconds.")
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
+            if simulation.simulationShouldUpdate(currentDate: Date()) && self.simulationIsUpdating == false {
+                simulationIsUpdating = true
+                let updatedSimulation = simulation.updateSimulation(currentDate: Date())
+                assert(simulation.id == updatedSimulation.id)
+                self.simulation = updatedSimulation
+        
+                // save result (in seperate thread)
+                let copy = self.simulation
+                queue.addOperation {
+                    copy.save()
                 }
-                return self.getMainViewForPlayer(with: id, simulation: simulation, on: req, page: page)
+                
+                simulationIsUpdating = false
             }
+            
+            return try self.getMainViewForPlayer(with: id, simulation: simulation, on: req, page: page)
         }
         
         router.get("edit/mission") { req -> Future<View> in
-            return try self.getPlayerFromSession(on: req).flatMap(to: View.self) { player in
-                return try player.getSupportedMission(on: req).flatMap(to: View.self) { missionResult in
-                    switch missionResult {
-                    case .success(let mission):
-                        return try req.view().render("editMission", ["missionName": mission.missionName])
-                    case .failure(let error):
-                        throw error
-                    }
-                }
+            let player = try self.getPlayerFromSession(on: req)
+            
+            guard let supportedMission = self.simulation.getSupportedMissionForPlayer(player) else {
+                throw Abort(.notFound, reason: "No supported mission found for player.")
             }
+            
+            return try req.view().render("editMission", ["missionName": supportedMission.missionName])
         }
         
-        router.post("edit/mission") { req -> Future<Response> in
+        router.post("edit/mission") { req -> Response in
             let newName: String = try req.content.syncGet(at: "missionName")
-            return try self.getPlayerFromSession(on: req).flatMap(to: Response.self) { player in
-                return try player.getSupportedMission(on: req).flatMap(to: Response.self) { missionResult in
-                    switch missionResult {
-                    case .success(var mission):
-                        mission.missionName = newName
-                        return mission.update(on: req).map(to: Response.self) { savedMission in
-                            return req.redirect(to: "/mission")
-                        }
-                    case .failure(let error):
-                        throw error
-                    }
-                }
+            
+            let player = try self.getPlayerFromSession(on: req)
+            
+            if let supportedMission = self.simulation.getSupportedMissionForPlayer(player) {
+                var changedMission = supportedMission
+                changedMission.missionName = newName
+                let updatedSimulation = try self.simulation.replaceMission(changedMission)
+                self.simulation = updatedSimulation
             }
+            
+            return req.redirect(to: "/mission")
         }
         
-        router.get("create/mission") { req -> Future<Response> in
-            return try self.getPlayerFromSession(on: req).flatMap(to: Response.self) { player in
-                assert(player.id != nil)
-                
-                let mission = Mission(owningPlayerID: player.id!)
-                return mission.create(on: req).flatMap(to: Response.self) { mission in
-                    var updatedPlayer = player
-                    updatedPlayer.ownsMissionID = mission.id
-                    return updatedPlayer.save(on: req).map(to: Response.self) { updatedPlayer in
-                        return req.redirect(to: "/mission")
-                    }
-                }
-            }
+        router.get("create/mission") { req -> Response in
+            let player = try self.getPlayerFromSession(on: req)
+            self.simulation = try self.simulation.createMission(for: player)
+            return req.redirect(to: "/mission")
         }
         
         router.get("support/mission") { req -> Future<View> in
-            guard self.getPlayerIDFromSession(on: req) != nil else {
-                throw Abort(.unauthorized)
+            _ = try self.getPlayerFromSession(on: req)
+            
+            let unfinishedMissions = self.simulation.missions.filter { mission in mission.missionComplete == false }
+            
+            let mcs = unfinishedMissions.map { mission -> MissionContext in
+                let owningPlayer = self.simulation.players.first(where: { somePlayer in somePlayer.id == mission.owningPlayerID })?.name ?? "unknown"
+                return MissionContext(id: mission.id, missionName: mission.missionName, percentageDone: mission.percentageDone, owningPlayerName: owningPlayer)
             }
             
-            return Mission.query(on: req).all().flatMap(to: View.self) { missions in
-                let unfinishedMissions = missions.filter { mission in mission.missionComplete == false }
-                let playerFutures = try unfinishedMissions.map { mission in
-                    return try mission.getOwningPlayer(on: req)
-                }
-                let playerFuture = playerFutures.flatten(on: req)
-                
-                return playerFuture.flatMap(to: View.self) { playerResults in
-                    var mcs = [MissionContext]()
-                    for i in 0 ..< playerResults.count {
-                        switch playerResults[i] {
-                        case .success(let player):
-                            mcs.append(MissionContext(id: missions[i].id!, missionName: missions[i].missionName, percentageDone: missions[i].percentageDone, owningPlayerName: player.name))
-                        case .failure(let error):
-                            print(error)
-                        }
-                    }
-                    return try req.view().render("missions", ["missions": mcs])
-                }
-            }
+            return try req.view().render("missions", ["missions": mcs])
         }
         
-        router.get("support/mission", UUID.parameter) { req -> Future<Response> in
+        router.get("support/mission", UUID.parameter) { req -> Response in
             let supportedMissionID: UUID = try req.parameters.next()
+            let player = try self.getPlayerFromSession(on: req)
             
-            return try self.getPlayerFromSession(on: req).flatMap(to: Response.self) { player in
-                return Mission.find(supportedMissionID, on: req).flatMap(to: Response.self) { mission in
-                    guard let supportedMission = mission else {
-                        throw Abort(.notFound, reason: "Could not find mission with id \(supportedMissionID)")
-                    }
-                    
-                    guard supportedMission.missionComplete == false else {
-                        self.errorMessages[player.id!] = "You cannot support a mission that is already complete."
-                        return Future.map(on: req) { return req.redirect(to: "/main") }
-                    }
-                    
-                    var updatedPlayer = player
-                    
-                    updatedPlayer.supportsPlayerID = supportedMission.owningPlayerID
-                    return updatedPlayer.update(on: req).map(to: Response.self) { savedPlayer in
-                        return req.redirect(to: "/mission")
-                    }
-                }
+            guard let supportedMission = self.simulation.missions.first(where: {mission in mission.id == supportedMissionID} ) else {
+                throw Abort(.notFound, reason: "Could not find mission with id \(supportedMissionID)")
             }
+            
+            guard supportedMission.missionComplete == false else {
+                self.errorMessages[player.id] = "You cannot support a mission that is already complete."
+                return req.redirect(to: "/main")
+            }
+                    
+            var updatedPlayer = player
+                    
+            updatedPlayer.supportsPlayerID = supportedMission.owningPlayerID
+            self.simulation = try self.simulation.replacePlayer(updatedPlayer)
+            
+            return req.redirect(to: "/mission")
         }
         
-        router.get("donate/to", String.parameter) { req -> Future<View> in
+        /*router.get("donate/to", String.parameter) { req -> Future<View> in
             struct DonateContext: Content {
                 let player: Player
                 let receivingPlayerName: String
@@ -270,127 +222,93 @@ class FrontEndController: RouteCollection {
             }
             
             let receivingPlayerEmail: String = try req.parameters.next()
+            let player = try self.getPlayerFromSession(on: req)
             
-            return try self.getPlayerFromSession(on: req).flatMap(to: View.self) {
-            player in
-                return Player.query(on: req).filter(\.emailAddress, .equal, receivingPlayerEmail).first().flatMap(to: View.self) { receivingPlayer in
-                    guard let receivingPlayer = receivingPlayer else {
-                        throw Abort(.notFound, reason: "Could not find player with emailadress \(receivingPlayerEmail)")
-                    }
-                    
-                    let context = DonateContext(player: player, receivingPlayerName: receivingPlayer.name, receivingPlayerEmail: receivingPlayer.emailAddress)
-                        return try req.view().render("donate", context)
-                    }
+            guard let receivingPlayer = self.simulation.players.first(where: {somePlayer in somePlayer.emailAddress == receivingPlayerEmail}) else {
+                throw Abort(.notFound, reason: "Could not find player with emailadress \(receivingPlayerEmail)")
             }
-        }
+            
+            let context = DonateContext(player: player, receivingPlayerName: receivingPlayer.name, receivingPlayerEmail: receivingPlayer.emailAddress)
+            return try req.view().render("donate", context)
+        }*/
         
-        router.get("donate/to", String.parameter, "cash", String.parameter) { req -> Future<Response> in
-            guard let id = self.getPlayerIDFromSession(on: req) else {
-                throw Abort(.unauthorized)
-            }
+        router.get("donate/to", String.parameter, "cash", String.parameter) { req -> Response in
+            let donatingPlayer = try self.getPlayerFromSession(on: req)
             
             let receivingPlayerEmail: String = try req.parameters.next()
             let donateString: String = try req.parameters.next()
             
-            return Player.find(id, on: req).flatMap(to: Response.self) { player in
-                guard let donatingPlayer = player else {
-                    return Future.map(on: req) { return req.redirect(to: "/")}
-                }
-                
-                return Player.query(on: req).filter(\.emailAddress, .equal, receivingPlayerEmail).first().flatMap(to: Response.self) { receivingPlayer in
-                    guard let receivingPlayer = receivingPlayer else {
-                        return Future.map(on: req) { return req.redirect(to: "/")}
-                    }
+            guard let receivingPlayer = self.simulation.players.first(where: {player in player.emailAddress == receivingPlayerEmail}) else {
+                return req.redirect(to: "/")
+            }
                     
-                    let cash: Double
-                    switch donateString {
-                    case "1k":
-                        cash = 1_000
-                    case "10k":
-                        cash = 10_000
-                    case "100k":
-                        cash = 100_000
-                    case "1m":
-                        cash = 1_000_000
-                    case "1b":
-                        cash = 1_000_000_000
-                    case "10b":
-                        cash = 10_000_000_000
-                    default:
-                        cash = 0
-                    }
+            let cash: Double
+            switch donateString {
+            case "1k":
+                cash = 1_000
+            case "10k":
+                cash = 10_000
+            case "100k":
+                cash = 100_000
+            case "1m":
+                cash = 1_000_000
+            case "1b":
+                cash = 1_000_000_000
+            case "10b":
+                cash = 10_000_000_000
+            default:
+                cash = 0
+            }
                     
-                    return try donatingPlayer.donateToPlayerSupportingSameMission(cash: cash, receivingPlayer: receivingPlayer, on: req).flatMap(to: Response.self) { donationResult in
-                        switch donationResult{
-                        case .success(let changedDonatingPlayer, let changedReceivingPlayer):
-                            return changedDonatingPlayer.update(on: req).flatMap(to: Response.self) { updatedDonatingPlayer in
-                                return changedReceivingPlayer.update(on: req).map(to: Response.self) { updatedReceivingPlayer in
-                                    self.infoMessages[changedDonatingPlayer.id!] = "You donated $\(Int(cash)) to \(changedReceivingPlayer.name)"
-                                    return req.redirect(to: "/mission")
-                                }
-                            }
-                        case .failure(let error):
-                            if let playerError = error as? Player.PlayerError {
-                                if playerError == .insufficientFunds {
-                                    self.errorMessages[donatingPlayer.id!] = "Insufficient funds to donate."
-                                    return Future.map(on: req) { return req.redirect(to: "/main") }
-                                } else {
-                                    throw error
-                                }
-                            } else {
-                                throw error
-                            }
-                        }
+            do {
+                let changedSimulation = try self.simulation.donateToPlayerInSameMission(donatingPlayer: donatingPlayer, receivingPlayer: receivingPlayer, cash: cash)
+                self.simulation = changedSimulation
+                self.infoMessages[donatingPlayer.id] = "You donated $\(Int(cash)) to \(receivingPlayer.name)"
+                return req.redirect(to: "/mission")
+            } catch {
+                if let playerError = error as? Player.PlayerError {
+                    if playerError == .insufficientFunds {
+                        self.errorMessages[donatingPlayer.id] = "Insufficient funds to donate."
+                        return req.redirect(to: "/main")
+                    } else {
+                        throw error
                     }
+                } else {
+                    throw error
                 }
             }
         }
         
-        router.get("donate/to", String.parameter, "tech", Int.parameter) { req -> Future<Response> in
-            guard let id = self.getPlayerIDFromSession(on: req) else {
-                throw Abort(.unauthorized)
-            }
-            
+        router.get("donate/to", String.parameter, "tech", Int.parameter) { req -> Response in
+            let donatingPlayer = try self.getPlayerFromSession(on: req)
             let receivingPlayerEmail: String = try req.parameters.next()
             let techPoints: Int = try req.parameters.next()
             
-            return Player.find(id, on: req).flatMap(to: Response.self) { player in
-                guard let donatingPlayer = player else {
-                    return Future.map(on: req) { return req.redirect(to: "/")}
-                }
+            guard let receivingPlayer = self.simulation.players.first(where: {player in player.emailAddress == receivingPlayerEmail}) else {
+                return req.redirect(to: "/")
+            }
                 
-                return Player.query(on: req).filter(\.emailAddress, .equal, receivingPlayerEmail).first().flatMap(to: Response.self) { receivingPlayer in
-                    guard let receivingPlayer = receivingPlayer else {
-                        return Future.map(on: req) { return req.redirect(to: "/")}
+            do {
+                let changedSimulation = try self.simulation.donateToPlayerInSameMission(donatingPlayer: donatingPlayer, receivingPlayer: receivingPlayer, techPoints: techPoints)
+                self.simulation = changedSimulation
+                self.infoMessages[donatingPlayer.id] = "You donated $\(Int(techPoints)) to \(receivingPlayer.name)"
+                return req.redirect(to: "/mission")
+            } catch {
+                if let playerError = error as? Player.PlayerError {
+                    if playerError == .insufficientTechPoints {
+                        self.errorMessages[donatingPlayer.id] = "Insufficient technology points to donate."
+                        return req.redirect(to: "/main")
+                    } else {
+                        throw error
                     }
-                    
-                    return try donatingPlayer.donateToPlayerSupportingSameMission(tech: Double(techPoints), receivingPlayer: receivingPlayer, on: req).flatMap(to: Response.self) { donationResult in
-                        switch donationResult{
-                        case .success(let changedDonatingPlayer, let changedReceivingPlayer):
-                            return changedDonatingPlayer.update(on: req).flatMap(to: Response.self) { updatedDonatingPlayer in
-                                return changedReceivingPlayer.update(on: req).map(to: Response.self) { updatedReceivingPlayer in
-                                    self.infoMessages[changedDonatingPlayer.id!] = "You donated \(techPoints) technology points to \(changedReceivingPlayer.name)"
-                                    return req.redirect(to: "/mission")
-                                }
-                            }
-                        case .failure(let error):
-                            if let playerError = error as? Player.PlayerError {
-                                if playerError == .insufficientFunds {
-                                    self.errorMessages[donatingPlayer.id!] = "Insufficient technology points to donate."
-                                    return Future.map(on: req) { return req.redirect(to: "/main") }
-                                } else {
-                                    throw error
-                                }
-                            } else {
-                                throw error
-                            }
-                        }
-                    }
+                } else {
+                    throw error
                 }
             }
         }
         
-        router.get("build/component", String.parameter) { req -> Future<Response> in
+        router.get("build/component", String.parameter) { req -> Response in
+            let player = try self.getPlayerFromSession(on: req)
             let shortNameString: String = try req.parameters.next()
             
             guard let shortName = Component.ShortName.init(rawValue: shortNameString) else {
@@ -401,41 +319,31 @@ class FrontEndController: RouteCollection {
                 throw Abort(.notFound, reason: "No component with shortName \(shortName) found.")
             }
             
-            return self.getSimulation(on: req).flatMap(to: Response.self) { simulation in
-                return try self.getPlayerFromSession(on: req).flatMap(to: Response.self) { player in
-                    return try player.investInComponent(component, on: req, date: simulation.gameDate).flatMap(to: Response.self) { result in
-                        switch result {
-                        case .failure(let error):
-                            throw error
-                            
-                        case .success(let investmentResult):
-                            return investmentResult.changedPlayer.save(on: req).flatMap(to: Response.self) { savedPlayer in
-                                return investmentResult.changedMission.save(on: req).map(to: Response.self) { savedMission in
-                                    return req.redirect(to: "/mission")
-                                }
-                            }
-                        }
-                    }
+            do {
+                let changedSimulation = try self.simulation.playerInvestsInComponent(player: player, component: component)
+                self.simulation = changedSimulation
+            } catch {
+                switch error {
+                case Player.PlayerError.insufficientFunds:
+                    self.errorMessages[player.id] = "Not enough funds to build component \(component.name)."
+                default:
+                    throw error
                 }
             }
             
+            
+            return req.redirect(to: "/mission")
         }
         
-        router.get("advance/stage") { req -> Future<Response> in
-            return try self.getPlayerFromSession(on: req).flatMap(to: Response.self) { player in
-                return try player.getSupportedMission(on: req).flatMap(to: Response.self) { missionResult in
-                    switch missionResult {
-                    case .success(let mission):
-                        let advancedMission = try mission.goToNextStage()
-                        
-                        return advancedMission.save(on: req).map(to: Response.self) { savedMission in
-                            return req.redirect(to: "/mission")
-                        }
-                    case .failure(let error):
-                        throw error
-                    }
-                }
+        router.get("advance/stage") { req -> Response in
+            let player = try self.getPlayerFromSession(on: req)
+            guard let mission = self.simulation.getSupportedMissionForPlayer(player) else {
+                throw Abort(.badRequest, reason: "No mission for player")
             }
+            
+            let advancedMission = try mission.goToNextStage()
+            self.simulation = try self.simulation.replaceMission(advancedMission)
+            return req.redirect(to: "/mission")
         }
         
         router.get("build/improvements") { req -> Future<View> in
@@ -444,126 +352,112 @@ class FrontEndController: RouteCollection {
                 let possibleImprovements: [Improvement]
             }
             
-            return try self.getPlayerFromSession(on: req).flatMap(to: View.self) {
-            player in
-                
-                let possibleImprovements = Improvement.unlockedImprovementsForPlayer(player)/*.filter { improvement in
-                    // filter out the improvements the player has already built
-                    player.improvements.contains(improvement) == false
-                }*/
-                
-                let context = ImprovementBuildContext(player: player, possibleImprovements: possibleImprovements)
-                
-                return try req.view().render("improvements", context)
-            }
+            let player = try self.getPlayerFromSession(on: req)
+            
+            let possibleImprovements = Improvement.unlockedImprovementsForPlayer(player)
+            let context = ImprovementBuildContext(player: player, possibleImprovements: possibleImprovements)
+            
+            return try req.view().render("improvements", context)
         }
         
-        router.get("build/improvements", Int.parameter) { req -> Future<Response> in
+        router.get("build/improvements", Int.parameter) { req -> Response in
             let number: Int = try req.parameters.next()
             
             guard let shortName = Improvement.ShortName(rawValue: number) else {
-                return Future.map(on: req) { return req.redirect(to: "/main")}
+                return req.redirect(to: "/main")
             }
             
-            return try self.getPlayerFromSession(on: req).flatMap(to: Response.self) {
-            player in
-                guard let improvement = Improvement.getImprovementByName(shortName) else {
-                    self.errorMessages[player.id!] = "No improvement with shortName \(shortName) found."
-                    return Future.map(on: req) { return req.redirect(to: "/main")}
-                }
+            let player = try self.getPlayerFromSession(on: req)
+            
+            guard let improvement = Improvement.getImprovementByName(shortName) else {
+                self.errorMessages[player.id] = "No improvement with shortName \(shortName) found."
+                return req.redirect(to: "/main")
+            }
+            
+            do {
                 
-                do {
-                    
-                    let buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
-                    return buildingPlayer.save(on: req).map(to: Response.self) { savedPlayer in
-                        self.infoMessages[savedPlayer.id!] = "Started working on \(improvement.name)."
-                        return req.redirect(to: "/improvements")
-                    }
-                } catch {
-                    switch error {
-                    case Player.PlayerError.insufficientImprovementSlots:
-                        self.errorMessages[player.id!] = "You can have a maximum of \(player.improvementSlotsCount) improvements."
-                    case Player.PlayerError.insufficientFunds:
-                        self.errorMessages[player.id!] = "Insufficient funds to build \(improvement.name)."
-                        return Future.map(on: req) { return req.redirect(to: "/main") }
-                    case Player.PlayerError.playerIsAlreadyBuildingImprovement:
-                        self.errorMessages[player.id!] = "You can't build \(improvement.name) while you are building \(player.currentlyBuildingImprovement?.name ?? "unknown")"
-                        return Future.map(on: req) { return req.redirect(to: "/main") }
-                    default:
-                        throw error
-                    }
-                    return Future.map(on: req) { return req.redirect(to: "/main") }
+                let buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
+                self.simulation = try self.simulation.replacePlayer(buildingPlayer)
+                return req.redirect(to: "/improvements")
+            } catch {
+                switch error {
+                case Player.PlayerError.insufficientImprovementSlots:
+                    self.errorMessages[player.id] = "You can have a maximum of \(player.improvementSlotsCount) improvements."
+                case Player.PlayerError.insufficientFunds:
+                    self.errorMessages[player.id] = "Insufficient funds to build \(improvement.name)."
+                    return req.redirect(to: "/main")
+                case Player.PlayerError.playerIsAlreadyBuildingImprovement:
+                    self.errorMessages[player.id] = "You can't build \(improvement.name) while you are building \(player.currentlyBuildingImprovement?.name ?? "unknown")"
+                    return req.redirect(to: "/main")
+                default:
+                    throw error
                 }
+                return req.redirect(to: "/main")
             }
         }
         
-        router.get("rush/improvements", Int.parameter) { req -> Future<Response> in
+        router.get("rush/improvements", Int.parameter) { req -> Response in
             let number: Int = try req.parameters.next()
             
             guard let shortName = Improvement.ShortName(rawValue: number) else {
-                return Future.map(on: req) { return req.redirect(to: "/main")}
+                return req.redirect(to: "/main")
             }
             
-            return try self.getPlayerFromSession(on: req).flatMap(to: Response.self) {
-            player in
-                guard let improvement = Improvement.getImprovementByName(shortName) else {
-                    self.errorMessages[player.id!] = "No improvement with shortName \(shortName) found."
-                    return Future.map(on: req) { return req.redirect(to: "/main")}
+            let player = try self.getPlayerFromSession(on: req)
+            
+            guard let improvement = Improvement.getImprovementByName(shortName) else {
+                self.errorMessages[player.id] = "No improvement with shortName \(shortName) found."
+                return req.redirect(to: "/main")
+            }
+            
+            do {
+                let rushingPlayer = try player.rushImprovement(improvement)
+                self.simulation = try self.simulation.replacePlayer(rushingPlayer)
+                self.infoMessages[rushingPlayer.id] = "Succesfully rushed \(improvement.name)."
+                return req.redirect(to: "/improvements")
+            } catch {
+                switch error {
+                case Player.PlayerError.insufficientFunds:
+                    self.errorMessages[player.id] = "Insufficient funds to rush \(improvement.name)."
+                    return req.redirect(to: "/main")
+                case Improvement.ImprovementError.improvementCannotBeRushed:
+                    self.errorMessages[player.id] = "\(improvement.name) cannot be rushed."
+                    return req.redirect(to: "/main")
+                default:
+                    self.errorMessages[player.id] = error.localizedDescription
+                    return req.redirect(to: "/main")
                 }
-                
-                do {
-                    let rushingPlayer = try player.rushImprovement(improvement)
-                    return rushingPlayer.save(on: req).map(to: Response.self) { savedPlayer in
-                        self.infoMessages[savedPlayer.id!] = "Succesfully rushed \(improvement.name)."
-                        return req.redirect(to: "/improvements")
-                    }
-                } catch {
-                    switch error {
-                    case Player.PlayerError.insufficientFunds:
-                        self.errorMessages[player.id!] = "Insufficient funds to rush \(improvement.name)."
-                        return Future.map(on: req) { return req.redirect(to: "/main") }
-                    case Improvement.ImprovementError.improvementCannotBeRushed:
-                        self.errorMessages[player.id!] = "\(improvement.name) cannot be rushed."
-                        return Future.map(on: req) { return req.redirect(to: "/main") }
-                    default:
-                        self.errorMessages[player.id!] = error.localizedDescription
-                        return Future.map(on: req) { return req.redirect(to: "/main") }
-                    }
-                    //return Future.map(on: req) { return req.redirect(to: "/main") }
-                }
+                //return Future.map(on: req) { return req.redirect(to: "/main") }
             }
         }
         
-        router.get("sell/improvement", Int.parameter) { req -> Future<Response> in
+        router.get("sell/improvement", Int.parameter) { req -> Response in
             let number: Int = try req.parameters.next()
             
             guard let shortName = Improvement.ShortName(rawValue: number) else {
-                return Future.map(on: req) { return req.redirect(to: "/main")}
+                return req.redirect(to: "/main")
             }
             
-            return try self.getPlayerFromSession(on: req).flatMap(to: Response.self) {
-            player in
-                guard let improvement = Improvement.getImprovementByName(shortName) else {
-                    self.errorMessages[player.id!] = "No improvement with shortName \(shortName) found."
-                    return Future.map(on: req) { return req.redirect(to: "/main")}
-                }
-                
-                do {
-                    let sellingPlayer = try player.sellImprovement(improvement)
-                    return sellingPlayer.save(on: req).map(to: Response.self) { savedPlayer in
-                        self.infoMessages[savedPlayer.id!] = "Succesfully sold \(improvement.name)."
-                        return req.redirect(to: "/improvements")
-                    }
-                } catch {
-                    switch error {
-                    case Improvement.ImprovementError.improvementIncomplete:
-                        self.errorMessages[player.id!] = "You can only sell completed improvements."
-                        return Future.map(on: req) { return req.redirect(to: "/main") }
-                    default:
-                        self.errorMessages[player.id!] = error.localizedDescription
-                        return Future.map(on: req) { return req.redirect(to: "/main") }
-                    }
-                    //return Future.map(on: req) { return req.redirect(to: "/main") }
+            let player = try self.getPlayerFromSession(on: req)
+            
+            guard let improvement = Improvement.getImprovementByName(shortName) else {
+                self.errorMessages[player.id] = "No improvement with shortName \(shortName) found."
+                return req.redirect(to: "/main")
+            }
+            
+            do {
+                let sellingPlayer = try player.sellImprovement(improvement)
+                self.simulation = try self.simulation.replacePlayer(sellingPlayer)
+                self.infoMessages[sellingPlayer.id] = "Succesfully sold \(improvement.name)."
+                return req.redirect(to: "/improvements")
+            } catch {
+                switch error {
+                case Improvement.ImprovementError.improvementIncomplete:
+                    self.errorMessages[player.id] = "You can only sell completed improvements."
+                    return req.redirect(to: "/main")
+                default:
+                    self.errorMessages[player.id] = error.localizedDescription
+                    return req.redirect(to: "/main")
                 }
             }
         }
@@ -575,20 +469,16 @@ class FrontEndController: RouteCollection {
                 let mission: Mission
             }
             
-            return try self.getPlayerFromSession(on: req).flatMap(to: View.self) {
-            player in
-                return try player.getSupportedMission(on: req).flatMap(to: View.self) { missionResult in
-                    switch missionResult {
-                    case .success(let mission):
-                        return try mission.getSupportingPlayers(on: req).flatMap(to: View.self) { supportingPlayers in
-                            let context = SupportingPlayerContext(player: player, supportingPlayers: supportingPlayers, mission: mission)
-                            return try req.view().render("mission_supportingPlayers", context)
-                        }
-                    case .failure(let error):
-                        throw error
-                    }
-                }
+            let player = try self.getPlayerFromSession(on: req)
+            
+            guard let mission = self.simulation.getSupportedMissionForPlayer(player) else {
+                throw Abort(.notFound, reason: "Mission not found for player.")
             }
+            
+            let supportingPlayers = try self.simulation.supportingPlayersForMission(mission)
+            
+            let context = SupportingPlayerContext(player: player, supportingPlayers: supportingPlayers, mission: mission)
+            return try req.view().render("mission_supportingPlayers", context)
         }
         
         router.get("unlock/technologies") { req -> Future<View> in
@@ -597,165 +487,143 @@ class FrontEndController: RouteCollection {
                 let possibleTechnologies: [Technology]
             }
             
-            return try self.getPlayerFromSession(on: req).flatMap(to: View.self) {
-            player in
-                
-                let possibleTechnologies = Technology.unlockableTechnologiesForPlayer(player)
-                
-                let context = UnlockTechnologyContext(player: player, possibleTechnologies: possibleTechnologies)
-                
-                return try req.view().render("technologies", context)
-            }
+            let player = try self.getPlayerFromSession(on: req)
+            
+            let possibleTechnologies = Technology.unlockableTechnologiesForPlayer(player)
+            let context = UnlockTechnologyContext(player: player, possibleTechnologies: possibleTechnologies)
+            
+            return try req.view().render("technologies", context)
         }
         
-        router.get("unlock/technologies", Int.parameter) { req -> Future<Response> in
+        router.get("unlock/technologies", Int.parameter) { req -> Response in
             let number: Int = try req.parameters.next()
             
             guard let shortName = Technology.ShortName(rawValue: number) else {
-                return Future.map(on: req) { return req.redirect(to: "/main")}
+                return req.redirect(to: "/main")
             }
             
-            return try self.getPlayerFromSession(on: req).flatMap(to: Response.self) {
-            player in
-                guard let technology = Technology.getTechnologyByName(shortName) else {
-                    self.errorMessages[player.id!] = "No technology with shortName \(shortName) found."
-                    return Future.map(on: req) { return req.redirect(to: "/main")}
-                }
+            let player = try self.getPlayerFromSession(on: req)
+            
+            guard let technology = Technology.getTechnologyByName(shortName) else {
+                self.errorMessages[player.id] = "No technology with shortName \(shortName) found."
+                return req.redirect(to: "/main")
+            }
+            
+            do {
                 
-                do {
-                    
-                    let unlockingPlayer = try player.investInTechnology(technology)
-                    return unlockingPlayer.save(on: req).map(to: Response.self) { savedPlayer in
-                        self.infoMessages[savedPlayer.id!] = "Succesfully unlocked \(technology.name)."
-                        return req.redirect(to: "/technology")
-                    }
-                } catch {
-                    switch error {
-                    case Player.PlayerError.playerAlreadyUnlockedTechnology:
-                        self.errorMessages[player.id!] = "You already unlocked \(technology.name)."
-                    case Player.PlayerError.insufficientTechPoints:
-                        self.errorMessages[player.id!] = "Insufficient technology points to unlock \(technology.name)."
-                    case Player.PlayerError.playerMissesPrerequisiteTechnology:
-                        self.errorMessages[player.id!] = "You miss the prerequisite technology to unlock \(technology.name)."
-                    default:
-                        throw error
-                    }
-                    return Future.map(on: req) { return req.redirect(to: "/main") }
+                let unlockingPlayer = try player.investInTechnology(technology)
+                self.simulation = try self.simulation.replacePlayer(unlockingPlayer)
+                self.infoMessages[unlockingPlayer.id] = "Succesfully unlocked \(technology.name)."
+                return req.redirect(to: "/technology")
+            } catch {
+                switch error {
+                case Player.PlayerError.playerAlreadyUnlockedTechnology:
+                    self.errorMessages[player.id] = "You already unlocked \(technology.name)."
+                case Player.PlayerError.insufficientTechPoints:
+                    self.errorMessages[player.id] = "Insufficient technology points to unlock \(technology.name)."
+                case Player.PlayerError.playerMissesPrerequisiteTechnology:
+                    self.errorMessages[player.id] = "You miss the prerequisite technology to unlock \(technology.name)."
+                default:
+                    throw error
                 }
+                return req.redirect(to: "/main")
             }
         }
         
-        router.get("debug", "allUsers") { req -> Future<[Player]> in
+        router.get("debug", "allUsers") { req -> [Player] in
             guard (Environment.get("DEBUG_MODE") ?? "inactive") == "active" else {
                 throw Abort(.notFound)
             }
-            return Player.query(on: req).all()
+            return self.simulation.players
         }
         
-        router.post("debug", "cash") { req -> Future<[Player]> in
+        router.post("debug", "cash") { req -> [Player] in
             guard (Environment.get("DEBUG_MODE") ?? "inactive") == "active" else {
                 throw Abort(.notFound)
             }
             
-            return Player.query(on: req).all().flatMap(to: [Player].self) { players in
-                let richPlayers = players.map { player -> Player in
-                    var changedPlayer = player
-                    changedPlayer.debug_setCash(4_000_000_000)
-                    return changedPlayer
-                }
-                
-                return Player.savePlayers(richPlayers, on: req)
+            let richPlayers = self.simulation.players.map { player -> Player in
+                var changedPlayer = player
+                changedPlayer.debug_setCash(4_000_000_000)
+                return changedPlayer
             }
+            
+            for player in richPlayers {
+                self.simulation = try self.simulation.replacePlayer(player)
+            }
+            return self.simulation.players
         }
         
-        router.post("debug", "tech") { req -> Future<[Player]> in
+        router.post("debug", "tech") { req -> [Player] in
             guard (Environment.get("DEBUG_MODE") ?? "inactive") == "active" else {
                 throw Abort(.notFound)
             }
             
-            return Player.query(on: req).all().flatMap(to: [Player].self) { players in
-                let smartPlayers = players.map { player -> Player in
-                    var changedPlayer = player
-                    changedPlayer.debug_setTech(1000)
-                    return changedPlayer
-                }
-                
-                return Player.savePlayers(smartPlayers, on: req)
+            let smartPlayers = self.simulation.players.map { player -> Player in
+                var changedPlayer = player
+                changedPlayer.debug_setTech(2_000)
+                return changedPlayer
             }
+            
+            for player in smartPlayers {
+                self.simulation = try self.simulation.replacePlayer(player)
+            }
+            return self.simulation.players
         }
         
-        router.post("debug", "createDummyUsers") { req -> Future<[Player]> in
+        router.post("debug", "createDummyUsers") { req -> [Player] in
             guard (Environment.get("DEBUG_MODE") ?? "inactive") == "active" else {
                 throw Abort(.notFound)
             }
             
-            var futures = [Future<Player>]()
             for i in 0 ..< 1_000 {
-                let playerFuture = Player.createUser(emailAddress: "dummyUser\(i)\(Int.random(in: 0...1_000_000))@example.com", name: "dummyUser\(i)\(Int.random(in: 0...1_000_000))", on: req).map(to: Player.self) { result in
-                    switch result {
-                    case .success(let player):
-                        return player
-                    case .failure(let error):
-                        throw error
-                    }
-                }
-                futures.append(playerFuture)
+                let result = try self.simulation.createPlayer(emailAddress: "dummyUser\(i)\(Int.random(in: 0...1_000_000))@example.com", name: "dummyUser\(i)\(Int.random(in: 0...1_000_000))")
+                self.simulation = result.updatedSimulation
             }
-            return futures.flatten(on: req)
+            return self.simulation.players
         }
         
         router.get() { req in
             return try req.view().render("index")
         }
         
-        struct DataDump: Content {
-            let simulation: Simulation
-            let players: [Player]
-            let missions: [Mission]
-        }
-        
-        router.get("debug/backup") { req -> Future<String> in
+        router.get("debug/backup") { req -> String in
             guard (Environment.get("DEBUG_MODE") ?? "inactive") == "active" else {
                 throw Abort(.notFound)
             }
             
-            return self.getSimulation(on: req).flatMap(to: String.self) { simulation in
-                return Player.query(on: req).all().flatMap(to: String.self) { players in
-                    return Mission.query(on: req).all().map(to: String.self) { missions in
-                        do {
-                            let dataDump = DataDump(simulation: simulation, players: players, missions: missions)
-                            let encoder = JSONEncoder()
-                            encoder.outputFormatting = .prettyPrinted
-                            let data = try encoder.encode(dataDump)
-                            let backupDir = Environment.get("BACKUP_PATH") ?? ""
-                            let formatter = DateFormatter()
-                            formatter.dateFormat = "YYYYMMdd_HHmmss"
-                            
-                            let formattedDate = formatter.string(from: Date())
-                            print(formattedDate)
-                            let url = URL(fileURLWithPath: "\(backupDir)backup_\(formattedDate).json")
-                            try data.write(to: url)
-                            return "Done"
-                        } catch {
-                            print(error)
-                            return("Error while backup up: \(error).")
-                        }
-                    }
-                }
+            do {
+                let encoder = JSONEncoder()
+                encoder.outputFormatting = .prettyPrinted
+                let data = try encoder.encode(self.simulation)
+                let backupDir = Environment.get("BACKUP_PATH") ?? ""
+                let formatter = DateFormatter()
+                formatter.dateFormat = "YYYYMMdd_HHmmss"
+                
+                let formattedDate = formatter.string(from: Date())
+                print(formattedDate)
+                let url = URL(fileURLWithPath: "\(backupDir)backup_\(formattedDate).json")
+                try data.write(to: url)
+                return "Done"
+            } catch {
+                print(error)
+                return("Error while backup up: \(error).")
             }
         }
         
-        router.get("debug/dataDump") { req -> Future<DataDump> in
+        router.get("debug/dataDump") { req -> String in
             guard (Environment.get("DEBUG_MODE") ?? "inactive") == "active" else {
                 throw Abort(.notFound)
             }
             
-            return self.getSimulation(on: req).flatMap(to: DataDump.self) { simulation in
-                return Player.query(on: req).all().flatMap(to: DataDump.self) { players in
-                    return Mission.query(on: req).all().map(to: DataDump.self) { missions in
-                        return DataDump(simulation: simulation, players: players, missions: missions)
-                    }
-                }
+            do {
+                let encoder = JSONEncoder()
+                encoder.outputFormatting = .prettyPrinted
+                let data = try encoder.encode(self.simulation)
+                return String(data: data, encoding: .utf8) ?? "empty"
+            } catch {
+                print(error)
+                return("Error while backup up: \(error).")
             }
         }
     }
@@ -769,7 +637,7 @@ class FrontEndController: RouteCollection {
         return nil
     }
     
-    func getSimulation(on req: Request) -> Future<Simulation> {
+    /*func getSimulation(on req: Request) -> Future<Simulation> {
         if let simulationID = Simulation.GLOBAL_SIMULATION_ID {
             return Simulation.find(simulationID, on: req).map(to: Simulation.self) { sim in
                 guard let simulation = sim else {
@@ -797,9 +665,9 @@ class FrontEndController: RouteCollection {
                 }
             }
         }
-    }
+    }*/
     
-    func getMainViewForPlayer(with id: UUID, simulation: Simulation, on req: Request, page: String = "overview") -> Future<View> {
+    func getMainViewForPlayer(with id: UUID, simulation: Simulation, on req: Request, page: String = "overview") throws -> Future<View> {
         struct MainContext: Codable {
             let player: Player
             let mission: Mission?
@@ -820,67 +688,53 @@ class FrontEndController: RouteCollection {
             let simulationIsUpdating: Bool
         }
         
-        return Player.find(id, on: req).flatMap(to: View.self) { player in
-            guard let player = player else {
-                print("Could not find user with id: \(id)")
-                throw Abort(.unauthorized)
+        guard let player = self.simulation.players.first(where: {somePlayer in somePlayer.id == id}) else {
+            print("Could not find user with id: \(id)")
+            return try req.view().render("index")
+        }
+        
+        let errorMessage = self.errorMessages[id] ?? nil
+        self.errorMessages.removeValue(forKey: id)
+        let infoMessage = self.infoMessages[id] ?? nil
+        self.infoMessages.removeValue(forKey: id)
+ 
+        if let mission = self.simulation.getSupportedMissionForPlayer(player) {
+            if mission.missionComplete {
+                return try req.view().render("win")
             }
             
-            let errorMessage = self.errorMessages[id] ?? nil
-            self.errorMessages.removeValue(forKey: id)
-            let infoMessage = self.infoMessages[id] ?? nil
-            self.infoMessages.removeValue(forKey: id)
- 
-            return try player.getSupportedMission(on: req).flatMap(to: View.self) { missionResult in
-                switch missionResult {
-                case .success(let mission):
-                    if mission.missionComplete {
-                        return try req.view().render("win")
-                    }
-                    
-                    var unlockedComponents = [Component]()
-                    var techlockedComponents = [Component]()
-                    
-                    for component in mission.currentStage.components {
-                        if component.playerHasPrerequisitesForComponent(player) {
-                            unlockedComponents.append(component)
-                        } else {
-                            techlockedComponents.append(component)
-                        }
-                    }
-                    
-                    let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponents: mission.currentStage.currentlyBuildingComponents, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage, currentStageComplete: mission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: unlockedComponents, techlockedComponents: techlockedComponents, playerIsBuildingComponent: mission.currentStage.playerIsBuildingComponentInStage(player), cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, page: page, simulationIsUpdating: self.simulationIsUpdating)
-                    
-                    return try req.view().render("main", context)
-                case .failure(let error):
-                    if let error = error as? Player.PlayerError {
-                        switch error {
-                        case .noMission:
-                            let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponents: [], simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage,  currentStageComplete: false, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: [], techlockedComponents: [], playerIsBuildingComponent: false, cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, page: page, simulationIsUpdating: self.simulationIsUpdating)
-                            
-                                return try req.view().render("main", context)
-                        default:
-                            throw error
-                        }
-                    } else {
-                        throw (error)
-                    }
+            var unlockedComponents = [Component]()
+            var techlockedComponents = [Component]()
+            
+            for component in mission.currentStage.components {
+                if component.playerHasPrerequisitesForComponent(player) {
+                    unlockedComponents.append(component)
+                } else {
+                    techlockedComponents.append(component)
                 }
             }
+            
+            let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponents: mission.currentStage.currentlyBuildingComponents, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage, currentStageComplete: mission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: unlockedComponents, techlockedComponents: techlockedComponents, playerIsBuildingComponent: mission.currentStage.playerIsBuildingComponentInStage(player), cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, page: page, simulationIsUpdating: self.simulationIsUpdating)
+            
+            return try req.view().render("main", context)
+        } else {
+            // no mission
+            let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponents: [], simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage,  currentStageComplete: false, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: [], techlockedComponents: [], playerIsBuildingComponent: false, cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, page: page, simulationIsUpdating: self.simulationIsUpdating)
+            
+            return try req.view().render("main", context)
         }
     }
     
-    func getPlayerFromSession(on req: Request) throws -> Future<Player> {
+    func getPlayerFromSession(on req: Request) throws -> Player {
         guard let id = getPlayerIDFromSession(on: req) else {
             throw Abort(.unauthorized)
         }
         
-        return Player.find(id, on: req).map(to: Player.self) { player in
-            guard let player = player else {
-                throw Abort(.unauthorized)
-            }
-            return player
+        guard let player = simulation.players.first(where: {player in player.id == id }) else {
+            throw Abort(.unauthorized)
         }
+        
+        return player
     }
 }
 
