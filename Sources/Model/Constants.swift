@@ -7,6 +7,7 @@
 
 import Foundation
 
+public let SIMULATION_FILENAME = "simulation"
 public let SECONDS_IN_YEAR = 365*24*60*60
 public let TECH_TO_CASH_CONVERSION_RATE: Double = 1_000
 public let CASH_TO_TECH_CONVERSION_RATE: Double = 2_000

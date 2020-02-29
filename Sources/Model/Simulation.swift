@@ -44,8 +44,8 @@ public struct Simulation: Content {
     
         while updatedSimulation.simulationShouldUpdate(currentDate: currentDate) {
             //print("updating \(result)")
-            let nextUpdateDate = updatedSimulation.nextUpdateDate.addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60)
-            //let nextUpdateDate = updatedSimulation.nextUpdateDate.addingTimeInterval(120)
+            //let nextUpdateDate = updatedSimulation.nextUpdateDate.addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60)
+            let nextUpdateDate = updatedSimulation.nextUpdateDate.addingTimeInterval(120)
             let gameDate = updatedSimulation.gameDate.addingTimeInterval(24*60*60)
             let tickCount = updatedSimulation.tickCount + 1
             
@@ -188,6 +188,38 @@ public struct Simulation: Content {
         return players.filter { player in
             getSupportedMissionForPlayer(player)?.id == mission.id
         }
+    }
+    
+    public func save() {
+        do {
+            let encoder = JSONEncoder()
+            encoder.outputFormatting = .prettyPrinted
+            
+            // we make a copy of this simulation to make sure we never try to write a simulation that is being changed (in another thread)
+            // this works because structures are values and copying is thread safe
+            let copy = self
+            let data = try encoder.encode(copy)
+            let url = URL(fileURLWithPath: SIMULATION_FILENAME + ".json")
+            try data.write(to: url)
+            print("Succesfully saved simulation to file: \(url)")
+        } catch {
+            print("Error while saving simulation: \(error).")
+        }
+    }
+    
+    public static func load() -> Simulation? {
+        do {
+            let decoder = JSONDecoder()
+            let url = URL(fileURLWithPath: SIMULATION_FILENAME + ".json")
+            let data = try Data(contentsOf: url)
+            let simulation = try decoder.decode(Simulation.self, from: data)
+            print("Succesfully loaded simulation from file: \(url)")
+            return simulation
+        } catch {
+            print("Error while loading simulation: \(error).")
+        }
+        
+        return nil
     }
     
 }

@@ -15,8 +15,19 @@ class FrontEndController: RouteCollection {
     
     var errorMessages = [UUID: String?]()
     var infoMessages = [UUID: String?]()
-    var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date())
+    var simulation: Simulation
     var simulationIsUpdating = false
+    
+    let queue = OperationQueue()
+    
+    init() {
+        if let loadedSimulation = Simulation.load() {
+            simulation = loadedSimulation
+        } else {
+            print("Could not load simulation, generating a new one.")
+            simulation = Simulation(tickCount: 0, gameDate: Date().addingTimeInterval(TimeInterval(SECONDS_IN_YEAR)), nextUpdateDate: Date())
+        }
+    }
     
     func boot(router: Router) throws {
         router.get("create/player") { req -> Future<View> in
@@ -121,11 +132,18 @@ class FrontEndController: RouteCollection {
             }
             
             if simulation.simulationShouldUpdate(currentDate: Date()) && self.simulationIsUpdating == false {
+                simulationIsUpdating = true
                 let updatedSimulation = simulation.updateSimulation(currentDate: Date())
                 assert(simulation.id == updatedSimulation.id)
                 self.simulation = updatedSimulation
-                // save result
+        
+                // save result (in seperate thread)
+                let copy = self.simulation
+                queue.addOperation {
+                    copy.save()
+                }
                 
+                simulationIsUpdating = false
             }
             
             return try self.getMainViewForPlayer(with: id, simulation: simulation, on: req, page: page)
