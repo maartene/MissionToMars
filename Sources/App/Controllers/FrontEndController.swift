@@ -319,8 +319,18 @@ class FrontEndController: RouteCollection {
                 throw Abort(.notFound, reason: "No component with shortName \(shortName) found.")
             }
             
-            let changedSimulation = try self.simulation.playerInvestsInComponent(player: player, component: component)
-            self.simulation = changedSimulation
+            do {
+                let changedSimulation = try self.simulation.playerInvestsInComponent(player: player, component: component)
+                self.simulation = changedSimulation
+            } catch {
+                switch error {
+                case Player.PlayerError.insufficientFunds:
+                    self.errorMessages[player.id] = "Not enough funds to build component \(component.name)."
+                default:
+                    throw error
+                }
+            }
+            
             
             return req.redirect(to: "/mission")
         }
