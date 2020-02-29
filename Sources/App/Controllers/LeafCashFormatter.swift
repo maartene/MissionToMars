@@ -7,6 +7,7 @@
 
 import Async
 import Leaf
+import Model
 
 public final class CashTag: TagRenderer {
     public func render(tag: TagContext) throws -> EventLoopFuture<TemplateData> {
