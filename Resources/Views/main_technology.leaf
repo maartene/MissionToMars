@@ -8,7 +8,7 @@
         <img src="/images/lab-flask-experiment-48-w.png" alt="Technology"/>
     </div>
 </div>
-<div class="my-2"><a href="/unlock/technologies" class="btn btn-primary">Unlock technologies</a></div>
+<div class="my-2"><a href="/unlock/technologies" class="btn btn-primary #if(simulationIsUpdating) {disabled}">Unlock technologies</a></div>
 <ul class="list-group">
     #for(tech in unlockedTechnologies) {
         <li class="list-group-item">
@@ -19,4 +19,4 @@
         </li>
     }
 </ul>
-<div class="mt-2"><a href="/unlock/technologies" class="btn btn-primary">Unlock technologies</a></div>
+<div class="mt-2"><a href="/unlock/technologies" class="btn btn-primary #if(simulationIsUpdating) {disabled}">Unlock technologies</a></div>

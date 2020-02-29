@@ -117,7 +117,7 @@ public struct Improvement: Codable, Equatable {
             effect.description
         }
         
-        return effectStrings.joined(separator: ", ")
+        return effectStrings.joined(separator: "\n")
     }
     
     public let cost: Double

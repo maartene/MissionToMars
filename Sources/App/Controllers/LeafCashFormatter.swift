@@ -7,6 +7,7 @@
 
 import Async
 import Leaf
+import Model
 
 public final class CashTag: TagRenderer {
     public func render(tag: TagContext) throws -> EventLoopFuture<TemplateData> {
@@ -14,16 +15,7 @@ public final class CashTag: TagRenderer {
         
         return Future.map(on: tag.container) {
             if let double = tag.parameters[0].double {
-                
-                if double / 1_000_000_000.0 > 1 {
-                    return .string("\(String(format: "%.2f", double / 1_000_000_000.0)) billion")
-                } else if double / 1_000_000.0 > 1 {
-                    return .string("\(String(format: "%.2f", double / 1_000_000.0)) million")
-                } else if double / 1_000.0 > 1 {
-                    return .string("\(String(format: "%.2f", double / 1_000.0)) thousand")
-                } else {
-                    return .string(String(format: "%.2f", double))
-                }
+                return .string(cashFormatter(double))
             } else {
                 return .null
             }

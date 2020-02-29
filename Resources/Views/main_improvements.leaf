@@ -8,24 +8,42 @@
         <img src="/images/streamline-icon-project-blueprint-create@48x48-w.png" alt="Improvements"/>
     </div>
 </div>
-<div class="my-2"><a href="/build/improvements" class="btn btn-primary">Build improvements</a></div>
-<ul class="list-group">
-    #for(improvement in player.improvements) {
-        <li class="list-group-item">
-            <div class="row align-items-center">
-            <div class="col-md-1 justify-content-center"><img src="/images/Improvements/#(improvement.shortName)-w.png"/></div>
-            <div class="col"><b>#(improvement.name)</b> #(improvement.description) <br/>
-            <span class="text-info">#improvementEffects(improvement.shortName)</span><br/>
-            #for(tag in improvement.tags) { <span class="badge badge-success">#tag(tag)</span> }<br/>
-            
-            #if(improvement.percentageCompleted < 100) { <br/>Currently building: 
-            <div class="progress">
-                    <div class="progress-bar" role="progressbar" style="width: #decimal(improvement.percentageCompleted)%" aria-valuenow="#decimal(improvement.percentageCompleted)" aria-valuemin="0" aria-valuemax="100"></div>
-            </div>#decimal(improvement.percentageCompleted)% done. #if(improvement.rushable){<a class="btn btn-sm btn-warning #if(improvement.cost > player.cash) {disabled}" href="/rush/improvements/#(improvement.shortName)">Rush</a>} } else {
-                <a class="btn btn-sm btn-danger mt-1" href="/sell/improvement/#(improvement.shortName)">Sell</a>
-            }
-            </div>
-        </li>
-    }
-</ul>
-<div class="mt-2"><a href="/build/improvements" class="btn btn-primary">Build improvements</a></div>
+<div class="my-2"><a href="/build/improvements" class="btn btn-primary #if(simulationIsUpdating) {disabled}">Build improvements</a></div>
+<div class="table-responsive mt-3">
+    <table class="table">
+        <thead>
+            <tr>
+                <th scope="col"></th>
+                <th scope="col">Description</th>
+                <th scope="col">Effects</th>
+                <th scope="col">Tags</th>
+                <th scope="col">Actions</th>
+            </tr>
+        </thead>
+        <tbody>
+        #for(improvement in player.improvements) {
+            <tr>
+                <td><img src="/images/Improvements/#(improvement.shortName)-w.png"/></td>
+                <td><b>#(improvement.name)</b> #(improvement.description)
+                    #if(improvement.percentageCompleted < 100) {
+                        <br/>
+                        Currently building: 
+                <div class="progress">
+                        <div class="progress-bar" role="progressbar" style="width: #decimal(improvement.percentageCompleted)%" aria-valuenow="#decimal(improvement.percentageCompleted)" aria-valuemin="0" aria-valuemax="100"></div>
+                </div>#decimal(improvement.percentageCompleted)% done.
+                    }
+                </td>
+                <td><span class="text-info">#improvementEffects(improvement.shortName)</span></td>
+                <td>#for(tag in improvement.tags) { <span class="badge badge-success">#tag(tag)</span> }</td>
+                <td>#if(improvement.percentageCompleted < 100) { 
+                        #if(improvement.rushable){<a class="btn btn-sm btn-warning #if(improvement.cost > player.cash) {disabled}" href="/rush/improvements/#(improvement.shortName)">Rush</a>} 
+                    } else {
+                        <a class="btn btn-sm btn-danger mt-1" href="/sell/improvement/#(improvement.shortName)">Sell</a>
+                    }
+                </td>
+            </tr>
+        }
+        </tbody>
+    </table>
+</div>
+<div class="mt-2"><a href="/build/improvements" class="btn btn-primary #if(simulationIsUpdating) {disabled}">Build improvements</a></div>

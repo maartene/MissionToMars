@@ -8,7 +8,7 @@ Getting to Mars is hard. Very hard. This game aims to become a "hard-scifi" simu
 * Whether you spend your funds on improving technology, supporting other players, building improvements is up to you.
 
 ## Playable version online
-You can play a playable build of version 0.0.11 on https://mission2mars.space 
+You can play a playable build of version 0.0.12 on https://mission2mars.space 
 
 ## Features
 ### Whats available
@@ -89,6 +89,14 @@ The UI is Leaf based. The most important Leaf view is `main.leaf` (called from `
 2. If the simulation needs to update, all players and missions are also updated;
 3. It checks whether the mission for the current player (either owning or supporting) is complete. If so, the "Win screen" is shown;
 4. There is an `errorMessages` dictionary ([UUID: String?]), you can use to show an error message to players. See `donate/to/supportedPlayer` route in `routes.swift` for an exmaple.
+
+## About performance
+After testing, I find the application doesn't scale linear. I.e.:
+* 1 player update takes 0.1s;
+* 1000 players update takes 3.5s;
+* 5000 players update takes 30s;
+* 6000 players update takes 50s.
+This is using SQLite as database backend. Not yet sure whether this is CPU bound or IO bound, but this will not scale to really large number of players.
 
 ## Debug features
 The game provides some debug features:

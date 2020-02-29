@@ -85,57 +85,6 @@ public struct Player: Content, SQLiteUUIDModel {
         }
     }
     
-    /*var buildTimeFactor: Double {
-        let allEffects = completedImprovements.map { improvement in
-            return improvement.staticEffects
-            }.joined()
-        
-        let rawBuildTimeFactor = allEffects.reduce(1.0) { result, effect in
-            switch effect {
-            case .lowerProductionTimePercentage(let percentage):
-                return result - (percentage / 100.0)
-            default:
-                return result
-            }
-        }
-        
-        return max(rawBuildTimeFactor, 0.1)
-    }*/
-    
-    /*var componentDiscount: Double {
-        let allEffects = completedImprovements.map { improvement in
-            return improvement.staticEffects
-            }.joined()
-        
-        let rawDiscount = allEffects.reduce(1.0) { result, effect in
-            switch effect {
-            case .componentBuildDiscount(let percentage):
-                return result - (percentage / 100.0)
-            default:
-                return result
-            }
-        }
-        
-        return max(rawDiscount, 0.1)
-    }*/
-    
-    /*var componentBuildTimeFactor: Double {
-        let allEffects = completedImprovements.map { improvement in
-            return improvement.staticEffects
-            }.joined()
-        
-        let rawBuildTimeFactor = allEffects.reduce(1.0) { result, effect in
-            switch effect {
-            case .shortenComponentBuildTime(let percentage):
-                return result - (percentage / 100.0)
-            default:
-                return result
-            }
-        }
-        
-        return max(rawBuildTimeFactor, 0.1)
-    }*/
-    
     public func updatePlayer(ticks: Int = 1) -> Player {
         var updatedPlayer = self
         updatedPlayer.componentBuildPoints = 1
@@ -176,7 +125,10 @@ public struct Player: Content, SQLiteUUIDModel {
     }
     
     public var techPerTick: Double {
-        let allEffects = completedImprovements.map { improvement in
+        let updatedPlayer = self.updatePlayer()
+        return updatedPlayer.technologyPoints - technologyPoints
+        
+        /*let allEffects = completedImprovements.map { improvement in
             return improvement.updateEffects
             }.joined()
         
@@ -189,7 +141,7 @@ public struct Player: Content, SQLiteUUIDModel {
             }
         }
         
-        return flatTechPerTick
+        return flatTechPerTick*/
     }
 
     public var improvementSlotsCount: Int {

@@ -33,7 +33,7 @@ public struct Simulation {
         while updatedSimulation.simulationShouldUpdate(currentDate: currentDate) {
             //print("updating \(result)")
             let nextUpdateDate = updatedSimulation.nextUpdateDate.addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60)
-            //let nextUpdateDate = updatedSimulation.nextUpdateDate.addingTimeInterval(1)
+            //let nextUpdateDate = updatedSimulation.nextUpdateDate.addingTimeInterval(120)
             let gameDate = updatedSimulation.gameDate.addingTimeInterval(24*60*60)
             let tickCount = updatedSimulation.tickCount + 1
             

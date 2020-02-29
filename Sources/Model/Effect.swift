@@ -148,7 +148,7 @@ public enum Effect: Codable, CustomStringConvertible {
     public var description: String {
         switch self {
         case .extraIncomeFlat(let amount):
-            return "+$\(amount) per day"
+            return "+$\(cashFormatter(amount)) per day"
         case .extraTechFlat(let amount):
             return "+\(amount) technology points per day"
         case .interestOnCash(let percentage):

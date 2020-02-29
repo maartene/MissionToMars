@@ -21,7 +21,7 @@ public func configure(
     try services.register(FluentSQLiteProvider())
     
     let sqlite: SQLiteDatabase
-    if (Environment.get("USE_MEMORY_STORAGE") ?? "disadled") == "enabled" {
+    if (Environment.get("USE_MEMORY_STORAGE") ?? "disabled") == "enabled" {
         print("Using memory storage.")
         sqlite = try SQLiteDatabase(storage: .memory)
     } else {
@@ -53,6 +53,9 @@ public func configure(
     tags.use(ComponentPrereqTag(), as: "compPrereqs")
     tags.use(ImprovementTagTag(), as: "tag")
     tags.use(ImprovementEffectTag(), as: "improvementEffects")
+    tags.use(TechnologyUnlocksImprovementsTag(), as: "techUnlocksImprovements")
+    tags.use(TechnologyUnlocksTechnologiesTag(), as: "techUnlocksTechnologies")
+    tags.use(TechnologyUnlocksComponentsTag(), as: "techUnlocksComponents")
     services.register(tags)
 
     // Register middleware (file serving and sessions)
