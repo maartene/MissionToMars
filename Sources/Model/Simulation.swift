@@ -62,7 +62,7 @@ public struct Simulation: Content {
         }
         
         updatedSimulation.players = updatedPlayers
-        updatedSimulation.missions = missions
+        updatedSimulation.missions = updatedMissions
         
         return updatedSimulation
     }

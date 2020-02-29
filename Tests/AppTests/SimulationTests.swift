@@ -63,15 +63,20 @@ final class SimulationTests : XCTestCase {
         let gameDate = Date().addingTimeInterval(Double(SECONDS_IN_YEAR))
         var simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
         let playerCreateResult = try simulation.createPlayer(emailAddress: "test@test.com", name: "test")
+        var player = playerCreateResult.newPlayer
+        
         simulation = playerCreateResult.updatedSimulation
         simulation = try simulation.createMission(for: playerCreateResult.newPlayer)
         let mission = simulation.missions[0]
         let component = mission.currentStage.components.first!
-        let buildingMission = try mission.startBuildingInStage(component, buildDate: Date(), by: Player(emailAddress: "example@example.com", name: "testuser"))
+        player = player.extraIncome(amount: component.cost)
+        simulation = try simulation.replacePlayer(player)
+        let buildingMission = try mission.startBuildingInStage(component, buildDate: Date(), by: player)
         
         simulation = try simulation.replaceMission(buildingMission)
         
         let updatedSimulation = simulation.updateSimulation(currentDate: Date())
+        XCTAssertGreaterThan(updatedSimulation.tickCount, simulation.tickCount, "ticks")
         let updatedMission = updatedSimulation.missions.first!
         XCTAssertGreaterThan(updatedMission.percentageDone, mission.percentageDone)
         XCTAssertGreaterThan(updatedMission.currentStage.percentageComplete, mission.currentStage.percentageComplete)
