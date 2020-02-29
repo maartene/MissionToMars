@@ -11,6 +11,7 @@ import Dispatch
 import XCTest
 @testable import Model
 
+/*
 final class SimulationDBTests : XCTestCase {
     var app: Application!
     
@@ -159,3 +160,4 @@ final class SimulationDBTests : XCTestCase {
         ("testSaveUpdatedSimulation", testSaveUpdatedSimulation)
     ]
 }
+*/

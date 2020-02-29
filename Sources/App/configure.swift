@@ -1,6 +1,5 @@
 import Vapor
 import Model
-import FluentSQLite
 import Leaf
 
 /// Called before your application initializes.
@@ -15,31 +14,6 @@ public func configure(
     let router = EngineRouter.default()
     try routes(router)
     services.register(router, as: Router.self)
-    
-    // Configure the rest of your application here
-    // Register providers first
-    try services.register(FluentSQLiteProvider())
-    
-    let sqlite: SQLiteDatabase
-    if (Environment.get("USE_MEMORY_STORAGE") ?? "disabled") == "enabled" {
-        print("Using memory storage.")
-        sqlite = try SQLiteDatabase(storage: .memory)
-    } else {
-        sqlite = try SQLiteDatabase(storage: .file(path: "db.sqlite"))
-        print("Database path: \(sqlite.storage)")
-    }
-    
-    /// Register the configured PostgreSQL database to the database config.
-    var databases = DatabasesConfig()
-    databases.add(database: sqlite, as: .sqlite)
-    services.register(databases)
-    
-    // Configure migrations
-    var migrations = MigrationConfig()
-    migrations.add(model: Player.self, database: .sqlite)
-    migrations.add(model: Mission.self, database: .sqlite)
-    migrations.add(model: Simulation.self, database: .sqlite)
-    services.register(migrations)
     
     // Configure LEAF
     try services.register(LeafProvider())

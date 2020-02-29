@@ -6,33 +6,29 @@
 //
 
 import Foundation
-import FluentSQLite
 import Vapor
 
-public struct Player: Content, SQLiteUUIDModel {
+public struct Player: Content {
     public enum PlayerError: Error {
         case noMission
         case insufficientFunds
         case insufficientTechPoints
         case noSupportedPlayer
-        case userAlreadyExists
-        
-        case userDoesNotExist
+
         case playerAlreadyHasImprovement
-        case usernameFailedValidation
+        case playerAlreadySupportsMission
         case playerAlreadyUnlockedTechnology
         case playerMissesPrerequisiteTechnology
         
         case playerIsAlreadyBuildingImprovement
         case playerNotFound
-        case playersNotInSameMission
         case cannotDonateToYourself
         case illegalImprovementSlot
         
         case insufficientImprovementSlots
     }
     
-    public var id: UUID?
+    public var id = UUID()
     
     public let emailAddress: String
     public let name: String
@@ -358,179 +354,5 @@ public struct Player: Content, SQLiteUUIDModel {
     
     mutating public func debug_setTech(_ amount: Double) {
         self.technologyPoints = amount
-    }
-}
-
-extension Player: Migration { }
-
-// Database aware actions for Player model
-extension Player {
-    public static func createUser(emailAddress: String, name: String, startImprovementShortName: Improvement.ShortName = .TechConsultancy, on conn: DatabaseConnectable) -> Future<Result<Player, PlayerError>> {
-        let player = Player(emailAddress: emailAddress, name: name, startImprovementShortName: startImprovementShortName)
-        do {
-            try player.validate()
-            
-            return Player.query(on: conn).filter(\.emailAddress, .equal, emailAddress).first().flatMap(to: Result<Player, PlayerError>.self) { existingUser in
-                if existingUser != nil {
-                    return Future.map(on: conn) { () -> Result<Player, PlayerError> in
-                        return .failure(.userAlreadyExists)
-                    }
-                }
-                
-                return player.save(on: conn).map(to: Result<Player, PlayerError>.self) { player in
-                    return .success(player)
-                }
-            }
-        } catch {
-            return Future.map(on: conn) { return .failure(.usernameFailedValidation) }
-        }
-    }
-    
-    // refactor to use Result type. This now shows a very ugly error message when function throws (which might not be an issue at this time).
-    public func getSupportedMission(on conn: DatabaseConnectable) throws -> Future<Result<Mission, Error>> {
-        if let missionID = ownsMissionID {
-            return Mission.find(missionID, on: conn).map(to: Result<Mission, Error>.self) { mission in
-                if let mission = mission {
-                    return .success(mission)
-                } else {
-                    return .failure(Mission.MissionError.missionNotFound)
-                }
-            }
-        } else if supportsPlayerID != nil {
-            return try getSupportedPlayer(on: conn).flatMap(to: Result<Mission, Error>.self) { supportedPlayer in
-                guard let supportedPlayer = supportedPlayer else {
-                    return Future.map(on: conn) { () -> Result<Mission, Error> in
-                        return .failure(PlayerError.playerNotFound)
-                    }
-                }
-                guard let missionID = supportedPlayer.ownsMissionID else {
-                    throw PlayerError.noMission
-                }
-                return Mission.find(missionID, on: conn).map(to: Result<Mission, Error>.self) { mission in
-                    if let mission = mission {
-                        return .success(mission)
-                    } else {
-                        return .failure(Mission.MissionError.missionNotFound)
-                    }
-                }
-            }
-        } else {
-            return Future.map(on: conn) { return .failure(PlayerError.noMission) }
-        }
-    }
-    
-    public func getSupportedPlayer(on conn: DatabaseConnectable) throws -> Future<Player?> {
-        guard let playerID = supportsPlayerID else {
-            throw PlayerError.noSupportedPlayer
-        }
-        
-        return Player.find(playerID, on: conn)
-    }
-    
-    public func donateToPlayerSupportingSameMission(cash amount: Double, receivingPlayer: Player, on conn: DatabaseConnectable) throws ->
-        Future<Result<(donatingPlayer: Player, receivingPlayer: Player), Error>> {
-            return try getSupportedMission(on: conn).flatMap(to: Result<(donatingPlayer: Player, receivingPlayer: Player), Error>.self) { missionResult in
-                switch missionResult {
-                case .success(let mission):
-                    return try mission.getSupportingPlayers(on: conn).flatMap(to: Result<(donatingPlayer: Player, receivingPlayer: Player), Error>.self) { supportingPlayers in
-                        guard supportingPlayers.contains(where: { player in
-                            player.id == self.id }) && supportingPlayers.contains(where: { player in
-                                player.id == receivingPlayer.id }) else {
-                            return Future.map(on: conn) {
-                                return .failure(PlayerError.playersNotInSameMission)
-                            }
-                        }
-                        
-                        var result: Result<(donatingPlayer: Player, receivingPlayer: Player), Error>
-                        do {
-                            let donatingResult = try self.donate(cash: amount, to: receivingPlayer)
-                            result = .success(donatingResult)
-                        } catch {
-                            result = .failure(error)
-                        }
-                        return Future.map(on: conn) { return result }
-                    }
-                case .failure(let error):
-                    return Future.map(on: conn) {
-                        return .failure(error)
-                    }
-                }
-            }
-    }
-    
-    public func donateToPlayerSupportingSameMission(tech amount: Double, receivingPlayer: Player, on conn: DatabaseConnectable) throws ->
-        Future<Result<(donatingPlayer: Player, receivingPlayer: Player), Error>> {
-            return try getSupportedMission(on: conn).flatMap(to: Result<(donatingPlayer: Player, receivingPlayer: Player), Error>.self) { missionResult in
-                switch missionResult {
-                case .success(let mission):
-                    return try mission.getSupportingPlayers(on: conn).flatMap(to: Result<(donatingPlayer: Player, receivingPlayer: Player), Error>.self) { supportingPlayers in
-                        guard supportingPlayers.contains(where: { player in
-                            player.id == self.id }) && supportingPlayers.contains(where: { player in
-                                player.id == receivingPlayer.id }) else {
-                            return Future.map(on: conn) {
-                                return .failure(PlayerError.playersNotInSameMission)
-                            }
-                        }
-                        
-                        var result: Result<(donatingPlayer: Player, receivingPlayer: Player), Error>
-                        do {
-                            let donatingResult = try self.donate(techPoints: amount, to: receivingPlayer)
-                            result = .success(donatingResult)
-                        } catch {
-                            result = .failure(error)
-                        }
-                        return Future.map(on: conn) { return result }
-                    }
-                case .failure(let error):
-                    return Future.map(on: conn) {
-                        return .failure(error)
-                    }
-                }
-            }
-    }
-    
-    public func investInComponent(_ component: Component, on conn: DatabaseConnectable, date: Date) throws -> Future<Result<(changedPlayer: Player, changedMission: Mission), Error>> {
-        return try getSupportedMission(on: conn).flatMap(to: Result<(changedPlayer: Player, changedMission: Mission), Error>.self) { missionResult in
-            
-            switch missionResult {
-            case .success(let mission):
-                var result: Result<(changedPlayer: Player, changedMission: Mission), Error>
-                do {
-                    let investResult = try self.investInComponent(component, in: mission, date: date)
-                    result = .success(investResult)
-                } catch {
-                    if let error = error as? PlayerError {
-                        result = .failure(error)
-                    } else {
-                        throw error
-                    }
-                }
-                return Future.map(on: conn) { return result }
-            
-            case .failure(let error):
-                return Future.map(on: conn) {
-                    return .failure(error)
-                }
-            }
-        }
-    }
-    
-    public static func savePlayers(_ players: [Player], on conn: DatabaseConnectable) -> Future<[Player]> {
-        let futures = players.map { player in
-            return player.update(on: conn)
-        }
-        return futures.flatten(on: conn)
-    }
-}
-
-extension Player: Parameter { }
-
-extension Player: Validatable {
-    /// See `Validatable`.
-    public static func validations() throws -> Validations<Player> {
-        var validations = Validations(Player.self)
-        try validations.add(\.emailAddress, .email)
-        try validations.add(\.name, .count(3...) && .ascii)
-        return validations
     }
 }

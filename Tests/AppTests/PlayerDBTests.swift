@@ -11,7 +11,7 @@ import Dispatch
 import XCTest
 @testable import Model
 
-final class PlayerDBTests : XCTestCase {
+/*final class PlayerDBTests : XCTestCase {
     var app: Application!
     
     override func setUp() {
@@ -276,3 +276,4 @@ final class PlayerDBTests : XCTestCase {
         ("testCannotDonateToPlayerNotSupportingSameMission", testCannotDonateToPlayerNotSupportingSameMission)
     ]
 }
+*/

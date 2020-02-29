@@ -227,7 +227,7 @@ final class ImprovementTests : XCTestCase {
     func testBuildingCanShortenBuildTimeForComponent() throws {
         var player = Player(emailAddress: "testuser@user.com", name: "testuser")
         player.id = UUID()
-        var mission = Mission(owningPlayerID: player.id!)
+        var mission = Mission(owningPlayerID: player.id)
         mission.id = UUID()
         player.ownsMissionID = mission.id
         player = player.extraIncome(amount: mission.currentStage.components[1].cost)

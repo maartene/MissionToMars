@@ -9,13 +9,12 @@ import Foundation
 import FluentSQLite
 import Vapor
 
-public struct Mission: Content, SQLiteUUIDModel {
+public struct Mission: Content {
     public enum MissionError: Error {
         case uncompletedComponents
-        case missionNotFound
     }
     
-    public var id: UUID?
+    public var id = UUID()
     
     public var missionName: String// = "Mission To Mars"// #\(Int.random(in: 1...1_000_000))"
     public let owningPlayerID: UUID
@@ -99,48 +98,5 @@ public struct Mission: Content, SQLiteUUIDModel {
         }
         
         return result
-    }
-}
-
-extension Mission: Migration { }
-
-extension Mission {
-    public static func saveMissions(_ missions: [Mission], on conn: DatabaseConnectable) -> Future<[Mission]> {
-        let futures = missions.map { mission in
-            return mission.update(on: conn)
-        }
-        return futures.flatten(on: conn)
-    }
-    
-    // Refactor to use Result type. By using "throw", you get a very ugly error message (not a big problem right now btw)
-    public func getOwningPlayer(on conn: DatabaseConnectable) throws -> Future<Result<Player, Error>> {
-        return Player.find(owningPlayerID, on: conn).map(to: Result<Player, Error>.self) { player in
-            guard let player = player else {
-                return .failure(Player.PlayerError.playerNotFound)
-            }
-            
-            return .success(player)
-        }
-    }
-    
-    // returns supporting players including owner
-    public func getSupportingPlayers(on conn: DatabaseConnectable) throws -> Future<[Player]> {
-        return Player.query(on: conn).filter(\.supportsPlayerID, .equal, owningPlayerID).all().flatMap(to: [Player].self) { players in
-            do {
-                return try self.getOwningPlayer(on: conn).map(to: [Player].self) { ownerResult in
-                    switch ownerResult {
-                    case .success(let owner):
-                        var playersIncludingOwner = players
-                        playersIncludingOwner.append(owner)
-                        return playersIncludingOwner
-                    case .failure(let error):
-                        print(error)
-                        return players
-                    }
-                }
-            } catch {
-                return Future.map(on: conn) { return players }
-            }
-        }
     }
 }

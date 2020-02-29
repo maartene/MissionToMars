@@ -52,9 +52,10 @@ final class ComponentTests : XCTestCase {
         XCTAssertGreaterThanOrEqual(updatedComponent.percentageCompleted, 100.0, "Component should be done by now.")
     }
     
+    
     // discount tests
     func disable_testComponentShortenBuildTime() throws {
-        var player1 = Player(emailAddress: "example@example.com", name: "no discount")
+        /*var player1 = Player(emailAddress: "example@example.com", name: "no discount")
         player1.id = UUID()
         let mission1 = Mission(owningPlayerID: player1.id!)
         
@@ -78,9 +79,11 @@ final class ComponentTests : XCTestCase {
         let result2 = try player2.investInComponent(component, in: mission2, date: Date())
         
         XCTAssertLessThan(result2.changedMission.currentStage.currentlyBuildingComponents.first?.buildTime ?? 0, result1.changedMission.currentStage.currentlyBuildingComponents.first?.buildTime ?? -1)
+         */
     }
     
     func disable_testComponentDiscount() throws {
+        /*
         var player1 = Player(emailAddress: "example@example.com", name: "no discount")
         player1.id = UUID()
         let mission1 = Mission(owningPlayerID: player1.id!)
@@ -107,6 +110,7 @@ final class ComponentTests : XCTestCase {
         let netCost2 = player2.cash - result2.changedPlayer.cash
         
         XCTAssertLessThan(netCost2, netCost1)
+         */
     }
     
     static let allTests = [

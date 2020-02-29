@@ -16,12 +16,12 @@ final class SimulationTests : XCTestCase {
         let gameDate = Date().addingTimeInterval(24*60*60*365)
         
         let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
-        let update = simulation.updateSimulation(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60), players: [], missions: [])
+        let update = simulation.updateSimulation(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60))
         
-        XCTAssertGreaterThan(update.updatedSimulation.tickCount, simulation.tickCount, " ticks")
-        XCTAssertGreaterThan(update.updatedSimulation.gameDate, simulation.gameDate, " gameDate")
-        XCTAssertGreaterThan(update.updatedSimulation.nextUpdateDate, simulation.nextUpdateDate, " nextUpdateDate")
-        XCTAssertEqual(update.updatedSimulation.id, simulation.id, "after update, UUIDs should be the same.")
+        XCTAssertGreaterThan(update.tickCount, simulation.tickCount, " ticks")
+        XCTAssertGreaterThan(update.gameDate, simulation.gameDate, " gameDate")
+        XCTAssertGreaterThan(update.nextUpdateDate, simulation.nextUpdateDate, " nextUpdateDate")
+        XCTAssertEqual(update.id, simulation.id, "after update, UUIDs should be the same.")
     }
     
     func testSimulationDoesNotAdvanceWithSmallEnoughTimeDifference() throws {
@@ -29,11 +29,11 @@ final class SimulationTests : XCTestCase {
         let gameDate = Date().addingTimeInterval(24*60*60*365)
         
         let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60))
-        let update = simulation.updateSimulation(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 30), players: [], missions: [])
+        let update = simulation.updateSimulation(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 30))
         
-        XCTAssertEqual(update.updatedSimulation.tickCount, simulation.tickCount, " ticks")
-        XCTAssertEqual(update.updatedSimulation.gameDate, simulation.gameDate, " gameDate")
-        XCTAssertEqual(update.updatedSimulation.nextUpdateDate, simulation.nextUpdateDate, " nextUpdateDate")
+        XCTAssertEqual(update.tickCount, simulation.tickCount, " ticks")
+        XCTAssertEqual(update.gameDate, simulation.gameDate, " gameDate")
+        XCTAssertEqual(update.nextUpdateDate, simulation.nextUpdateDate, " nextUpdateDate")
     }
     
     func testAdvanceSimulationMultipleTicks() throws {
@@ -41,35 +41,38 @@ final class SimulationTests : XCTestCase {
         let gameDate = Date().addingTimeInterval(24*60*60*365)
         
         let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
-        let update = simulation.updateSimulation(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60 * 4), players: [], missions: [])
+        let update = simulation.updateSimulation(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60 * 4))
         
         // if this fails, it is usually because simulation update time was hardcoded to a different value (in 'Simulation.swift')
-        XCTAssertEqual(update.updatedSimulation.tickCount, 5, " ticks")
+        XCTAssertEqual(update.tickCount, 5, " ticks")
     }
     
     func testUpdatePlayer() throws {
         // let's assume gamedate is one year from now.
         let gameDate = Date().addingTimeInterval(24*60*60*365)
-        let players = [Player(emailAddress: "example@example.com", name: "testUser")]
         
-        let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
-        let update = simulation.updateSimulation(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60 * 4), players: players, missions: [])
+        var simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
+        simulation = try simulation.createPlayer(emailAddress: "example@example.com", name: "testUser").updatedSimulation
+        let update = simulation.updateSimulation(currentDate: Date().addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60 * 4))
         
-        XCTAssertGreaterThan(update.updatedPlayers[0].cash, players[0].cash, " cash")
-        XCTAssertEqual(update.updatedPlayers[0].id, players[0].id, "Player.id should be the same after update.")
+        XCTAssertGreaterThan(update.players[0].cash, simulation.players[0].cash, " cash")
+        XCTAssertEqual(update.players[0].id, simulation.players[0].id, "Player.id should be the same after update.")
     }
     
     func testUpdateMission() throws {
         let gameDate = Date().addingTimeInterval(Double(SECONDS_IN_YEAR))
-        let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
-        let mission = Mission(owningPlayerID: UUID())
+        var simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
+        let playerCreateResult = try simulation.createPlayer(emailAddress: "test@test.com", name: "test")
+        simulation = playerCreateResult.updatedSimulation
+        simulation = try simulation.createMission(for: playerCreateResult.newPlayer)
+        let mission = simulation.missions[0]
         let component = mission.currentStage.components.first!
         let buildingMission = try mission.startBuildingInStage(component, buildDate: Date(), by: Player(emailAddress: "example@example.com", name: "testuser"))
         
-        let missions = [buildingMission]
+        simulation = try simulation.replaceMission(buildingMission)
         
-        let updatedSimulationResult = simulation.updateSimulation(currentDate: Date(), players: [], missions: missions)
-        let updatedMission = updatedSimulationResult.updatedMissions.first!
+        let updatedSimulation = simulation.updateSimulation(currentDate: Date())
+        let updatedMission = updatedSimulation.missions.first!
         XCTAssertGreaterThan(updatedMission.percentageDone, mission.percentageDone)
         XCTAssertGreaterThan(updatedMission.currentStage.percentageComplete, mission.currentStage.percentageComplete)
         XCTAssertGreaterThan(updatedMission.currentStage.currentlyBuildingComponents.first?.percentageCompleted ?? 0, mission.currentStage.currentlyBuildingComponents.first?.percentageCompleted ?? 0)
@@ -78,23 +81,28 @@ final class SimulationTests : XCTestCase {
     
     func testUpdateAdvancesPlayerImprovementBuildProgress() throws {
         let gameDate = Date().addingTimeInterval(Double(SECONDS_IN_YEAR))
-        let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
-        
-        var player = Player(emailAddress: "example@example.com", name: "testUser")
+        var simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
+        let createPlayerResult = try simulation.createPlayer(emailAddress: "example@example.com", name: "testUser")
+        simulation = createPlayerResult.updatedSimulation
+        var player = createPlayerResult.newPlayer
         let improvement = Improvement.getImprovementByName(.Faculty)!
         player.debug_setCash(improvement.cost)
         let buildingPlayer = try player.startBuildImprovement(improvement, startDate: gameDate)
         
-        let updateResult = simulation.updateSimulation(currentDate: Date(), players: [buildingPlayer], missions: [])
-        XCTAssertGreaterThan(updateResult.updatedPlayers[0].improvements.last!.percentageCompleted, buildingPlayer.improvements.last!.percentageCompleted, "%")
+        let updateResult = simulation.updateSimulation(currentDate: Date())
+        XCTAssertGreaterThan(updateResult.players[0].improvements.last!.percentageCompleted, buildingPlayer.improvements.last!.percentageCompleted, "%")
     }
     
     func testUpdateTriggersImprovementEffectInPlayer() throws {
         let gameDate = Date().addingTimeInterval(Double(SECONDS_IN_YEAR))
-        let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
+        var simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
         
         let improvement = Improvement.getImprovementByName(.PrefabFurniture)!
-        var player = Player(emailAddress: "example@example.com", name: "testUser").extraIncome(amount: improvement.cost)
+        
+        let createPlayerResult = try simulation.createPlayer(emailAddress: "example@example.com", name: "testUser")
+        simulation = createPlayerResult.updatedSimulation
+        var player = createPlayerResult.newPlayer
+        
         player = unlockTechnologiesForImprovement(player: player, improvement: improvement)
         player = try player.startBuildImprovement(improvement, startDate: Date())
         let extraCash = player.cashPerTick
@@ -102,8 +110,8 @@ final class SimulationTests : XCTestCase {
         player = player.updatePlayer(ticks: improvement.buildTime + 1)
         XCTAssert(player.completedImprovements.contains(improvement))
         
-        let updateResult = simulation.updateSimulation(currentDate: Date(), players: [player], missions: [])
-        XCTAssertGreaterThan(updateResult.updatedPlayers[0].cash, player.cash + extraCash, " cash")
+        let updateResult = simulation.updateSimulation(currentDate: Date())
+        XCTAssertGreaterThan(updateResult.players[0].cash, player.cash + extraCash, " cash")
     }
     
     func unlockTechnologiesForImprovement(player: Player, improvement: Improvement) -> Player {

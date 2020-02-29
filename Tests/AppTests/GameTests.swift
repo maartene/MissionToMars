@@ -8,6 +8,7 @@
 import XCTest
 @testable import Model
 
+/*
 class GameTests: XCTestCase {
 
     override func setUp() {
@@ -236,3 +237,4 @@ class GameTests: XCTestCase {
     }
 
 }
+ */

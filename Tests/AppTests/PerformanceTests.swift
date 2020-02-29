@@ -10,7 +10,7 @@ import Dispatch
 import Vapor
 import XCTest
 @testable import Model
-
+/*
 final class PerformanceTests: XCTestCase {
     var app: Application!
     
@@ -158,3 +158,4 @@ final class PerformanceTests: XCTestCase {
         //("testGame", testGame)
     ]
 }
+*/
