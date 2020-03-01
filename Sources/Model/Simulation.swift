@@ -70,7 +70,7 @@ public struct Simulation: Content {
         return currentDate >= self.nextUpdateDate
     }
     
-    public func createPlayer(emailAddress: String, name: String) throws -> (newPlayer: Player, updatedSimulation: Simulation) {
+    public func createPlayer(emailAddress: String, name: String, startImprovementShortName: Improvement.ShortName = Improvement.ShortName.TechConsultancy) throws -> (newPlayer: Player, updatedSimulation: Simulation) {
         guard players.contains(where: { player in player.name == name || player.emailAddress == emailAddress }) == false else {
             throw SimulationError.userAlreadyExists
         }
@@ -79,7 +79,7 @@ public struct Simulation: Content {
             throw SimulationError.usernameFailedValidation
         }
         
-        let newPlayer = Player(emailAddress: emailAddress, name: name)
+        let newPlayer = Player(emailAddress: emailAddress, name: name, startImprovementShortName: startImprovementShortName)
         var updatedSimulation = self
         updatedSimulation.players.append(newPlayer)
         return (newPlayer, updatedSimulation)

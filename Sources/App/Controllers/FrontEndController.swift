@@ -49,7 +49,7 @@ class FrontEndController: RouteCollection {
             
             var context = CreateCharacterContext()
             do {
-                let result = try self.simulation.createPlayer(emailAddress: emailAddress, name: name)
+                let result = try self.simulation.createPlayer(emailAddress: emailAddress, name: name, startImprovementShortName: startingImprovement)
                 self.simulation = result.updatedSimulation
                 
                 context.email = emailAddress
