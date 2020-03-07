@@ -120,6 +120,11 @@ public struct Player: Content {
         return updatedPlayer.cash - cash
     }
     
+    public var componentBuildPointsPerTick: Double {
+        let updatedPlayer = self.updatePlayer()
+        return updatedPlayer.componentBuildPoints
+    }
+    
     public var techPerTick: Double {
         let updatedPlayer = self.updatePlayer()
         return updatedPlayer.technologyPoints - technologyPoints

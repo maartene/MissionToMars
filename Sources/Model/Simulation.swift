@@ -19,8 +19,6 @@ public struct Simulation: Content {
 
     }
     
-    public static let UPDATE_INTERVAL_IN_MINUTES = 15.0
-    
     public private(set) var missions = [Mission]()
     public private(set) var players = [Player]()
     
@@ -43,7 +41,7 @@ public struct Simulation: Content {
     
         while updatedSimulation.simulationShouldUpdate(currentDate: currentDate) {
             //print("updating \(result)")
-            let nextUpdateDate = updatedSimulation.nextUpdateDate.addingTimeInterval(Simulation.UPDATE_INTERVAL_IN_MINUTES * 60)
+            let nextUpdateDate = updatedSimulation.nextUpdateDate.addingTimeInterval(UPDATE_INTERVAL_IN_MINUTES * 60)
             //let nextUpdateDate = updatedSimulation.nextUpdateDate.addingTimeInterval(120)
             let gameDate = updatedSimulation.gameDate.addingTimeInterval(24*60*60)
             let tickCount = updatedSimulation.tickCount + 1
