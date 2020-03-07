@@ -40,7 +40,7 @@
             <tr>
                 <td><img src="/images/Improvements/#(improvement.shortName)-w.png"/></td>
                 <td><b>#(improvement.name)</b> #(improvement.description)<br/>
-                    <span class="text-primary">Cost: $#cash(improvement.cost)</span>
+                    <span class="text-primary">Cost: $#cash(improvement.cost) - Build time: #dec0(improvement.buildTime / buildPointsPerTick) days</span>
                 </td>
                 <td><span class="text-info">#improvementEffects(improvement.shortName)</span></td>
                 <td>#for(tag in improvement.tags) { <span class="badge badge-success">#tag(tag)</span> }</td>

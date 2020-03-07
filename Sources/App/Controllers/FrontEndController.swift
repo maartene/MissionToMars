@@ -349,13 +349,14 @@ class FrontEndController: RouteCollection {
         router.get("build/improvements") { req -> Future<View> in
             struct ImprovementBuildContext: Codable {
                 let player: Player
+                let buildPointsPerTick: Double
                 let possibleImprovements: [Improvement]
             }
             
             let player = try self.getPlayerFromSession(on: req)
             
             let possibleImprovements = Improvement.unlockedImprovementsForPlayer(player)
-            let context = ImprovementBuildContext(player: player, possibleImprovements: possibleImprovements)
+            let context = ImprovementBuildContext(player: player, buildPointsPerTick: player.buildPointsPerTick, possibleImprovements: possibleImprovements)
             
             return try req.view().render("improvements", context)
         }

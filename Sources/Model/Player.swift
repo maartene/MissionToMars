@@ -86,7 +86,7 @@ public struct Player: Content {
         updatedPlayer.componentBuildPoints = 1
         
         for _ in 0 ..< ticks {
-            if isCurrentlyBuildingImprovement { updatedPlayer.buildPoints += 1 }
+            updatedPlayer.buildPoints = 1
             
             for improvement in updatedPlayer.improvements {
                 updatedPlayer = improvement.applyEffectForOwner(player: updatedPlayer)
@@ -118,6 +118,13 @@ public struct Player: Content {
     public var cashPerTick: Double {
         let updatedPlayer = self.updatePlayer()
         return updatedPlayer.cash - cash
+    }
+    
+    public var buildPointsPerTick: Double {
+        var updatedPlayer = self
+        updatedPlayer.improvements.removeAll(where: { improvement in improvement.percentageCompleted < 100})
+        updatedPlayer = updatedPlayer.updatePlayer()
+        return updatedPlayer.buildPoints
     }
     
     public var componentBuildPointsPerTick: Double {

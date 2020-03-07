@@ -133,11 +133,7 @@ public enum Effect: Codable, CustomStringConvertible {
             }
             return changedPlayer
         case .extraBuildPointsFlat(let amount):
-            if player.isCurrentlyBuildingImprovement {
-                return player.extraBuildPoints(amount: amount)
-            } else {
-                return player
-            }
+            return player.extraBuildPoints(amount: amount)
         case .extraComponentBuildPointsFlat(let amount):
             return player.extraComponentBuildPoints(amount: amount)
         default:
