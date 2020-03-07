@@ -14,7 +14,8 @@
             </div>
             <div class="row m-2 pt-2 align-items-center bg-dark rounded">
                 <div class="col-md-1"><img src="/images/Stages/#(currentStage.level)-w.png" alt="#(currentStage.name)"/></div>
-                <div class="col"><p>#(currentStage.description)</p></div>
+                <div class="col"><p>#(currentStage.description)<br/>
+                </p></div>
             </div>
             <div class="row m-2"><ul class="list-group">
                 #for(component in unlockedComponents) { 
@@ -23,7 +24,7 @@
                             <div class="col-md-1"><img src="/images/Components/#(component.shortName)-w.png" alt="#(component.name)"/></div>
                             <div class="col">
                                 <b>#(component.name)</b> #(component.description)<br/>
-                                Cost: #cash(component.cost) - Build time: #(component.buildTime) days.
+                                Cost: #cash(component.cost) - Build time: #dec0(component.buildTime / componentBuildPointsPerDay) days.
                                 <br />
                                 #if(component.buildStartedOn) { Build started on: #date(component.buildStartedOn) 
                                     <div class="progress">

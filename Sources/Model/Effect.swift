@@ -152,7 +152,7 @@ public enum Effect: Codable, CustomStringConvertible {
         case .extraTechFlat(let amount):
             return "+\(amount) technology points per day"
         case .interestOnCash(let percentage):
-            return "+\(percentage) on your total cash per day"
+            return "+\(percentage)% on your total cash per day"
         case .tagEffectDoubler(let tag):
             return "Receive double benefits from all improvements with tag '\(tag)'"
         case .extraBuildPointsFlat(let amount):
