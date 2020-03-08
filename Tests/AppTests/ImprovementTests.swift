@@ -106,6 +106,14 @@ final class ImprovementTests : XCTestCase {
         XCTAssertGreaterThan(updatedPlayer.improvements.last!.percentageCompleted, buildingPlayer.improvements.last!.percentageCompleted, "Improvement building progress should increase after update.")
     }
     
+    func playerCompleteImprovement(player: Player, improvement: Improvement) -> Player {
+        var resultPlayer = player
+        for _ in 0 ... improvement.buildTime {
+            resultPlayer = resultPlayer.updatePlayer()
+        }
+        return resultPlayer
+    }
+    
     func testUpdateOfPlayerTriggersImprovementEffect() throws {
         var player = Player(emailAddress: "example@example.com", name: "testUser")
         player = try player.removeImprovementInSlot(0)
@@ -117,7 +125,7 @@ final class ImprovementTests : XCTestCase {
         buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
         XCTAssertEqual(player.cash, buildingPlayer.cash, "cash")
         
-        buildingPlayer = buildingPlayer.updatePlayer(ticks: improvement.buildTime + 1)
+        buildingPlayer = playerCompleteImprovement(player: buildingPlayer, improvement: improvement)
         XCTAssert(buildingPlayer.completedImprovements.contains(improvement))
         
         let updatedPlayer = buildingPlayer.updatePlayer()
@@ -213,7 +221,7 @@ final class ImprovementTests : XCTestCase {
         player2 = unlockTechnologiesForImprovement(player: player2, improvement: ikea)
         player2 = player2.extraIncome(amount: improvement2.cost + ikea.cost)
         player2 = try player2.startBuildImprovement(ikea, startDate: Date())
-        player2 = player2.updatePlayer(ticks: ikea.buildTime + 1)
+        player2 = playerCompleteImprovement(player: player2, improvement: ikea)
         XCTAssert(player2.improvements.filter { improvement in improvement.isCompleted }.contains(ikea))
         player2 = try player2.startBuildImprovement(improvement2, startDate: Date())
         XCTAssertEqual(player2.currentlyBuildingImprovement?.percentageCompleted ?? 1.0, 0.0, "%")
@@ -273,7 +281,7 @@ final class ImprovementTests : XCTestCase {
         var ikeaPlayer = player.extraIncome(amount: ikea.cost)
         ikeaPlayer = unlockTechnologiesForImprovement(player: ikeaPlayer, improvement: ikea)
         ikeaPlayer = try ikeaPlayer.startBuildImprovement(ikea, startDate: Date())
-        ikeaPlayer = ikeaPlayer.updatePlayer(ticks: ikea.buildTime + 1)
+        ikeaPlayer = playerCompleteImprovement(player: ikeaPlayer, improvement: ikea)
         
         //XCTAssertLessThan(ikeaPlayer.buildTimeFactor, player.buildTimeFactor)
     }
@@ -286,7 +294,7 @@ final class ImprovementTests : XCTestCase {
         player = unlockTechnologiesForImprovement(player: player, improvement: improvement)
         
         player = try player.startBuildImprovement(improvement, startDate: Date())
-        player = player.updatePlayer(ticks: improvement.buildTime + 1)
+        player = playerCompleteImprovement(player: player, improvement: improvement)
         XCTAssertEqual(player.completedImprovements.filter({$0 == improvement}).count, 1)
         
         player = try player.startBuildImprovement(improvement, startDate: Date())
@@ -316,7 +324,7 @@ final class ImprovementTests : XCTestCase {
         let improvement = Improvement.getImprovementByName(.AI_TAG)!
         player = unlockTechnologiesForImprovement(player: player, improvement: improvement)
         player = try player.startBuildImprovement(improvement, startDate: Date())
-        player = player.updatePlayer(ticks: improvement.buildTime + 1)
+        player = playerCompleteImprovement(player: player, improvement: improvement)
         XCTAssert(player.completedImprovements.contains(improvement))
         let cashBeforeSale = player.cash
         let sellingPlayer = try player.sellImprovement(improvement)

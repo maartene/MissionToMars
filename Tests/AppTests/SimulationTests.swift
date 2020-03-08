@@ -98,6 +98,14 @@ final class SimulationTests : XCTestCase {
         XCTAssertGreaterThan(updateResult.players[0].improvements.last!.percentageCompleted, buildingPlayer.improvements.last!.percentageCompleted, "%")
     }
     
+    func playerCompleteImprovement(player: Player, improvement: Improvement) -> Player {
+        var resultPlayer = player
+        for _ in 0 ... improvement.buildTime {
+            resultPlayer = resultPlayer.updatePlayer()
+        }
+        return resultPlayer
+    }
+    
     func testUpdateTriggersImprovementEffectInPlayer() throws {
         let gameDate = Date().addingTimeInterval(Double(SECONDS_IN_YEAR))
         var simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
@@ -112,7 +120,7 @@ final class SimulationTests : XCTestCase {
         player = try player.startBuildImprovement(improvement, startDate: Date())
         let extraCash = player.cashPerTick
         
-        player = player.updatePlayer(ticks: improvement.buildTime + 1)
+        player = playerCompleteImprovement(player: player, improvement: improvement)
         XCTAssert(player.completedImprovements.contains(improvement))
         
         let updateResult = simulation.updateSimulation(currentDate: Date())

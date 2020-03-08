@@ -81,29 +81,27 @@ public struct Player: Content {
         }
     }
     
-    public func updatePlayer(ticks: Int = 1) -> Player {
+    public func updatePlayer() -> Player {
         var updatedPlayer = self
         updatedPlayer.componentBuildPoints = 1
         
-        for _ in 0 ..< ticks {
-            updatedPlayer.buildPoints = 1
-            
-            for improvement in updatedPlayer.improvements {
-                updatedPlayer = improvement.applyEffectForOwner(player: updatedPlayer)
-            }
-            //print("Player build points before: \(updatedPlayer.componentBuildPoints)")
-            
-            var updatedImprovements = updatedPlayer.improvements
-            
-            for i in 0 ..< updatedPlayer.improvements.count {
-                let result = updatedImprovements[i].updateImprovement(buildPoints: updatedPlayer.buildPoints)
-                updatedImprovements[i] = result.updatedImprovement
-                updatedPlayer.buildPoints = result.remainingBuildPoints
-            }
-            
-            updatedPlayer.improvements = updatedImprovements
-            //print("Player build points after: \(updatedPlayer.buildPoints)")
+        updatedPlayer.buildPoints = 1
+        
+        for improvement in updatedPlayer.improvements {
+            updatedPlayer = improvement.applyEffectForOwner(player: updatedPlayer)
         }
+        //print("Player build points before: \(updatedPlayer.componentBuildPoints)")
+        
+        var updatedImprovements = updatedPlayer.improvements
+        
+        for i in 0 ..< updatedPlayer.improvements.count {
+            let result = updatedImprovements[i].updateImprovement(buildPoints: updatedPlayer.buildPoints)
+            updatedImprovements[i] = result.updatedImprovement
+            updatedPlayer.buildPoints = result.remainingBuildPoints
+        }
+        
+        updatedPlayer.improvements = updatedImprovements
+        //print("Player build points after: \(updatedPlayer.buildPoints)")
         
         //print("cashPerTick: \(cashPerTick)")
         //print(updatedPlayer)
