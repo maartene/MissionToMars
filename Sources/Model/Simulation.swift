@@ -32,6 +32,8 @@ public struct Simulation: Content {
         self.tickCount = tickCount
         self.gameDate = gameDate
         self.nextUpdateDate = nextUpdateDate
+        
+        createAdminPlayer()
     }
     
     public func updateSimulation(currentDate: Date) -> Simulation {
@@ -187,27 +189,23 @@ public struct Simulation: Content {
         }
     }
     
-    public func save() {
-        do {
-            let encoder = JSONEncoder()
-            encoder.outputFormatting = .prettyPrinted
-            
-            // we make a copy of this simulation to make sure we never try to write a simulation that is being changed (in another thread)
-            // this works because structures are values and copying is thread safe
-            let copy = self
-            let data = try encoder.encode(copy)
-            let url = URL(fileURLWithPath: SIMULATION_FILENAME + ".json")
-            try data.write(to: url)
-            print("Succesfully saved simulation to file: \(url)")
-        } catch {
-            print("Error while saving simulation: \(error).")
-        }
+    public func save(fileName: String = SIMULATION_FILENAME + ".json", path: String = "") throws {
+        let encoder = JSONEncoder()
+        encoder.outputFormatting = .prettyPrinted
+        
+        // we make a copy of this simulation to make sure we never try to write a simulation that is being changed (in another thread)
+        // this works because structures are values and copying is thread safe
+        let copy = self
+        let data = try encoder.encode(copy)
+        let url = URL(fileURLWithPath: path + fileName)
+        try data.write(to: url)
     }
     
-    public static func load() -> Simulation? {
+    public static func load(fileName: String = SIMULATION_FILENAME + ".json", path: String = "") -> Simulation? {
         do {
             let decoder = JSONDecoder()
-            let url = URL(fileURLWithPath: SIMULATION_FILENAME + ".json")
+            
+            let url = URL(fileURLWithPath: path + fileName)
             let data = try Data(contentsOf: url)
             let simulation = try decoder.decode(Simulation.self, from: data)
             print("Succesfully loaded simulation from file: \(url)")
@@ -217,6 +215,23 @@ public struct Simulation: Content {
         }
         
         return nil
+    }
+    
+    private mutating func createAdminPlayer() {
+        let adminEmail = Environment.get("ADMIN_EMAIL") ?? "maarten@mission2mars.space"
+        let adminUserName = Environment.get("ADMIN_USERNAME") ?? "maarten"
+        
+        let dataDir = Environment.get("DATA_DIR") ?? ""
+        
+        do {
+            var adminPlayer = try createPlayer(emailAddress: adminEmail, name: adminUserName).newPlayer
+            adminPlayer = adminPlayer.bless()
+            players.append(adminPlayer)
+            try save(path: dataDir)
+            print("Successfully created admin player with username: \(adminPlayer.name), email: \(adminPlayer.emailAddress) and id: \(adminPlayer.id)")
+        } catch {
+            fatalError("Could not create admin player: " + error.localizedDescription)
+        }
     }
     
 }

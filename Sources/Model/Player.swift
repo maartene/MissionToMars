@@ -32,7 +32,7 @@ public struct Player: Content {
     
     public let emailAddress: String
     public let name: String
-    
+    public private(set) var isAdmin: Bool = false
     public var ownsMissionID: UUID?
     public var supportsPlayerID: UUID?
     
@@ -364,5 +364,11 @@ public struct Player: Content {
     
     mutating public func debug_setTech(_ amount: Double) {
         self.technologyPoints = amount
+    }
+    
+    func bless() -> Player {
+        var blessedPlayer = self
+        blessedPlayer.isAdmin = true
+        return blessedPlayer
     }
 }

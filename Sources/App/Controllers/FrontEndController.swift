@@ -21,7 +21,8 @@ class FrontEndController: RouteCollection {
     let queue = OperationQueue()
     
     init() {
-        if let loadedSimulation = Simulation.load() {
+        let dataDir = Environment.get("DATA_DIR") ?? ""
+        if let loadedSimulation = Simulation.load(path: dataDir) {
             simulation = loadedSimulation
         } else {
             print("Could not load simulation, generating a new one.")
@@ -140,7 +141,12 @@ class FrontEndController: RouteCollection {
                 // save result (in seperate thread)
                 let copy = self.simulation
                 queue.addOperation {
-                    copy.save()
+                    let dataDir = Environment.get("DATA_DIR") ?? ""
+                    do {
+                        try copy.save(path: dataDir)
+                    } catch {
+                        print("failed to save simulation")
+                    }
                 }
                 
                 simulationIsUpdating = false
@@ -531,6 +537,99 @@ class FrontEndController: RouteCollection {
             }
         }
         
+        router.get("admin") { req -> Future<View> in
+            struct FileInfo: Content {
+                let fileName: String
+                let creationDate: String
+                let modifiedDate: String
+                let isCurrentSimulation: Bool
+            }
+            
+            struct AdminContext: Content {
+                let player: Player
+                let backupFiles: [FileInfo]
+                let infoMessage: String?
+                let errorMessage: String?
+            }
+            
+            let player = try self.getPlayerFromSession(on: req)
+            guard player.isAdmin else {
+                throw Abort(.unauthorized, reason: "Player \(player.name) is not an admin.")
+            }
+            
+            let dataDir = Environment.get("DATA_DIR") ?? ""
+            let url = URL(fileURLWithPath: dataDir, isDirectory: true)
+            
+            let fm = FileManager.default
+            let content = try fm.contentsOfDirectory(at: url, includingPropertiesForKeys: nil, options: .skipsHiddenFiles)
+            
+            let filteredFiles = content.filter({file in file.pathExtension == "json" })
+            
+            let files = filteredFiles.map { file -> FileInfo in
+                let fileName = file.lastPathComponent
+                let attributes = try? fm.attributesOfItem(atPath: file.path)
+                let creationDate: Date? = attributes?[FileAttributeKey.creationDate] as? Date
+                let modifiedDate: Date? = attributes?[FileAttributeKey.modificationDate] as? Date
+                let currentSimulation = fileName == "\(SIMULATION_FILENAME).json"
+                
+                return FileInfo(fileName: fileName, creationDate: creationDate?.description ?? "", modifiedDate: modifiedDate?.description ?? "", isCurrentSimulation: currentSimulation)
+            }
+            
+            let sortedFiles = files.sorted { file1, file2 in file1.modifiedDate > file2.modifiedDate }
+            
+            let context = AdminContext(player: player, backupFiles: sortedFiles, infoMessage: self.infoMessages[player.id] ?? nil, errorMessage: self.errorMessages[player.id] ?? nil)
+            return try req.view().render("admin/admin", context)
+        }
+        
+        router.get("admin", "backupnow") { req -> Response in
+            let player = try self.getPlayerFromSession(on: req)
+            guard player.isAdmin else {
+                throw Abort(.unauthorized, reason: "Player \(player.name) is not an admin.")
+            }
+            
+            do {
+                let dataDir = Environment.get("DATA_DIR") ?? ""
+                let formatter = DateFormatter()
+                formatter.dateFormat = "YYYYMMdd_HHmmss"
+                
+                let formattedDate = formatter.string(from: Date())
+                //print(formattedDate)
+                try self.simulation.save(fileName: "backup_\(formattedDate).json", path: dataDir)
+                self.infoMessages[player.id] = "Succesfully backed up to file: backup_\(formattedDate).json)"
+            } catch {
+                self.errorMessages[player.id] = "Failed to backup due to error: \(error.localizedDescription)"
+            }
+            
+            return req.redirect(to: "/admin")
+        }
+        
+        router.get("admin", "restore", String.parameter, String.parameter) { req -> Response in
+            let player = try self.getPlayerFromSession(on: req)
+            guard player.isAdmin else {
+                throw Abort(.unauthorized, reason: "Player \(player.name) is not an admin.")
+            }
+            
+            let fileName = try req.parameters.next(String.self)
+            let loadMode = (try req.parameters.next(String.self)) == "replace"
+            
+            do {
+                
+                let dataDir = Environment.get("DATA_DIR") ?? ""
+                if let simulation = Simulation.load(fileName: fileName, path: dataDir) {
+                    if (loadMode) { self.simulation = simulation }
+                    if (loadMode) {
+                        self.infoMessages[player.id] = ("Succesfully loaded simulation from file: \(dataDir+fileName)")
+                    } else {
+                        self.infoMessages[player.id] = ("\(dataDir + fileName) is a valid simulation.")
+                    }
+                } else {
+                self.errorMessages[player.id] = ("Could not load simulation from file: \(fileName)")
+                }
+            }
+        
+        return req.redirect(to: "/admin")
+        }
+        
         router.get("debug", "allUsers") { req -> [Player] in
             guard (Environment.get("DEBUG_MODE") ?? "inactive") == "active" else {
                 throw Abort(.notFound)
@@ -586,30 +685,6 @@ class FrontEndController: RouteCollection {
         
         router.get() { req in
             return try req.view().render("index")
-        }
-        
-        router.get("debug/backup") { req -> String in
-            guard (Environment.get("DEBUG_MODE") ?? "inactive") == "active" else {
-                throw Abort(.notFound)
-            }
-            
-            do {
-                let encoder = JSONEncoder()
-                encoder.outputFormatting = .prettyPrinted
-                let data = try encoder.encode(self.simulation)
-                let backupDir = Environment.get("BACKUP_PATH") ?? ""
-                let formatter = DateFormatter()
-                formatter.dateFormat = "YYYYMMdd_HHmmss"
-                
-                let formattedDate = formatter.string(from: Date())
-                print(formattedDate)
-                let url = URL(fileURLWithPath: "\(backupDir)backup_\(formattedDate).json")
-                try data.write(to: url)
-                return "Done"
-            } catch {
-                print(error)
-                return("Error while backup up: \(error).")
-            }
         }
         
         router.get("debug/dataDump") { req -> String in

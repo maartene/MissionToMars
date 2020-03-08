@@ -1,0 +1,38 @@
+#set("body") {
+    <h2>Admin game</h2>
+    #if(errorMessage) {
+        <div class="alert alert-dismissible alert-warning">
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+            <p class="mb-0">#(errorMessage)</p>
+        </div>
+    }
+    #if(infoMessage) {
+        <div class="alert alert-dismissible alert-success">
+            <button type="button" class="close" data-dismiss="alert">&times;</button>
+            #(infoMessage)
+        </div>
+    }
+    <h3>Backup/Restore</h3>
+    <div class="table-responsive">
+      <table class="table">
+      <thead>
+        <tr>
+          <td>Filename</td>
+          <td>Modified</td>
+          <td>Created</td>
+          <td>Actions</td>
+        </tr>
+      </thead>
+      #for(file in backupFiles) {
+      <tr>
+        <td>#(file.fileName) #if(file.isCurrentSimulation) {<span class="badge badge-primary">Active Simulation</span>}</td>
+        <td>#(file.modifiedDate)</td>
+        <td>#(file.creationDate)</td>
+        <td>#if(file.isCurrentSimulation) {<a href="/admin/backupnow" class="btn btn-sm btn-primary">Backup now</a>} else {<a href="/admin/restore/#(file.fileName)/replace" class="btn btn-sm btn-danger">Restore</a>&nbsp;<a href="/admin/restore/#(file.fileName)/testMode" class="btn btn-sm btn-info">Check</a>}</td>
+      </tr>
+      }
+      </table>
+    </div>
+}
+
+#embed("master")
