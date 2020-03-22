@@ -167,16 +167,18 @@ final class ImprovementTests : XCTestCase {
     
     func testPlayerCanRushImprovement() throws {
         var player = Player(emailAddress: "example@example.com", name: "testUser")
-        let improvement = Improvement.getImprovementByName(.Faculty)!
+        let improvement = Improvement.getImprovementByName(.DesignStudio)!
         player = player.extraIncome(amount: improvement.cost * 2)
         
         var buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
         XCTAssertEqual(buildingPlayer.currentlyBuildingImprovement!.percentageCompleted, 0, "% complete")
         
+        let cashBeforeRush = buildingPlayer.cash
         buildingPlayer = try buildingPlayer.rushImprovement(improvement)
         
-        XCTAssertEqual(buildingPlayer.improvements.last!.shortName, Improvement.ShortName.Faculty)
+        XCTAssertEqual(buildingPlayer.improvements.last!.shortName, Improvement.ShortName.DesignStudio)
         XCTAssertGreaterThanOrEqual(buildingPlayer.improvements.last!.percentageCompleted, 100.0, "% complete")
+        XCTAssertLessThan(buildingPlayer.cash, cashBeforeRush, "cash")
         
     }
     

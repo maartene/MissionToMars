@@ -32,7 +32,7 @@ public struct Player: Content {
     
     public let emailAddress: String
     public let name: String
-    
+    public private(set) var isAdmin: Bool = false
     public var ownsMissionID: UUID?
     public var supportsPlayerID: UUID?
     
@@ -314,15 +314,18 @@ public struct Player: Content {
             throw PlayerError.insufficientFunds
         }
         
+        var rushingPlayer = self
+        
         let rushedImprovement = try improvement.rush()
         
-        if let slot = self.improvements.firstIndex(where: { existingImprovement in
+        if let slot = rushingPlayer.improvements.firstIndex(where: { existingImprovement in
             existingImprovement == improvement && existingImprovement.isCompleted == false
         }) {
-            return try self.replaceImprovementInSlot(slot, with: rushedImprovement)
+            rushingPlayer.cash -= improvement.cost
+            return try rushingPlayer.replaceImprovementInSlot(slot, with: rushedImprovement)
         }
         
-        return self
+        return rushingPlayer
     }
     
     public func investInTechnology(_ technology: Technology) throws -> Player {
@@ -364,5 +367,11 @@ public struct Player: Content {
     
     mutating public func debug_setTech(_ amount: Double) {
         self.technologyPoints = amount
+    }
+    
+    func bless() -> Player {
+        var blessedPlayer = self
+        blessedPlayer.isAdmin = true
+        return blessedPlayer
     }
 }

@@ -139,7 +139,7 @@ final class SimulationTests : XCTestCase {
         XCTAssertEqual(mission.currentStage.currentlyBuildingComponents.count, 0)
         
         let component = mission.currentStage.components.first!
-        player = simulation.players[0]
+        player = simulation.players.last!
         player = unlockTechnologiesForComponent(player: player, component: component)
         player = player.extraIncome(amount: component.cost)
         simulation = try simulation.replacePlayer(player)
@@ -163,14 +163,14 @@ final class SimulationTests : XCTestCase {
         simulation = playerCreateResult2.updatedSimulation
         
         simulation = try simulation.createMission(for: player1)
-        player1 = simulation.players[0]
+        player1 = simulation.players[1]
         player2.supportsPlayerID = player1.id
         simulation = try simulation.replacePlayer(player2)
         
         let donationResult = try simulation.donateToPlayerInSameMission(donatingPlayer: player1, receivingPlayer: player2, cash: player1.cash)
         
-        XCTAssertLessThan(donationResult.players[0].cash, player1.cash, "cash")
-        XCTAssertGreaterThan(donationResult.players[1].cash, player2.cash, "cash")
+        XCTAssertLessThan(donationResult.players[1].cash, player1.cash, "cash")
+        XCTAssertGreaterThan(donationResult.players[2].cash, player2.cash, "cash")
         
     }
     
@@ -186,14 +186,14 @@ final class SimulationTests : XCTestCase {
         simulation = playerCreateResult2.updatedSimulation
         
         simulation = try simulation.createMission(for: player1)
-        player1 = simulation.players[0]
+        player1 = simulation.players[1]
         player2.supportsPlayerID = player1.id
         simulation = try simulation.replacePlayer(player2)
         
         let donationResult = try simulation.donateToPlayerInSameMission(donatingPlayer: player1, receivingPlayer: player2, techPoints: Int(player1.technologyPoints))
         
-        XCTAssertLessThan(donationResult.players[0].technologyPoints, player1.technologyPoints, "techpoints")
-        XCTAssertGreaterThan(donationResult.players[1].technologyPoints, player2.technologyPoints, "techpoints")
+        XCTAssertLessThan(donationResult.players[1].technologyPoints, player1.technologyPoints, "techpoints")
+        XCTAssertGreaterThan(donationResult.players[2].technologyPoints, player2.technologyPoints, "techpoints")
     }
     
     func testCreateMission() throws {
@@ -205,7 +205,7 @@ final class SimulationTests : XCTestCase {
         XCTAssertEqual(simulation.missions.count, 0, "missions")
         
         simulation = try simulation.createMission(for: player)
-        XCTAssertNotNil(simulation.players[0].ownsMissionID)
+        XCTAssertNotNil(simulation.players[1].ownsMissionID)
         XCTAssertEqual(simulation.missions.count, 1, "missions")
     }
     
@@ -218,13 +218,13 @@ final class SimulationTests : XCTestCase {
         
         let updatedPlayer = player.extraIncome(amount: 100)
         
-        XCTAssertEqual(simulation.players[0].cash, player.cash, "cash")
+        XCTAssertEqual(simulation.players[1].cash, player.cash, "cash")
         XCTAssertGreaterThan(updatedPlayer.cash, simulation.players[0].cash, "cash")
         
         simulation = try simulation.replacePlayer(updatedPlayer)
         
-        XCTAssertEqual(simulation.players[0].cash, updatedPlayer.cash, "cash")
-        XCTAssertGreaterThan(simulation.players[0].cash, player.cash, "cash")
+        XCTAssertEqual(simulation.players[1].cash, updatedPlayer.cash, "cash")
+        XCTAssertGreaterThan(simulation.players[1].cash, player.cash, "cash")
         
     }
     
@@ -258,7 +258,7 @@ final class SimulationTests : XCTestCase {
         simulation = playerCreateResult.updatedSimulation
         
         simulation = try simulation.createMission(for: player)
-        player = simulation.players[0]
+        player = simulation.players[1]
         let mission = simulation.missions[0]
         let receivedMission = simulation.getSupportedMissionForPlayer(player)
         XCTAssertNotNil(receivedMission)
@@ -267,12 +267,12 @@ final class SimulationTests : XCTestCase {
     
     func testCreatePlayer() throws {
         var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date())
-        XCTAssertEqual(simulation.players.count, 0, "players")
+        XCTAssertEqual(simulation.players.count, 1, "players")
         
         let playerCreateResult = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1")
         simulation = playerCreateResult.updatedSimulation
-        XCTAssertEqual(simulation.players.count, 1, "players")
-        XCTAssertEqual(simulation.players[0].id, playerCreateResult.newPlayer.id)
+        XCTAssertEqual(simulation.players.count, 2, "players")
+        XCTAssertEqual(simulation.players[1].id, playerCreateResult.newPlayer.id)
     }
     
     func unlockTechnologiesForImprovement(player: Player, improvement: Improvement) -> Player {
