@@ -314,15 +314,18 @@ public struct Player: Content {
             throw PlayerError.insufficientFunds
         }
         
+        var rushingPlayer = self
+        
         let rushedImprovement = try improvement.rush()
         
-        if let slot = self.improvements.firstIndex(where: { existingImprovement in
+        if let slot = rushingPlayer.improvements.firstIndex(where: { existingImprovement in
             existingImprovement == improvement && existingImprovement.isCompleted == false
         }) {
-            return try self.replaceImprovementInSlot(slot, with: rushedImprovement)
+            rushingPlayer.cash -= improvement.cost
+            return try rushingPlayer.replaceImprovementInSlot(slot, with: rushedImprovement)
         }
         
-        return self
+        return rushingPlayer
     }
     
     public func investInTechnology(_ technology: Technology) throws -> Player {

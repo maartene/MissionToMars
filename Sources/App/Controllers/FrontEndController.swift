@@ -56,31 +56,7 @@ class FrontEndController: RouteCollection {
                 context.email = emailAddress
                 context.uuid = String(result.newPlayer.id)
                 
-                if let publicKey = Environment.get("MAILJET_API_KEY"), let privateKey = Environment.get("MAILJET_SECRET_KEY") {
-                
-                    let mailJetConfig = MailJetConfig(apiKey: publicKey, secretKey: privateKey, senderName: "Mission2Mars Support", senderEmail: "support@mission2mars.space")
-                    mailJetConfig.sendMessage(to: emailAddress, toName: name, subject: "Your login id", message: """
-                        Welcome \(result.newPlayer.name) to Mission2Mars
-                        
-                        Your login id is: \(result.newPlayer.id)
-                        Please keep this code secret, as there is no other authentication method at this time!
-                        
-                        Have fun!
-                        
-                        - the Mission2Mars team
-                        Sent from: \(Environment.get("ENVIRONMENT") ?? "local test")
-                        """, htmlMessage: """
-                        <h1>Welcome \(result.newPlayer.name) to Mission2Mars</h1>
-                        
-                        <h3>Your login id is: <b>\(result.newPlayer.id)</b></h3>
-                        <p>Please keep this code secret, as there is no other authentication method at this time!</p>
-                        <p>&nbsp;</p>
-                        <p>Have fun!</p>
-                        <p>&nbsp;</p>
-                        <p>- the Mission2Mars team</p>
-                        <p>Sent from: \(Environment.get("ENVIRONMENT") ?? "unknown")</p>
-                        """, on: req)
-                    }
+                self.sendWelcomeEmail(to: result.newPlayer, on: req)
 
                 return try req.view().render("userCreated", context)
             } catch {
@@ -220,7 +196,7 @@ class FrontEndController: RouteCollection {
             return req.redirect(to: "/mission")
         }
         
-        /*router.get("donate/to", String.parameter) { req -> Future<View> in
+        router.get("donate/to", String.parameter) { req -> Future<View> in
             struct DonateContext: Content {
                 let player: Player
                 let receivingPlayerName: String
@@ -236,7 +212,7 @@ class FrontEndController: RouteCollection {
             
             let context = DonateContext(player: player, receivingPlayerName: receivingPlayer.name, receivingPlayerEmail: receivingPlayer.emailAddress)
             return try req.view().render("donate", context)
-        }*/
+        }
         
         router.get("donate/to", String.parameter, "cash", String.parameter) { req -> Response in
             let donatingPlayer = try self.getPlayerFromSession(on: req)
@@ -713,36 +689,6 @@ class FrontEndController: RouteCollection {
         return nil
     }
     
-    /*func getSimulation(on req: Request) -> Future<Simulation> {
-        if let simulationID = Simulation.GLOBAL_SIMULATION_ID {
-            return Simulation.find(simulationID, on: req).map(to: Simulation.self) { sim in
-                guard let simulation = sim else {
-                    throw Abort(.notFound, reason: "Simulation with ID \(simulationID) not found in database.")
-                }
-                // print("Loaded simulation from database.")
-                return simulation
-            }
-        } else {
-            // search for the simulation
-            return Simulation.query(on: req).all().flatMap(to: Simulation.self) { sims in
-                if let simulation = sims.first {
-                    print("Found simulation in database, setting GLOBAL_SIMULATION_ID")
-                    Simulation.GLOBAL_SIMULATION_ID = simulation.id!
-                    return Future.map(on: req) { return simulation }
-                } else {
-                    // create a new simulation
-                    print("Creating new simulation.")
-                    let gameDate = Date().addingTimeInterval(Double(SECONDS_IN_YEAR))
-                    let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
-                    return simulation.create(on: req).map(to: Simulation.self) { sim in
-                        Simulation.GLOBAL_SIMULATION_ID = sim.id!
-                        return sim
-                    }
-                }
-            }
-        }
-    }*/
-    
     func getMainViewForPlayer(with id: UUID, simulation: Simulation, on req: Request, page: String = "overview") throws -> Future<View> {
         struct MainContext: Codable {
             let player: Player
@@ -812,6 +758,34 @@ class FrontEndController: RouteCollection {
         }
         
         return player
+    }
+    
+    func sendWelcomeEmail(to player: Player, on container: Container) {
+        if let publicKey = Environment.get("MAILJET_API_KEY"), let privateKey = Environment.get("MAILJET_SECRET_KEY") {
+        
+        let mailJetConfig = MailJetConfig(apiKey: publicKey, secretKey: privateKey, senderName: "Mission2Mars Support", senderEmail: "support@mission2mars.space")
+        mailJetConfig.sendMessage(to: player.emailAddress, toName: player.name, subject: "Your login id", message: """
+            Welcome \(player.name) to Mission2Mars
+            
+            Your login id is: \(player.id)
+            Please keep this code secret, as there is no other authentication method at this time!
+            
+            Have fun!
+            
+            - the Mission2Mars team
+            Sent from: \(Environment.get("ENVIRONMENT") ?? "local test")
+            """, htmlMessage: """
+            <h1>Welcome \(player.name) to Mission2Mars</h1>
+            
+            <h3>Your login id is: <b>\(player.id)</b></h3>
+            <p>Please keep this code secret, as there is no other authentication method at this time!</p>
+            <p>&nbsp;</p>
+            <p>Have fun!</p>
+            <p>&nbsp;</p>
+            <p>- the Mission2Mars team</p>
+            <p>Sent from: \(Environment.get("ENVIRONMENT") ?? "unknown")</p>
+            """, on: container)
+        }
     }
 }
 
