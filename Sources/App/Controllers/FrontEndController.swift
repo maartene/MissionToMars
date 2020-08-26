@@ -10,6 +10,7 @@ import Vapor
 import Leaf
 import Model
 import MailJet
+import Storage
 
 class FrontEndController: RouteCollection {
     
@@ -570,8 +571,19 @@ class FrontEndController: RouteCollection {
                 
                 let formattedDate = formatter.string(from: Date())
                 //print(formattedDate)
-                try self.simulation.save(fileName: "backup_\(formattedDate).json", path: dataDir)
+                let data = try self.simulation.save(fileName: "backup_\(formattedDate).json", path: dataDir)
                 self.infoMessages[player.id] = "Succesfully backed up to file: backup_\(formattedDate).json)"
+                
+                let result = try Storage.upload(
+                    bytes: data,
+                    fileName: "test",
+                    fileExtension: "json",
+                    folder: "data",
+                    on: req
+                )
+                print(result)
+                
+                
             } catch {
                 self.errorMessages[player.id] = "Failed to backup due to error: \(error.localizedDescription)"
             }

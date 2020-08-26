@@ -1,6 +1,7 @@
 import Vapor
 import Model
 import Leaf
+import Storage
 
 /// Called before your application initializes.
 ///
@@ -38,6 +39,17 @@ public func configure(
     middlewares.use(ErrorMiddleware.self) // Catches errors and converts to HTTP response
     middlewares.use(SessionsMiddleware.self)
     services.register(middlewares)
+    
+    // Digital Ocean Spaces integration
+    if let S3PublicKey = Environment.get("DO_SPACES_ACCESS_KEY"), let S3PrivateKey = Environment.get("DO_SPACES_SECRET") {
+        let S3Folder = Environment.get("DO_SPACES_FOLDER") ?? "default"
+        let driver = try S3Driver(bucket: "m2m.ams3", host: "digitaloceanspaces.com", accessKey: S3PublicKey, secretKey: S3PrivateKey, region: S3.Region(code: "AMS2"), pathTemplate: "/\(S3Folder)/#folder/#file")
+        services.register(driver, as: NetworkDriver.self)
+
+    }
+        
+    
+    
     
     config.prefer(MemoryKeyedCache.self, for: KeyedCache.self)
 }

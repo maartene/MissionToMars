@@ -25,4 +25,4 @@ COPY --from=builder /app/Public ./Public
 # Uncomment the next line if you are using Leaf
 COPY --from=builder /app/Resources ./Resources
 ENV ENVIRONMENT=development
-ENTRYPOINT ./Run serve --env $ENVIRONMENT --hostname 0.0.0.0 --port 8080
+ENTRYPOINT ./Run serve --hostname 0.0.0.0 --port 8080
