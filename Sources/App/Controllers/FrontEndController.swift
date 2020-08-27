@@ -22,9 +22,9 @@ class FrontEndController: RouteCollection {
     let queue = OperationQueue()
     
     init() {
-        let dataDir = Environment.get("DATA_DIR") ?? ""
+        //let dataDir = Environment.get("DATA_DIR") ?? ""
         
-        if let loadedSimulation = Simulation.load(path: dataDir) {
+        /*if let loadedSimulation = Simulation.load(path: dataDir) {
             simulation = loadedSimulation
             if let adminPlayer = simulation.players.first(where: { player in
                 player.isAdmin
@@ -33,10 +33,10 @@ class FrontEndController: RouteCollection {
             } else {
                 print("Did not find any admin player. Simulation might not work correctly.")
             }
-        } else {
+        } else {*/
             print("Could not load simulation, generating a new one.")
             simulation = Simulation(tickCount: 0, gameDate: Date().addingTimeInterval(TimeInterval(SECONDS_IN_YEAR)), nextUpdateDate: Date())
-        }
+        //}
     }
     
     func boot(router: Router) throws {
