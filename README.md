@@ -81,6 +81,15 @@ THIS MEANS THAT GAME STATE IS ONLY PERSISTED EVERY SO OFTEN AS THE GAME UPDATES.
 
 ### Environment variables
 M2M uses the following environment variables:
+* DATA_DIR (string): local folder to store the simulation.json as well as backup files
+* ADMIN_EMAIL (string): email address to use for the default admin player
+* ADMIN_USER (string): username for the default admin player
+* DEBUG_MODE ("active" || "inactive"): enables or disables debug mode (enables /debug/* end points)
+* DO_SPACES_ACCESS_KEY (string): 1 part of the Digital Ocean Spaces API key
+* DO_SPACES_SECRET (string): Second part of the Digital Ocean Spaces API key
+* DO_SPACES_FOLDER (string): subfolder to use (use this to share one Space between various development/production environments)
+* MAILJET_API_KEY (string): first part of the MailJet API key
+* MAILJET_SECRET_KEY (string) second part of the MailJet API key
 
 Note: none are required for the application to work per se.
 
