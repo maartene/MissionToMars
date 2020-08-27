@@ -24,7 +24,7 @@ public struct Simulation: Content {
         case running
     }
     
-    public var state: SimulationState = .admin
+    public var state: SimulationState
     
     public private(set) var missions = [Mission]()
     public private(set) var players = [Player]()
@@ -34,13 +34,16 @@ public struct Simulation: Content {
     public let gameDate: Date
     public let nextUpdateDate: Date
     
-    public init(id: UUID = UUID(), tickCount: Int, gameDate: Date, nextUpdateDate: Date) {
+    public init(id: UUID = UUID(), tickCount: Int, gameDate: Date, nextUpdateDate: Date, createDefaultAdminPlayer: Bool = false) {
         self.id = id
         self.tickCount = tickCount
         self.gameDate = gameDate
         self.nextUpdateDate = nextUpdateDate
+        self.state = .admin
         
-        createAdminPlayer()
+        if createDefaultAdminPlayer {
+            createAdminPlayer()
+        }
     }
     
     public func updateSimulation(currentDate: Date) -> Simulation {
@@ -65,6 +68,7 @@ public struct Simulation: Content {
             }
             
             updatedSimulation = Simulation(id: self.id, tickCount: tickCount, gameDate: gameDate, nextUpdateDate: nextUpdateDate)
+            updatedSimulation.state = self.state
         }
         
         updatedSimulation.players = updatedPlayers

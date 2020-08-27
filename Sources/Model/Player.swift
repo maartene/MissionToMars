@@ -369,7 +369,7 @@ public struct Player: Content {
         self.technologyPoints = amount
     }
     
-    func bless() -> Player {
+    public func bless() -> Player {
         var blessedPlayer = self
         blessedPlayer.isAdmin = true
         return blessedPlayer

@@ -15,13 +15,40 @@
     <h3>Administration</h3>
     <p>Simulation State: #if(state == 0) { admin mode } else { running }</p>
     #if(state == 0) {
-      <p><a href="/admin/load" class="btn btn-warning btn-large">Load Simulation</a></p>
-      <p><a href="/admin/leaveAdminMode" class="btn btn-primary btn-large">Leave Admin Mode</a></p>
+      <p><a href="/admin/load" class="btn btn-warning btn-lg">Load Simulation</a>&nbsp;<a href="/admin/save" class="btn btn-primary btn-lg">Save Simulation</a></p>
+      <p><a href="/admin/leaveAdminMode" class="btn btn-primary btn-lg">Leave Admin Mode</a></p>
     } else {
-      <p><a href="/admin/enterAdminMode" class="btn btn-primary brn-large">Enter Admin Mode</a></p>
+      <p><a href="/admin/save" class="btn btn-primary btn-lg">Save Simulation</a></p>
+      <p><a href="/admin/enterAdminMode" class="btn btn-primary btn-lg">Enter Admin Mode</a></p>
     }
 
-    <h3>Backup/Restore</h3>
+    <h3>User Management</h3>
+    <div class="table-responsive">
+      <table class="table">
+      <thead>
+        <tr>
+          <td>Username</td>
+          <td>Email address</td>
+          <td>Info</td>
+          <td>Actions</td>
+        </tr>
+      </thead>
+      #for(p in players) {
+        <tr>
+          <td>#(p.name)</td>
+          <td>#(p.emailAddress)</td>
+          <td>#if(p.isAdmin) {<span class="badge badge-sm badge-info">Admin</span> } &nbsp;</td>
+          <td>#if(p.isAdmin == false) {
+            <a href="/admin/bless/#(p.name)" class="btn btn-sm btn-info">Bless</a>
+          } else {
+            <a href="/admin/unbless/#(p.name)" class="btn btn-sm btn-info #if(p.name == player.name) { disabled }">Unbless</a>
+          }
+        </tr>
+      }
+      </table>
+    </div>
+
+    <!--<h3>Backup/Restore</h3>
     <div class="table-responsive">
       <table class="table">
       <thead>
@@ -41,7 +68,7 @@
       </tr>
       }
       </table>
-    </div>
+    </div>-->
 }
 
 #embed("master")
