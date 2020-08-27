@@ -15,7 +15,7 @@ final class SimulationTests : XCTestCase {
         // let's assume gamedate is one year from now.
         let gameDate = Date().addingTimeInterval(24*60*60*365)
         
-        let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
+        let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date(), createDefaultAdminPlayer: true)
         let update = simulation.updateSimulation(currentDate: Date().addingTimeInterval(UPDATE_INTERVAL_IN_MINUTES * 60))
         
         XCTAssertGreaterThan(update.tickCount, simulation.tickCount, " ticks")
@@ -28,7 +28,7 @@ final class SimulationTests : XCTestCase {
         // let's assume gamedate is one year from now.
         let gameDate = Date().addingTimeInterval(24*60*60*365)
         
-        let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date().addingTimeInterval(UPDATE_INTERVAL_IN_MINUTES * 60))
+        let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date().addingTimeInterval(UPDATE_INTERVAL_IN_MINUTES * 60), createDefaultAdminPlayer: true)
         let update = simulation.updateSimulation(currentDate: Date().addingTimeInterval(UPDATE_INTERVAL_IN_MINUTES * 30))
         
         XCTAssertEqual(update.tickCount, simulation.tickCount, " ticks")
@@ -40,7 +40,7 @@ final class SimulationTests : XCTestCase {
         // let's assume gamedate is one year from now.
         let gameDate = Date().addingTimeInterval(24*60*60*365)
         
-        let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
+        let simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date(), createDefaultAdminPlayer: true)
         let update = simulation.updateSimulation(currentDate: Date().addingTimeInterval(UPDATE_INTERVAL_IN_MINUTES * 60 * 4))
         
         // if this fails, it is usually because simulation update time was hardcoded to a different value (in 'Simulation.swift')
@@ -51,7 +51,7 @@ final class SimulationTests : XCTestCase {
         // let's assume gamedate is one year from now.
         let gameDate = Date().addingTimeInterval(24*60*60*365)
         
-        var simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
+        var simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date(), createDefaultAdminPlayer: true)
         simulation = try simulation.createPlayer(emailAddress: "example@example.com", name: "testUser").updatedSimulation
         let update = simulation.updateSimulation(currentDate: Date().addingTimeInterval(UPDATE_INTERVAL_IN_MINUTES * 60 * 4))
         
@@ -61,7 +61,7 @@ final class SimulationTests : XCTestCase {
     
     func testUpdateMission() throws {
         let gameDate = Date().addingTimeInterval(Double(SECONDS_IN_YEAR))
-        var simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
+        var simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date(), createDefaultAdminPlayer: true)
         let playerCreateResult = try simulation.createPlayer(emailAddress: "test@test.com", name: "test")
         var player = playerCreateResult.newPlayer
         
@@ -86,7 +86,7 @@ final class SimulationTests : XCTestCase {
     
     func testUpdateAdvancesPlayerImprovementBuildProgress() throws {
         let gameDate = Date().addingTimeInterval(Double(SECONDS_IN_YEAR))
-        var simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
+        var simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date(), createDefaultAdminPlayer: true)
         let createPlayerResult = try simulation.createPlayer(emailAddress: "example@example.com", name: "testUser")
         simulation = createPlayerResult.updatedSimulation
         var player = createPlayerResult.newPlayer
@@ -108,7 +108,7 @@ final class SimulationTests : XCTestCase {
     
     func testUpdateTriggersImprovementEffectInPlayer() throws {
         let gameDate = Date().addingTimeInterval(Double(SECONDS_IN_YEAR))
-        var simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
+        var simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date(), createDefaultAdminPlayer: true)
         
         let improvement = Improvement.getImprovementByName(.PrefabFurniture)!
         
@@ -129,7 +129,7 @@ final class SimulationTests : XCTestCase {
     
     func testPlayerInvestsInComponent() throws {
         let gameDate = Date().addingTimeInterval(Double(SECONDS_IN_YEAR))
-        var simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date())
+        var simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date(), createDefaultAdminPlayer: true)
         let playerCreateResult = try simulation.createPlayer(emailAddress: "test@test.com", name: "test")
         var player = playerCreateResult.newPlayer
         simulation = playerCreateResult.updatedSimulation
@@ -152,7 +152,7 @@ final class SimulationTests : XCTestCase {
     func testDonateCashToPlayerInSameMission() throws {
         // public func donateToPlayerInSameMission(donatingPlayer: Player, receivingPlayer: Player, techPoints: Int)
         
-        var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date())
+        var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date(), createDefaultAdminPlayer: true)
         
         let playerCreateResult1 = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1")
         var player1 = playerCreateResult1.newPlayer
@@ -175,7 +175,7 @@ final class SimulationTests : XCTestCase {
     }
     
     func testDonateTechToPlayerInSameMission() throws {
-        var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date())
+        var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date(), createDefaultAdminPlayer: true)
         
         let playerCreateResult1 = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1")
         var player1 = playerCreateResult1.newPlayer
@@ -197,7 +197,7 @@ final class SimulationTests : XCTestCase {
     }
     
     func testCreateMission() throws {
-        var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date())
+        var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date(), createDefaultAdminPlayer: true)
         
         let playerCreateResult = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1")
         let player = playerCreateResult.newPlayer
@@ -210,7 +210,7 @@ final class SimulationTests : XCTestCase {
     }
     
     func testReplacePlayer() throws {
-        var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date())
+        var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date(), createDefaultAdminPlayer: true)
         
         let playerCreateResult = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1")
         let player = playerCreateResult.newPlayer
@@ -229,7 +229,7 @@ final class SimulationTests : XCTestCase {
     }
     
     func testReplaceMission() throws {
-        var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date())
+        var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date(), createDefaultAdminPlayer: true)
         
         let playerCreateResult = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1")
         let player = playerCreateResult.newPlayer
@@ -251,7 +251,7 @@ final class SimulationTests : XCTestCase {
     }
     
     func testGetSupportedMissionForPlayer() throws {
-        var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date())
+        var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date(), createDefaultAdminPlayer: true)
         
         let playerCreateResult = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1")
         var player = playerCreateResult.newPlayer
@@ -266,7 +266,7 @@ final class SimulationTests : XCTestCase {
     }
     
     func testCreatePlayer() throws {
-        var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date())
+        var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date(), createDefaultAdminPlayer: true)
         XCTAssertEqual(simulation.players.count, 1, "players")
         
         let playerCreateResult = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1")
