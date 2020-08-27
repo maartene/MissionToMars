@@ -23,8 +23,16 @@ class FrontEndController: RouteCollection {
     
     init() {
         let dataDir = Environment.get("DATA_DIR") ?? ""
+        
         if let loadedSimulation = Simulation.load(path: dataDir) {
             simulation = loadedSimulation
+            if let adminPlayer = simulation.players.first(where: { player in
+                player.isAdmin
+            }) {
+                print("Found admin player with username: \(adminPlayer.name), email: \(adminPlayer.emailAddress) and id: \(adminPlayer.id)")
+            } else {
+                print("Did not find any admin player. Simulation might not work correctly.")
+            }
         } else {
             print("Could not load simulation, generating a new one.")
             simulation = Simulation(tickCount: 0, gameDate: Date().addingTimeInterval(TimeInterval(SECONDS_IN_YEAR)), nextUpdateDate: Date())
@@ -80,7 +88,12 @@ class FrontEndController: RouteCollection {
             }
             
             try req.session()["playerID"] = idString
-            return req.redirect(to: "/main")
+            if self.simulation.state == .admin {
+                return req.redirect(to: "/admin")
+            } else {
+                return req.redirect(to: "/main")
+            }
+            
         }
         
         router.get("main") { req in
@@ -102,7 +115,7 @@ class FrontEndController: RouteCollection {
         
         func mainPage(req: Request, page: String) throws -> Future<View> {
             guard let id = self.getPlayerIDFromSession(on: req) else {
-                return try req.view().render("index")
+                return try req.view().render("index", ["state": simulation.state])
             }
             
             if simulationIsUpdating {
@@ -120,12 +133,13 @@ class FrontEndController: RouteCollection {
                 queue.addOperation {
                     let dataDir = Environment.get("DATA_DIR") ?? ""
                     do {
-                        try copy.save(path: dataDir)
+                        let data = try copy.save(path: dataDir)
+                        try Storage.upload(bytes: data, fileName: "simulation", fileExtension: "json", folder: "data", on: req)
                     } catch {
                         print("failed to save simulation")
                     }
                 }
-                
+                                
                 simulationIsUpdating = false
             }
             
@@ -527,6 +541,7 @@ class FrontEndController: RouteCollection {
                 let backupFiles: [FileInfo]
                 let infoMessage: String?
                 let errorMessage: String?
+                let state: Simulation.SimulationState
             }
             
             let player = try self.getPlayerFromSession(on: req)
@@ -554,7 +569,7 @@ class FrontEndController: RouteCollection {
             
             let sortedFiles = files.sorted { file1, file2 in file1.modifiedDate > file2.modifiedDate }
             
-            let context = AdminContext(player: player, backupFiles: sortedFiles, infoMessage: self.infoMessages[player.id] ?? nil, errorMessage: self.errorMessages[player.id] ?? nil)
+            let context = AdminContext(player: player, backupFiles: sortedFiles, infoMessage: self.infoMessages[player.id] ?? nil, errorMessage: self.errorMessages[player.id] ?? nil, state: self.simulation.state)
             return try req.view().render("admin/admin", context)
         }
         
@@ -576,7 +591,7 @@ class FrontEndController: RouteCollection {
                 
                 let result = try Storage.upload(
                     bytes: data,
-                    fileName: "test",
+                    fileName: "simulation",
                     fileExtension: "json",
                     folder: "data",
                     on: req
@@ -589,6 +604,54 @@ class FrontEndController: RouteCollection {
             }
             
             return req.redirect(to: "/admin")
+        }
+        
+        router.get("admin", "leaveAdminMode") { req -> Response in
+            let player = try self.getPlayerFromSession(on: req)
+            guard player.isAdmin else {
+                throw Abort(.unauthorized, reason: "Player \(player.name) is not an admin.")
+            }
+            
+            guard self.simulation.state == .admin else {
+                throw Abort(.badRequest, reason: "Can only leave admin mode when simulation is in admin mode.")
+            }
+            
+            self.simulation.state = .running
+            return req.redirect(to: "/admin")
+        }
+        
+        router.get("admin", "enterAdminMode") { req -> Response in
+            let player = try self.getPlayerFromSession(on: req)
+            guard player.isAdmin else {
+                throw Abort(.unauthorized, reason: "Player \(player.name) is not an admin.")
+            }
+            
+            guard self.simulation.state != .admin else {
+                throw Abort(.badRequest, reason: "Can only enter admin mode when simulation is not already in admin mode.")
+            }
+            
+            self.simulation.state = .admin
+            return req.redirect(to: "/admin")
+        }
+        
+        router.get("admin", "load") { req -> Future<Response> in
+            let player = try self.getPlayerFromSession(on: req)
+            guard player.isAdmin else {
+                throw Abort(.unauthorized, reason: "Player \(player.name) is not an admin.")
+            }
+            
+            guard self.simulation.state == .admin else {
+                throw Abort(.badRequest, reason: "Loading of database is only allowed in 'Admin' state.")
+            }
+            
+            let S3Folder = Environment.get("DO_SPACES_FOLDER") ?? "default"
+            
+            return try Storage.get(path: "/\(S3Folder)/data/simulation.json", on: req).flatMap(to: Response.self) { response in
+                return try response.content.decode(Simulation.self, using: JSONDecoder()).map(to: Response.self) { simulation in
+                    self.simulation = simulation
+                    return req.redirect(to: "/admin")
+                }
+            }
         }
         
         router.get("admin", "restore", String.parameter, String.parameter) { req -> Response in
@@ -671,8 +734,12 @@ class FrontEndController: RouteCollection {
             return self.simulation.players
         }
         
+        router.get("debug", "getFileIndex") { req in
+            return try Storage.get(path: "/local/data/", on: req)
+        }
+        
         router.get() { req in
-            return try req.view().render("index")
+            return try req.view().render("index", ["state": self.simulation.state])
         }
         
         router.get("debug/dataDump") { req -> String in

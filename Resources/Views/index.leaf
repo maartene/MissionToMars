@@ -1,4 +1,11 @@
 #set("body") {
+    #if(state == 0) {
+            <div class="alert alert-dismissible alert-warning">
+                <h4 class="alert-heading">Admin mode active!</h4>
+                <p class="mb-0">Game is in maintenance (admin) mode. Only administrators can currently log in.<br/>
+            Players can try logging in again in a couple of minutes.</p>
+            </div>
+        }
     <div class="row m-3">
         <div class="col-lg"></div>
         <div class="col">
@@ -18,11 +25,13 @@
         <div class="col">&nbsp;</div>
         <div class="col-lg"></div>
     </div>
-    <div class="row m-3">
-        <div class="col-lg"></div>
-        <div class="col"><a href="/create/player" class="btn btn-success btn-block">Create new character</a></div>
-        <div class="col-lg"></div>
-    </div>
+    #if(state != 0) {
+        <div class="row m-3">
+            <div class="col-lg"></div>
+            <div class="col"><a href="/create/player" class="btn btn-success btn-block">Create new character</a></div>
+            <div class="col-lg"></div>
+        </div>
+    }
     <div class="row m-3">
         <div class="col-lg"></div>
         <div class="col">&nbsp;</div>

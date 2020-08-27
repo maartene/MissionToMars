@@ -19,6 +19,13 @@ public struct Simulation: Content {
 
     }
     
+    public enum SimulationState: Int, Codable {
+        case admin
+        case running
+    }
+    
+    public var state: SimulationState = .admin
+    
     public private(set) var missions = [Mission]()
     public private(set) var players = [Player]()
     
