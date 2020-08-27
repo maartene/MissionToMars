@@ -79,6 +79,11 @@ Earlier versions of this game used SQLite and PostgreSQL as persistence backend.
 Persistance is now the task of `Simulation.swift` that contains `load()` and `save()` functions. The initiazer in `FrontEndController.swift` first tries to load a simulation. If it fails, it creates a new one. Everytime the simulation update is triggered in the FrontEndController, the simulation.save() method is called to persist the game state.
 THIS MEANS THAT GAME STATE IS ONLY PERSISTED EVERY SO OFTEN AS THE GAME UPDATES. IF THE GAME CRASHES BETWEEN UPDATES, ALL CHANGES SINCE THE LAST UPDATE ARE LOST!
 
+### Environment variables
+M2M uses the following environment variables:
+
+Note: none are required for the application to work per se.
+
 ## Architecture - UI
 The UI is Leaf based. The most important Leaf view is `main.leaf` (called from `\main`). This shows the game dashboard, but also performs the following tasks:
 1. Calling `/main` checks  whether enough real time has passed to update the simulation;
@@ -93,7 +98,7 @@ The game provides some debug features:
 * Off course, the regular xcode debug features can be used.
 
 ## Contact details
-Need to contact me? Drop an email at maarten@thedreamweb.eu or twitter at [@maarten_engels](https://twitter.com/maarten_engels)
+Need to contact me? Drop an email at maarten@thedreamweb.eu or twitter at [@maarten_engels](https://twitter.com/maarten_engels) 
 
 ## Licensed assets & embedded media
 * [Solar theme](https://bootswatch.com/solar/) by [Thomas Park](https://thomaspark.co/) (MIT License)
