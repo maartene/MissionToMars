@@ -16,7 +16,7 @@ DerivedData/
 *.perspectivev3
 !default.perspectivev3
 xcuserdata/
-#.swiftpm
+.swiftpm
 
 ## Other
 *.moved-aside
@@ -73,4 +73,4 @@ fastlane/test_output
 
 # Misc
 Secrets/
-#.swiftpm/xcode/xcshareddata/xcschemes/MissionToMars.xcscheme
+.swiftpm/xcode/xcshareddata/xcschemes/MissionToMars.xcscheme
