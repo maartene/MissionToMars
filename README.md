@@ -20,6 +20,7 @@ You can play a playable build of version 0.0.15 on https://www.mission2mars.spac
 * Build improvements to get more cash per day, more value from research, improved production and the possibility to build mission parts
 * Stub for income;
 * Email integration using [MailJet](https://www.mailjet.com)
+* Persistence using Digital Ocean Spaces. This is easy to change to something like AWS S3.
 * There is a first tech tree implementation for stage one of missions.
 
 ### What's still to come
@@ -99,3 +100,4 @@ Need to contact me? Drop an email at maarten@thedreamweb.eu or twitter at [@maar
 * Icons for components, stages, technologies, company and improvements are from the [Free Icons from Streamline Icons pack](https://www.streamlineicons.com/).
 * Paul Hudson's "vapor-clean" template is the basis of this product. You can find it here. https://github.com/twostraws/vapor-clean (MIT License). Also, his book was/is invaluable if you want to take Vapor development further: https://www.hackingwithswift.com/store/server-side-swift  
 * Favicon is based on a Mars image from NASA. Apart from being a very esthetically pleasing image, it also shows Gale Crater: a possible Mars landing site. Original file:  https://www.nasa.gov/mission_pages/msl/multimedia/pia14293-amended.html 
+* Digital Ocean Spaces integration using [Storage](https://github.com/nodes-vapor/storage).
