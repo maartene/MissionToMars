@@ -7,10 +7,9 @@
 
 import Foundation
 
-import App
+@testable import App
 import Dispatch
 import XCTest
-@testable import Model
 
 final class ComponentTests : XCTestCase {
     func testStartBuildComponent() throws {

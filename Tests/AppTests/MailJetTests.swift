@@ -7,10 +7,9 @@
 
 import Foundation
 import Dispatch
-import App
+@testable import App
 import Vapor
 import XCTest
-@testable import MailJet
 
 
 class MailJetTests: XCTestCase {
@@ -19,30 +18,26 @@ class MailJetTests: XCTestCase {
     
     override func setUp() {
         do {
-            var config = Config.default()
             var env = try Environment.detect()
-            var services = Services.default()
-            
+
             // this line clears the command-line arguments
             env.commandInput.arguments = []
-            
-            try App.configure(&config, &env, &services)
 
-            app = try Application(
-                config: config,
-                environment: env,
-                services: services
-            )
+            try LoggingSystem.bootstrap(from: &env)
+
+            let app = Application(env)
+            defer { app.shutdown() }
             
-            try App.boot(app)
-            try app.asyncRun().wait()
+            try configure(app)
+            try app.run()
+                        
         } catch {
             fatalError("Failed to launch Vapor server: \(error.localizedDescription)")
         }
     }
     
     override func tearDown() {
-        try? app.runningServer?.close().wait()
+        app.shutdown()
     }
     
     func disable_testSendTestMail() throws {

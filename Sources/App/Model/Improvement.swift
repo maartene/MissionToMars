@@ -6,7 +6,7 @@
 //
 
 import Foundation
-import Vapor
+//import Vapor
 
 public enum Tag: Int, Codable {
     case Finance

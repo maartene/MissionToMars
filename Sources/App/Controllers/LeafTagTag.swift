@@ -6,33 +6,31 @@
 //
 
 import Foundation
-import Async
 import Leaf
-import Model
 
-public final class ImprovementTagTag: TagRenderer {
-    public func render(tag: TagContext) throws -> EventLoopFuture<TemplateData> {
-        try tag.requireParameterCount(1)
+public struct ImprovementTagTag: LeafTag {
+    static let name = "tag"
+    
+    public func render(_ ctx: LeafContext) throws -> LeafData {
+        try ctx.requireParameterCount(1)
         
-        return Future.map(on: tag.container) {
-            if let improvementTag = Tag.init(rawValue: tag.parameters[0].int ?? -1) {
-                switch improvementTag {
-                case .AI:
-                    return .string("AI")
-                case .Biotech:
-                    return .string("Biotech")
-                case .Construction:
-                    return .string("Construction")
-                case .Finance:
-                    return .string("Finance")
-                case .SpaceTravel:
-                    return .string("Space Travel")
-                case .Retail:
-                    return .string("Retail")
-                }
+        if let improvementTag = Tag.init(rawValue: ctx.parameters[0].int ?? -1) {
+            switch improvementTag {
+            case .AI:
+                return .string("AI")
+            case .Biotech:
+                return .string("Biotech")
+            case .Construction:
+                return .string("Construction")
+            case .Finance:
+                return .string("Finance")
+            case .SpaceTravel:
+                return .string("Space Travel")
+            case .Retail:
+                return .string("Retail")
             }
-            
-            return .null
         }
+        
+        return .trueNil
     }
 }

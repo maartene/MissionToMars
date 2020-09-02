@@ -1,14 +1,20 @@
 import App
-import Service
+//import Service
 import Vapor
 import Foundation
 
 // The contents of main are wrapped in a do/catch block because any errors that get raised to the top level will crash Xcode
 do {
-    var config = Config.default()
     var env = try Environment.detect()
-    var services = Services.default()
+    try LoggingSystem.bootstrap(from: &env)
     
+    let app = Application(env)
+    defer { app.shutdown() }
+    
+    try configure(app)
+    try app.run()
+    
+    /*
     try App.configure(&config, &env, &services)
     
     var app: Application?
@@ -34,6 +40,7 @@ do {
     try App.boot(app!)
     
     try app!.run()
+     */
 } catch {
     print(error)
     exit(1)

@@ -5,23 +5,23 @@
 //  Created by Maarten Engels on 24/12/2019.
 //
 
-import Async
+import Vapor
 import Leaf
 
-public final class DateTag: TagRenderer {
-    public func render(tag: TagContext) throws -> EventLoopFuture<TemplateData> {
-        try tag.requireParameterCount(1)
+public struct DateTag: LeafTag {
+    static let name = "date"
+    
+    public func render(_ ctx: LeafContext) throws -> LeafData {
+        try ctx.requireParameterCount(1)
         
-        return Future.map(on: tag.container) {
-            if let dateDouble = tag.parameters[0].double {
-                let date = Date(timeIntervalSince1970: dateDouble)
-                let formatter = DateFormatter()
-                formatter.setLocalizedDateFormatFromTemplate("MMMMdyyyy")
-                //print("gameDate: \(gameDate) gameDateString \(formatter.string(from: gameDate))")
-                return .string(formatter.string(from: date))
-            } else {
-                return .null
-            }
+        if let dateDouble = ctx.parameters[0].double {
+            let date = Date(timeIntervalSince1970: dateDouble)
+            let formatter = DateFormatter()
+            formatter.setLocalizedDateFormatFromTemplate("MMMMdyyyy")
+            //print("gameDate: \(gameDate) gameDateString \(formatter.string(from: gameDate))")
+            return .string(formatter.string(from: date))
+        } else {
+            return .trueNil
         }
     }
 }

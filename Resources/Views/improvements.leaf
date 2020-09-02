@@ -1,58 +1,35 @@
-#set("body") {
-    <h2>Which improvement do you wish to build?</h2>
-    <div>
-      <!--<div class="container">
-            <div class="row">
-                <div class="col-md-1"></div>
-                <div class="col-md">Description</div>
-                <div class="col-md-2">Effects</div>
-                <div class="col-md-1">Tags</div>
-                <div class="col-md-1">Actions</div>
+#extend("master"):
+    #export("body"):
+        <h2>Which improvement do you wish to build?</h2>
+        <div>
+            <div class="table-responsive">
+                <table class="table">
+                <thead>
+                    <tr>
+                        <th scope="col"></th>
+                        <th scope="col">Description</th>
+                        <th scope="col">Effects</th>
+                        <th scope="col">Tags</th>
+                        <th scope="col">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                #for(improvement in possibleImprovements):
+                    <tr>
+                        <td><img src="/images/Improvements/#(improvement.shortName)-w.png"/></td>
+                        <td><b>#(improvement.name)</b> #(improvement.description)<br/>
+                            <span class="text-primary">Cost: $#cash(improvement.cost) - Build time: #deczero(improvement.buildTime / buildPointsPerTick) days</span>
+                        </td>
+                        <td><span class="text-info">#improvementEffects(improvement.shortName)</span></td>
+                        <td>#for(tag in improvement.tags): <span class="badge badge-success">#tag(tag)</span> #endfor</td>
+                        <td><a href="/build/improvements/#(improvement.shortName)" class="btn btn-sm btn-primary #if(improvement.cost > player.cash): disabled #endif">Build</a>
+                        </td>
+                    </tr>
+                #endfor
+                </tbody>
+                </table>
             </div>
-        #for(improvement in possibleImprovements) {
-            <div class="row mt-3">
-                <div class="col-md-1"><img src="/images/Improvements/#(improvement.shortName)-w.png"/></div>
-                <div class="col-md"><b>#(improvement.name)</b> #(improvement.description)<br/>
-                    Cost: $#cash(improvement.cost)
-                </div>
-                <div class="col-md-2"><span class="text-info">#improvementEffects(improvement.shortName)</span></div>
-                <div class="col-md-1">#for(tag in improvement.tags) { <span class="badge badge-success">#tag(tag)</span> }</div>
-                <div class="col-md-1"><a href="/build/improvements/#(improvement.shortName)" class="btn btn-sm btn-primary #if(improvement.cost > player.cash) { disabled }">Build</a>
-                </div>
-            </div>
-        }
+        <p class="pt-2"><a href="/improvements" class="btn btn-secondary">Back</a></p>
         </div>
-      </div>
-    -->
-      <div class="table-responsive">
-        <table class="table">
-        <thead>
-            <tr>
-                <th scope="col"></th>
-                <th scope="col">Description</th>
-                <th scope="col">Effects</th>
-                <th scope="col">Tags</th>
-                <th scope="col">Actions</th>
-            </tr>
-        </thead>
-        <tbody>
-        #for(improvement in possibleImprovements) {
-            <tr>
-                <td><img src="/images/Improvements/#(improvement.shortName)-w.png"/></td>
-                <td><b>#(improvement.name)</b> #(improvement.description)<br/>
-                    <span class="text-primary">Cost: $#cash(improvement.cost) - Build time: #dec0(improvement.buildTime / buildPointsPerTick) days</span>
-                </td>
-                <td><span class="text-info">#improvementEffects(improvement.shortName)</span></td>
-                <td>#for(tag in improvement.tags) { <span class="badge badge-success">#tag(tag)</span> }</td>
-                <td><a href="/build/improvements/#(improvement.shortName)" class="btn btn-sm btn-primary #if(improvement.cost > player.cash) { disabled }">Build</a>
-                </td>
-            </tr>
-        }
-        </tbody>
-        </table>
-      </div>
-      <p class="pt-2"><a href="/improvements" class="btn btn-secondary">Back</a></p>
-    </div>
-}
-
-#embed("master")
+    #endexport
+#endextend

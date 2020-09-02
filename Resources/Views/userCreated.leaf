@@ -1,16 +1,16 @@
-#set("body") {
-    #if(uuid != "unknown") {
-        <h2>Welcome!</h2>
-        <h3>Please remember your unique code: <span class="text-primary">#(uuid)</span></h3>
-        <p>An email was sent to your email address <span class="text-success">#(email)</span> with this information.</p>
-        <p><a href="/" class="btn btn-success">Login</a></p>
-    }
+#extend("master"):
+    #export("body"):
+        #if(uuid != "unknown"):
+            <h2>Welcome!</h2>
+            <h3>Please remember your unique code: <span class="text-primary">#(uuid)</span></h3>
+            <p>An email was sent to your email address <span class="text-success">#(email)</span> with this information.</p>
+            <p><a href="/" class="btn btn-success">Login</a></p>
+        #endif
 
-    #if(errorMessage != "noError") {
-        <h2>Oh ooh!</h2>
-        <p class="text-warning">#(errorMessage)</p>
-        <a class="btn btn-primary" href="/create/player">Back</a>
-    }
-}
-
-#embed("master")
+        #if(errorMessage != "noError"):
+            <h2>Oh ooh!</h2>
+            <p class="text-warning">#(errorMessage)</p>
+            <a class="btn btn-primary" href="/create/player">Back</a>
+        #endif
+    #endexport
+#endextend

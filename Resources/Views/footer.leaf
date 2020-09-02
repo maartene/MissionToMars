@@ -1,5 +1,6 @@
-
+#export("footer")
 <p>Logged in user: #(player.username) (#(player.id))</p>
 <p><a href="https://bootswatch.com/solar/">Solar theme</a> by <a href="https://thomaspark.co/">Thomas Park</a><br />
 Icons for components, stages, technologies, company and improvements are from the <a href="https://www.streamlineicons.com/" target="_blank">Free Icons from Streamline Icons pack</a>.</p> 
 <p><a href="https://www.thedreamweb.eu" target="_blank"><img src="/images/dreamweblogo.png" width="32"/></a>&nbsp;&nbsp;&copy; <a href="https://www.thedreamweb.eu" target="_blank">thedreamweb.eu</a>, 2020. Support: <span class="text-success">support @ mission2mars.space</span></p>
+#endexport

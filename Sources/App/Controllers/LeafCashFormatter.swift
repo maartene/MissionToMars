@@ -5,20 +5,17 @@
 //  Created by Maarten Engels on 24/12/2019.
 //
 
-import Async
+import Vapor
 import Leaf
-import Model
 
-public final class CashTag: TagRenderer {
-    public func render(tag: TagContext) throws -> EventLoopFuture<TemplateData> {
-        try tag.requireParameterCount(1)
-        
-        return Future.map(on: tag.container) {
-            if let double = tag.parameters[0].double {
-                return .string(cashFormatter(double))
-            } else {
-                return .null
-            }
+public struct CashTag: LeafTag {
+    static let name = "cash"
+    public func render(_ ctx: LeafContext) throws -> LeafData {
+        try ctx.requireParameterCount(1)
+        if let double = ctx.parameters[0].double {
+            return .string(cashFormatter(double))
+        } else {
+            return .trueNil
         }
     }
 }
