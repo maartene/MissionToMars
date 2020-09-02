@@ -5,10 +5,9 @@
 //  Created by Maarten Engels on 31/12/2019.
 //
 
-import App
+@testable import App
 import Dispatch
 import XCTest
-@testable import Model
 
 class TechnologyTests: XCTestCase {
 

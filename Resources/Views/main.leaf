@@ -1,46 +1,35 @@
-#set("body") {
-    <h2>Welcome #(player.name)! #if(player.isAdmin) {&nbsp;&nbsp;<a href="/admin" class="btn btn-lg btn-danger">Admin</a>}</h2>
-    #if(errorMessage) {
-        <div class="alert alert-dismissible alert-warning">
-            <button type="button" class="close" data-dismiss="alert">&times;</button>
-            <p class="mb-0">#(errorMessage)</p>
+#extend("master"):
+    #export("body"):
+        <h2>Welcome #(player.name)! #if(player.isAdmin):&nbsp;&nbsp;<a href="/admin" class="btn btn-lg btn-danger">Admin</a>#endif</h2>
+        #if(errorMessage):
+            <div class="alert alert-dismissible alert-warning">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <p class="mb-0">#(errorMessage)</p>
+            </div>
+        #endif
+        #if(infoMessage):
+            <div class="alert alert-dismissible alert-success">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                #(infoMessage)
+            </div>
+        #endif
+        <ul class="nav nav-tabs">
+            <li class="nav-item">
+                <a class="nav-link #if(page=="main") {active}" href="/main">Overview</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link #if(page=="mission") {active}" href="/mission">Mission</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link #if(page=="technology") {active}" href="/technology">Technology</a>
+            </li>
+            <li class="nav-item">
+                <a class="nav-link #if(page=="improvements") {active}" href="/improvements">Improvements</a>
+            </li>
+        </ul>
+        
+        <div class="container p-3 mt-3">
+            #import("main_content")
         </div>
-    }
-    #if(infoMessage) {
-        <div class="alert alert-dismissible alert-success">
-            <button type="button" class="close" data-dismiss="alert">&times;</button>
-            #(infoMessage)
-        </div>
-    }
-    <ul class="nav nav-tabs">
-        <li class="nav-item">
-            <a class="nav-link #if(page=="main") {active}" href="/main">Overview</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link #if(page=="mission") {active}" href="/mission">Mission</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link #if(page=="technology") {active}" href="/technology">Technology</a>
-        </li>
-        <li class="nav-item">
-            <a class="nav-link #if(page=="improvements") {active}" href="/improvements">Improvements</a>
-        </li>
-    </ul>
-    
-    <div class="container p-3 mt-3">
-        #if(page=="main") {
-            #embed("main_main")
-        }
-        #if(page=="mission") {
-            #embed("main_mission")
-        }
-        #if(page=="technology") {
-            #embed("main_technology")
-        }
-        #if(page=="improvements") {
-            #embed("main_improvements")
-        }
-    </div>
-}
-
-#embed("master")
+    #endexport
+#endextend

@@ -1,45 +1,38 @@
 import Vapor
-import Model
 import Leaf
-import Storage
 
 /// Called before your application initializes.
 ///
 /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/structure/#configureswift)
-public func configure(
-    _ config: inout Config,
-    _ env: inout Environment,
-    _ services: inout Services
-) throws {
+public func configure(_ app: Application) throws {
+    app.simulation = Simulation(id: UUID(), tickCount: 0, gameDate: Date(), nextUpdateDate: Date(), createDefaultAdminPlayer: true)
+    app.simulation.state = .running
+    
     // Register routes to the router
-    let router = EngineRouter.default()
-    try routes(router)
-    services.register(router, as: Router.self)
-    
-    // Configure LEAF
-    try services.register(LeafProvider())
-    config.prefer(LeafRenderer.self, for: ViewRenderer.self)
-    // Configure custom tags
-    var tags = LeafTagConfig.default()
-    tags.use(DateTag(), as: "date")
-    tags.use(DecimalTag(), as: "decimal")
-    tags.use(ZeroDecimalTag(), as: "dec0")
-    tags.use(CashTag(), as: "cash")
-    tags.use(ComponentPrereqTag(), as: "compPrereqs")
-    tags.use(ImprovementTagTag(), as: "tag")
-    tags.use(ImprovementEffectTag(), as: "improvementEffects")
-    tags.use(TechnologyUnlocksImprovementsTag(), as: "techUnlocksImprovements")
-    tags.use(TechnologyUnlocksTechnologiesTag(), as: "techUnlocksTechnologies")
-    tags.use(TechnologyUnlocksComponentsTag(), as: "techUnlocksComponents")
-    services.register(tags)
+    try routes(app)
 
-    // Register middleware (file serving and sessions)
-    var middlewares = MiddlewareConfig() // Create _empty_ middleware config
-    middlewares.use(FileMiddleware.self) // Serves files from `Public/` directory
-    middlewares.use(ErrorMiddleware.self) // Catches errors and converts to HTTP response
-    middlewares.use(SessionsMiddleware.self)
-    services.register(middlewares)
+    // Configure LEAF
+    app.views.use(.leaf)
+
+    // Configure custom tags
+    app.leaf.tags[CashTag.name] = CashTag()
+    app.leaf.tags[TechnologyUnlocksImprovementsTag.name] = TechnologyUnlocksImprovementsTag()
+    app.leaf.tags[TechnologyUnlocksTechnologiesTag.name] = TechnologyUnlocksTechnologiesTag()
+    app.leaf.tags[TechnologyUnlocksComponentsTag.name] = TechnologyUnlocksComponentsTag()
+    app.leaf.tags[DecimalTag.name] = DecimalTag()
+    app.leaf.tags[ZeroDecimalTag.name] = ZeroDecimalTag()
+    app.leaf.tags[ComponentPrereqTag.name] = ComponentPrereqTag()
+    app.leaf.tags[DateTag.name] = DateTag()
+    app.leaf.tags[ImprovementEffectTag.name] = ImprovementEffectTag()
+    app.leaf.tags[ImprovementTagTag.name] = ImprovementTagTag()
     
+ 
+ // Register middleware (file serving and sessions)
+    app.middleware.use(FileMiddleware(publicDirectory: "Public"))
+    app.middleware.use(ErrorMiddleware.default(environment: app.environment))
+    app.middleware.use(app.sessions.middleware)
+    
+    /*
     // Digital Ocean Spaces integration
     if let S3PublicKey = Environment.get("DO_SPACES_ACCESS_KEY"), let S3PrivateKey = Environment.get("DO_SPACES_SECRET") {
         let S3Folder = Environment.get("DO_SPACES_FOLDER") ?? "default"
@@ -48,8 +41,7 @@ public func configure(
 
     }
         
+    */
     
-    
-    
-    config.prefer(MemoryKeyedCache.self, for: KeyedCache.self)
+    //config.prefer(MemoryKeyedCache.self, for: KeyedCache.self)
 }

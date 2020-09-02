@@ -1,5 +1,5 @@
-#set("body") {
-    <h2>Congratulations! You finished the game!</h2>
-}
-
-#embed("master")
+#extend("master"):
+    #export("body"):
+        <h2>Congratulations! You finished the game!</h2>
+    #endexport
+#endextend

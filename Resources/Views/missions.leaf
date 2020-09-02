@@ -1,16 +1,16 @@
-#set("body") {
+#extend("master"):
+  #export("body"):
     <h2>Which mission do you want to support?</h2>
     <p>Note: supporting a mission will share your e-mailaddress with the mission owner.</p>
     <div>
       <ul class="list-group">
-        #for(mission in missions) {
+        #for(mission in missions):
           <li class="list-group-item">#(mission.missionName)<br/>
             #(mission.owningPlayerName) <a href="/support/mission/#(mission.id)" class="btn btn-sm btn-primary">Support this mission</a>
           </li>
-        } 
+        #endfor 
       </ul>
       <a href="/mission" class="btn btn-secondary">Back</a>
     </div>
-}
-
-#embed("master")
+  #endexport
+#endextend

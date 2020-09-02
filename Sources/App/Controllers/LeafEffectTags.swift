@@ -6,22 +6,20 @@
 //
 
 import Foundation
-import Async
 import Leaf
-import Model
 
-public final class ImprovementEffectTag: TagRenderer {
-    public func render(tag: TagContext) throws -> EventLoopFuture<TemplateData> {
-        try tag.requireParameterCount(1)
+public struct ImprovementEffectTag: LeafTag {
+    static let name = "improvementEffects"
+    
+    public func render(_ ctx: LeafContext) throws -> LeafData {
+        try ctx.requireParameterCount(1)
         
-        return Future.map(on: tag.container) {
-            if let improvementShortName = Improvement.ShortName(rawValue: tag.parameters[0].int ?? -1) {
-                if let improvement = Improvement.getImprovementByName(improvementShortName) {
-                    return .string(improvement.effectDescription)
-                }
+        if let improvementShortName = Improvement.ShortName(rawValue: ctx.parameters[0].int ?? -1) {
+            if let improvement = Improvement.getImprovementByName(improvementShortName) {
+                return .string(improvement.effectDescription)
             }
-            
-            return .null
         }
+        
+        return .trueNil
     }
 }

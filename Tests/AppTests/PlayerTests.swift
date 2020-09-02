@@ -5,10 +5,9 @@
 //  Created by Maarten Engels on 08/12/2019.
 //
 
-import App
+@testable import App
 import Dispatch
 import XCTest
-@testable import Model
 
 final class PlayerTests : XCTestCase {
 

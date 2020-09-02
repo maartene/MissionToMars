@@ -1,26 +1,27 @@
-#set("body") {
+#extend("master"):
+  #export("body"):
     <h2>Admin game</h2>
-    #if(errorMessage) {
+    #if(errorMessage):
         <div class="alert alert-dismissible alert-warning">
             <button type="button" class="close" data-dismiss="alert">&times;</button>
             <p class="mb-0">#(errorMessage)</p>
         </div>
-    }
-    #if(infoMessage) {
+    #endif
+    #if(infoMessage): 
         <div class="alert alert-dismissible alert-success">
             <button type="button" class="close" data-dismiss="alert">&times;</button>
             #(infoMessage)
         </div>
-    }
+    #endif
     <h3>Administration</h3>
     <p>Simulation State: #if(state == 0) { admin mode } else { running }</p>
-    #if(state == 0) {
+    #if(state == 0):
       <p><a href="/admin/load" class="btn btn-warning btn-lg">Load Simulation</a>&nbsp;<a href="/admin/save" class="btn btn-primary btn-lg">Save Simulation</a></p>
       <p><a href="/admin/leaveAdminMode" class="btn btn-primary btn-lg">Leave Admin Mode</a></p>
-    } else {
+    #else:
       <p><a href="/admin/save" class="btn btn-primary btn-lg">Save Simulation</a></p>
       <p><a href="/admin/enterAdminMode" class="btn btn-primary btn-lg">Enter Admin Mode</a></p>
-    }
+    #endif
 
     <h3>User Management</h3>
     <div class="table-responsive">
@@ -33,42 +34,21 @@
           <td>Actions</td>
         </tr>
       </thead>
-      #for(p in players) {
+      #for(p in players):
         <tr>
           <td>#(p.name)</td>
           <td>#(p.emailAddress)</td>
-          <td>#if(p.isAdmin) {<span class="badge badge-sm badge-info">Admin</span> } &nbsp;</td>
-          <td>#if(p.isAdmin == false) {
+          <td>#if(p.isAdmin): <span class="badge badge-sm badge-info">Admin</span> #endif &nbsp;</td>
+          <td>#if(p.isAdmin == false):
             <a href="/admin/bless/#(p.name)" class="btn btn-sm btn-info">Bless</a>
-          } else {
+          #else:
             <a href="/admin/unbless/#(p.name)" class="btn btn-sm btn-info #if(p.name == player.name) { disabled }">Unbless</a>
-          }
+          #endif
         </tr>
-      }
+      #endfor
       </table>
     </div>
 
-    <!--<h3>Backup/Restore</h3>
-    <div class="table-responsive">
-      <table class="table">
-      <thead>
-        <tr>
-          <td>Filename</td>
-          <td>Modified</td>
-          <td>Created</td>
-          <td>Actions</td>
-        </tr>
-      </thead>
-      #for(file in backupFiles) {
-      <tr>
-        <td>#(file.fileName) #if(file.isCurrentSimulation) {<span class="badge badge-primary">Active Simulation</span>}</td>
-        <td>#(file.modifiedDate)</td>
-        <td>#(file.creationDate)</td>
-        <td>#if(file.isCurrentSimulation) {<a href="/admin/backupnow" class="btn btn-sm btn-primary">Backup now</a>} else {<a href="/admin/restore/#(file.fileName)/replace" class="btn btn-sm btn-danger">Restore</a>&nbsp;<a href="/admin/restore/#(file.fileName)/testMode" class="btn btn-sm btn-info">Check</a>}</td>
-      </tr>
-      }
-      </table>
-    </div>-->
-}
-
-#embed("master")
+    
+  #endexport
+#endextend

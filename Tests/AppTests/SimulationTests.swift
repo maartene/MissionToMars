@@ -8,7 +8,7 @@
 import Foundation
 import Dispatch
 import XCTest
-@testable import Model
+@testable import App
 
 final class SimulationTests : XCTestCase {
     func testAdvanceSimulationWithLargeEnoughTimeDifference() throws {

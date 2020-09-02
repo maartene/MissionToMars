@@ -7,33 +7,32 @@
 
 import Foundation
 
-import Async
 import Leaf
 
-public final class DecimalTag: TagRenderer {
-    public func render(tag: TagContext) throws -> EventLoopFuture<TemplateData> {
-        try tag.requireParameterCount(1)
+public struct DecimalTag: LeafTag {
+    static let name = "decimal"
+    
+    public func render(_ ctx: LeafContext) throws -> LeafData {
+        try ctx.requireParameterCount(1)
         
-        return Future.map(on: tag.container) {
-            if let double = tag.parameters[0].double {
-                return .string(String(format: "%.2f", double))
-            } else {
-                return .null
-            }
+        if let double = ctx.parameters[0].double {
+            return .string(String(format: "%.2f", double))
+        } else {
+            return .trueNil
         }
     }
 }
 
-public final class ZeroDecimalTag: TagRenderer {
-    public func render(tag: TagContext) throws -> EventLoopFuture<TemplateData> {
-        try tag.requireParameterCount(1)
+public struct ZeroDecimalTag: LeafTag {
+    static let name = "deczero"
+    
+    public func render(_ ctx: LeafContext) throws -> LeafData {
+        try ctx.requireParameterCount(1)
         
-        return Future.map(on: tag.container) {
-            if let double = tag.parameters[0].double {
-                return .string(String(Int(double)))
-            } else {
-                return .null
-            }
+        if let double = ctx.parameters[0].double {
+            return .string(String(Int(double)))
+        } else {
+            return .trueNil
         }
     }
 }

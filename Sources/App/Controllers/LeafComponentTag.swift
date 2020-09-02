@@ -6,23 +6,20 @@
 //
 
 import Foundation
-import Async
 import Leaf
-import Model
 
-public final class ComponentPrereqTag: TagRenderer {
-    public func render(tag: TagContext) throws -> EventLoopFuture<TemplateData> {
-        try tag.requireParameterCount(1)
+public struct ComponentPrereqTag: LeafTag {
+    static let name = "compPrereqs"
+    
+    public func render(_ ctx: LeafContext) throws -> LeafData {
+        try ctx.requireParameterCount(1)
         
-        return Future.map(on: tag.container) {
-            if let shortName = Component.ShortName.init(rawValue: tag.parameters[0].string ?? "") {
-                if let component = Component.getComponentByName(shortName) {
-                    let prereqString = component.requiredTechnologies.map({tech in tech.name}).joined(separator: " ")
-                    return .string(prereqString)
-                }
+        if let shortName = Component.ShortName.init(rawValue: ctx.parameters[0].string ?? "") {
+            if let component = Component.getComponentByName(shortName) {
+                let prereqString = component.requiredTechnologies.map({tech in tech.name}).joined(separator: " ")
+                return .string(prereqString)
             }
-            
-            return .null
         }
+        return .trueNil
     }
 }
