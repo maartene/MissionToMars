@@ -6,7 +6,7 @@ import Leaf
 /// [Learn More →](https://docs.vapor.codes/3.0/getting-started/structure/#configureswift)
 public func configure(_ app: Application) throws {
     app.simulation = Simulation(id: UUID(), tickCount: 0, gameDate: Date(), nextUpdateDate: Date(), createDefaultAdminPlayer: true)
-    app.simulation.state = .running
+    //app.simulation.state = .running
     
     // Register routes to the router
     try routes(app)
