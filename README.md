@@ -1,5 +1,5 @@
-![Swift 5.1](http://img.shields.io/badge/swift-5.1-orange.svg) 
-![Vapor v3.3](https://img.shields.io/badge/vapor-3.3-blue) [![CircleCI](https://circleci.com/gh/maartene/MissionToMars.svg?style=shield)](https://circleci.com/gh/maartene/MissionToMars) ![MIT License](http://img.shields.io/badge/license-MIT-brightgreen.svg) 
+![Swift 5.2](http://img.shields.io/badge/swift-5.2-orange.svg) 
+![Vapor v4.0](https://img.shields.io/badge/vapor-4.0-blue) [![CircleCI](https://circleci.com/gh/maartene/MissionToMars.svg?style=shield)](https://circleci.com/gh/maartene/MissionToMars) ![MIT License](http://img.shields.io/badge/license-MIT-brightgreen.svg) 
 
 # Mission To Mars
 Getting to Mars is hard. Very hard. This game aims to become a "hard-scifi" simulation of the challenges to get to Mars.
@@ -114,4 +114,4 @@ Need to contact me? Drop an email at maarten@thedreamweb.eu or twitter at [@maar
 * Icons for components, stages, technologies, company and improvements are from the [Free Icons from Streamline Icons pack](https://www.streamlineicons.com/).
 * Paul Hudson's "vapor-clean" template is the basis of this product. You can find it here. https://github.com/twostraws/vapor-clean (MIT License). Also, his book was/is invaluable if you want to take Vapor development further: https://www.hackingwithswift.com/store/server-side-swift  
 * Favicon is based on a Mars image from NASA. Apart from being a very esthetically pleasing image, it also shows Gale Crater: a possible Mars landing site. Original file:  https://www.nasa.gov/mission_pages/msl/multimedia/pia14293-amended.html 
-* Digital Ocean Spaces integration using [Storage](https://github.com/nodes-vapor/storage).
+* Digital Ocean Spaces integration using [AWSSDKSwift](https://github.com/swift-aws/aws-sdk-swift.git).
