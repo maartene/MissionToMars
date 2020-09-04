@@ -4,7 +4,9 @@
             <div class="col-md">
                 <h4>Improvements</h4>
                 <p class="text-secondary">Improvements have various beneficial effects on your company.<br/>
-                Cash: $#cash(player.cash) (+#cash(cashPerDay) / day)</p>
+                Cash: $#cash(player.cash) (+#cash(cashPerDay) / day)<br/>
+                Action Points: #(player.actionPoints)/10
+                </p>
             </div>
             <div class="col-md-1">
                 <img src="/images/streamline-icon-project-blueprint-create@48x48-w.png" alt="Improvements"/>
@@ -42,6 +44,7 @@
                             #else:
                                 <a class="btn btn-sm btn-danger mt-1" href="/sell/improvement/#(improvement.shortName)">Sell</a>
                             #endif
+                            <a class="btn btn-sm btn-primary mt-1 #if(player.actionPoints > 0): disabled #endif" href="/trigger/improvements/#(improvement.shortName)">Trigger (1 AP)</a>
                         </td>
                     </tr>
                 #endfor
