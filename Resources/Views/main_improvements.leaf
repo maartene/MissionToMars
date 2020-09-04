@@ -44,7 +44,7 @@
                             #else:
                                 <a class="btn btn-sm btn-danger mt-1" href="/sell/improvement/#(improvement.shortName)">Sell</a>
                             #endif
-                            <a class="btn btn-sm btn-primary mt-1 #if(player.actionPoints > 0): disabled #endif" href="/trigger/improvements/#(improvement.shortName)">Trigger (1 AP)</a>
+                            <a class="btn btn-sm btn-primary mt-1 #if(player.actionPoints <= 0 || improvement.triggerable == false): disabled #endif" href="/trigger/improvements/#(improvement.shortName)">Trigger (1 AP)</a>
                         </td>
                     </tr>
                 #endfor
