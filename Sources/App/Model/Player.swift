@@ -26,6 +26,9 @@ public struct Player: Content {
         case illegalImprovementSlot
         
         case insufficientImprovementSlots
+        
+        case missingImprovement
+        case insufficientActionPoints
     }
     
     public var id = UUID()
@@ -48,6 +51,7 @@ public struct Player: Content {
     public private(set) var technologyPoints: Double = 75
     public private(set) var buildPoints: Double = 0
     public private(set) var componentBuildPoints: Double = 0
+    public private(set) var actionPoints: Int = 10
     
     public private(set) var improvements: [Improvement]
     public var currentlyBuildingImprovement: Improvement? {
@@ -86,6 +90,7 @@ public struct Player: Content {
         updatedPlayer.componentBuildPoints = 1
         
         updatedPlayer.buildPoints = 1
+        updatedPlayer.actionPoints = min(MAXIMUM_PLAYER_ACTION_POINTS, updatedPlayer.actionPoints + 1)
         
         for improvement in updatedPlayer.improvements {
             updatedPlayer = improvement.applyEffectForOwner(player: updatedPlayer)
@@ -106,6 +111,34 @@ public struct Player: Content {
         //print("cashPerTick: \(cashPerTick)")
         //print(updatedPlayer)
         return updatedPlayer
+    }
+    
+    public func triggerImprovement(_ index: Int) throws -> Player {
+        guard (0 ..< improvements.count).contains(index) else {
+            throw PlayerError.missingImprovement
+        }
+        
+        guard actionPoints > 0 else {
+            throw PlayerError.insufficientActionPoints
+        }
+        
+        let improvement = improvements[index]
+    
+        guard improvement.triggerable else {
+            throw Improvement.ImprovementError.improvementCannotBeTriggered
+        }
+        
+        var updatedPlayer = self
+        updatedPlayer.actionPoints -= 1
+        
+        if improvement.isCompleted {
+            
+            return improvement.applyEffectForOwner(player: updatedPlayer)
+        } else {
+            let updatedImprovement = improvement.updateImprovement(buildPoints: 1)
+            updatedPlayer.improvements[index] = updatedImprovement.updatedImprovement
+            return updatedPlayer
+        }
     }
     
     @available(*, deprecated, message: "This function is for internal, testing purposes only.")
@@ -367,6 +400,10 @@ public struct Player: Content {
     
     mutating public func debug_setTech(_ amount: Double) {
         self.technologyPoints = amount
+    }
+    
+    mutating func debug_setActionPoints(_ amount: Int) {
+        self.actionPoints = amount
     }
     
     public func bless() -> Player {

@@ -150,9 +150,20 @@ func createFrontEndRoutes(_ app: Application) {
             let dataDir = Environment.get("DATA_DIR") ?? ""
             do {
                 let data = try copy.save(path: dataDir)
-                //try Storage.upload(bytes: data, fileName: "simulation", fileExtension: "json", folder: "data", on: req)
+                let bucket = Environment.get("DO_SPACES_FOLDER") ?? "default"
+        
+                if let accessKey = Environment.get("DO_SPACES_ACCESS_KEY"), let secretKey = Environment.get("DO_SPACES_SECRET") {
+                    
+                    let s3 = S3(accessKeyId: accessKey, secretAccessKey: secretKey, region: .euwest1, endpoint: "https://m2m.ams3.digitaloceanspaces.com")
+                    let uploadRequest = S3.PutObjectRequest(acl: .private, body: data, bucket: bucket, contentLength: Int64(data.count), key: "\(SIMULATION_FILENAME).json")
+                    _ = s3.putObject(uploadRequest).map { result in
+                        req.logger.info("Save successfull - \(result.eTag ?? "unknown")")
+                    }
+                } else {
+                    req.logger.error("S3 access key and secret key not set in environment. Save failed.")
+                }
             } catch {
-                print("failed to save simulation")
+                req.logger.error("Failed to save simulation due to error: \(error).")
             }
         }
         
@@ -482,6 +493,42 @@ func createFrontEndRoutes(_ app: Application) {
             }
         }
     }
+    
+    app.get("trigger", "improvements", ":number") { req -> Response in
+        guard let number =  Int(req.parameters.get("number") ?? "") else {
+            throw Abort (.badRequest, reason: "\(req.parameters.get("number") ?? "") is not a valid Integer.")
+        }
+        
+        guard let shortName = Improvement.ShortName(rawValue: number) else {
+            return req.redirect(to: "/main")
+        }
+        
+        guard let improvement = Improvement.getImprovementByName(shortName) else {
+            return req.redirect(to: "/main")
+        }
+        
+        let player = try getPlayerFromSession(on: req, in: app.simulation)
+        
+        guard let index = player.improvements.firstIndex(where: { $0.shortName == shortName }) else {
+            app.errorMessages[player.id] = "Player does not have \(improvement.name)."
+            return req.redirect(to: "/main")
+        }
+        
+        do {
+            let triggeringPlayer = try player.triggerImprovement(index)
+            app.simulation = try app.simulation.replacePlayer(triggeringPlayer)
+            app.infoMessages[triggeringPlayer.id] = "Succesfully triggered \(improvement.name)."
+            return req.redirect(to: "/improvements")
+        } catch {
+            switch error {
+            case Player.PlayerError.insufficientActionPoints:
+                app.errorMessages[player.id] = "You don't have enough Actions Points (\(player.actionPoints)) for this action."
+            default:
+                app.errorMessages[player.id] = error.localizedDescription
+            }
+            return req.redirect(to: "/main")
+        }
+    }
         
     app.get("mission", "supportingPlayers") { req -> EventLoopFuture<View> in
         struct SupportingPlayerContext: Content {
@@ -661,7 +708,7 @@ func createFrontEndRoutes(_ app: Application) {
         }
         
         guard let playerToBlessName = req.parameters.get("userName") else {
-            throw Abort(.badRequest, reason: "\(req.parameters.get("userName")) is not a valid string value.")
+            throw Abort(.badRequest, reason: "\(req.parameters.get("userName") ?? "unknown") is not a valid string value.")
         }
         
         guard let playerToBless = app.simulation.players.first(where: {$0.name == playerToBlessName }) else {
@@ -686,7 +733,7 @@ func createFrontEndRoutes(_ app: Application) {
         let bucket = Environment.get("DO_SPACES_FOLDER") ?? "default"
         
         guard let accessKey = Environment.get("DO_SPACES_ACCESS_KEY"), let secretKey = Environment.get("DO_SPACES_SECRET") else {
-            app.errorMessages[player.id] = "S3 access key and secret key not set in environment. Save failed."
+            req.logger.error("S3 access key and secret key not set in environment. Save failed.")
             let promise = req.eventLoop.makePromise(of: Response.self)
             promise.succeed(req.redirect(to: "/admin"))
             return promise.futureResult
@@ -707,12 +754,12 @@ func createFrontEndRoutes(_ app: Application) {
                     app.errorMessages[player.id] = "Did not find any admin player in loaded simulation. Load failed."
                     return req.redirect(to: "/admin")
                 }
-                print("Loaded admin player with username: \(adminPlayer.name), email: \(adminPlayer.emailAddress) and id: \(adminPlayer.id)")
+                req.logger.notice("Loaded admin player with username: \(adminPlayer.name), email: \(adminPlayer.emailAddress) and id: \(adminPlayer.id)")
                 app.simulation = loadedSimulation
                 return req.redirect(to: "/")
             } catch {
                 
-                print("Load failed: \(error)")
+                req.logger.error("Load failed: \(error)")
                 return req.redirect(to: "/admin")
             }
             

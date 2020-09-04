@@ -2,7 +2,8 @@
 * UI: improvements should look better
     * * Table for improvements
     * * Unlocks visible for technologies
-* Update simulation now a "background job" (hacked solution using static variable)
+* Update simulation using a "background job" (removed background processing when upgrading to Vapor 4)
+* Gameplay: Players can activate effects from improvements by spending action points to make the game more interactive.
 
 ### Done:
 * Supporting players should be able to build components

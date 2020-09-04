@@ -21,24 +21,18 @@ public struct MailJetConfig {
     }
     
     public func sendMessages(_ messages: [Message], on container: Request) {
-        do {
-            
         // Connect a new client to the supplied hostname.
-
-            guard let base64encodedApiKey = ("\(apiKey):\(secretKey)").data(using: .utf8)?.base64EncodedString() else {
-                print("failed to create data from apikey.")
-                return
-            }
-            
-            let headers = HTTPHeaders([("Content-Type", "application/json"), ("Authorization", "Basic \(base64encodedApiKey)")])
-            
-            _ = container.client.post("https://api.mailjet.com/v3.1/send", headers: headers) { req in
-                try req.content.encode(["Messages": messages])
-            }.map { res in
-                print("Email sent. Return code: \(res.status)")
-            }
-        } catch {
-            print(error)
+        guard let base64encodedApiKey = ("\(apiKey):\(secretKey)").data(using: .utf8)?.base64EncodedString() else {
+            print("failed to create data from apikey.")
+            return
+        }
+        
+        let headers = HTTPHeaders([("Content-Type", "application/json"), ("Authorization", "Basic \(base64encodedApiKey)")])
+        
+        _ = container.client.post("https://api.mailjet.com/v3.1/send", headers: headers) { req in
+            try req.content.encode(["Messages": messages])
+        }.map { res in
+            print("Email sent. Return code: \(res.status)")
         }
     }
 }

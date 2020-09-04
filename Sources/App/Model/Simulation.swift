@@ -239,7 +239,7 @@ public struct Simulation: Content {
             var adminPlayer = try createPlayer(emailAddress: adminEmail, name: adminUserName).newPlayer
             adminPlayer = adminPlayer.bless()
             players.append(adminPlayer)
-            try save(path: dataDir)
+            _ = try save(path: dataDir)
             print("Successfully created admin player with username: \(adminPlayer.name), email: \(adminPlayer.emailAddress) and id: \(adminPlayer.id)")
         } catch {
             fatalError("Could not create admin player: " + error.localizedDescription)

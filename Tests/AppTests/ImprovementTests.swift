@@ -334,6 +334,49 @@ final class ImprovementTests : XCTestCase {
         
     }
     
+    func testTriggerImprovementLowersActionPoints() throws {
+        let player = Player(emailAddress: "example@example.com", name: "testUser")
+        XCTAssertGreaterThan(player.improvements.count, 0, "Player should have at least one improvement.")
+        XCTAssertGreaterThan(player.actionPoints, 0, "Player should have at least one action point.")
+        
+        let updatedPlayer = try player.triggerImprovement(0)
+        XCTAssertLessThan(updatedPlayer.actionPoints, player.actionPoints, "points")
+    }
+    
+    func testTriggerImprovementChangesPlayer() throws {
+        let player = Player(emailAddress: "example@example.com", name: "testUser")
+        XCTAssertGreaterThan(player.improvements.count, 0, "Player should have at least one improvement.")
+        XCTAssertGreaterThan(player.actionPoints, 0, "Player should have at least one action point.")
+        
+        let updatedPlayer = try player.triggerImprovement(0)
+        XCTAssertGreaterThan(updatedPlayer.cash, player.cash, "cash")
+    }
+    
+    func testPlayerWithoutActionPointsCantTrigger() throws {
+        var player = Player(emailAddress: "example@example.com", name: "testUser")
+        XCTAssertGreaterThan(player.improvements.count, 0, "Player should have at least one improvement.")
+        player.debug_setActionPoints(0)
+        
+        XCTAssertThrowsError(try player.triggerImprovement(0))
+        //XCTAssertEqual(updatedPlayer.cash, player.cash, "cash")
+    }
+    
+    func testTriggerImprovementAddsBuildPoints() throws {
+        var player = Player(emailAddress: "example@example.com", name: "testUser")
+        player = try player.startBuildImprovement(Improvement.getImprovementByName(.DesignStudio)!, startDate: Date())
+        XCTAssertGreaterThan(player.improvements.count, 1, "Player should have at least two improvement.")
+        XCTAssertGreaterThan(player.actionPoints, 0, "Player should have at least one action point.")
+        XCTAssertLessThan(player.completedImprovements.count, player.improvements.count, "Player should have at least one unfinished improvement")
+        
+        guard let index = player.improvements.firstIndex(where: {$0.isCompleted == false}) else {
+            XCTFail("Player should have at least one unfinished improvement.")
+            return
+        }
+        
+        let updatedPlayer = try player.triggerImprovement(index)
+        XCTAssertGreaterThan(updatedPlayer.improvements[index].percentageCompleted, player.improvements[index].percentageCompleted)
+    }
+    
     static let allTests = [
         ("testStartBuildImprovement", testStartBuildImprovement),
         ("testGetImprovementByName", testGetImprovementByName),
@@ -352,7 +395,10 @@ final class ImprovementTests : XCTestCase {
         ("testBuildingCanIncreaseBuiltTimeFactor", testBuildingCanIncreaseBuiltTimeFactor),
         ("testRushingImprovementDoesNotRemoveExistingImprovement", testRushingImprovementDoesNotRemoveExistingImprovement),
         ("testCannotBuildMoreImprovementsThanNumberOfSlots", testCannotBuildMoreImprovementsThanNumberOfSlots),
-        ("testSellImprovement", testSellImprovement)
+        ("testSellImprovement", testSellImprovement),
+        ("testTriggerImprovementLowersActionPoints", testTriggerImprovementLowersActionPoints),
+        ("testPlayerWithoutActionPointsCantTrigger", testPlayerWithoutActionPointsCantTrigger),
+        ("testTriggerImprovementAddsBuildPoints", testTriggerImprovementAddsBuildPoints),
     ]
 
 }
