@@ -30,6 +30,7 @@ public enum Effect: Codable, CustomStringConvertible {
     case tagEffectDoubler(tag: Tag)
     case extraBuildPointsFlat(amount: Double)
     case extraComponentBuildPointsFlat(amount: Double)
+    case extraActionPointsFlat(amount: Int)
     
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: EffectCodingKeys.self)
@@ -68,6 +69,9 @@ public enum Effect: Codable, CustomStringConvertible {
         case "extraComponentBuildPointsFlat":
             let amount = try values.decode(Double.self, forKey: .value)
             self = .extraComponentBuildPointsFlat(amount: amount)
+        case "extraActionPointsFlat":
+            let amount = try values.decode(Int.self, forKey: .value)
+            self = .extraActionPointsFlat(amount: amount)
         default:
             throw EffectError.decodingUnknownEffectType
         }
@@ -110,6 +114,9 @@ public enum Effect: Codable, CustomStringConvertible {
         case .extraComponentBuildPointsFlat(let amount):
             try container.encode("extraComponentBuildPointsFlat", forKey: .effectType)
             try container.encode(amount, forKey: .value)
+        case .extraActionPointsFlat(let amount):
+            try container.encode("extraActionPointsFlat", forKey: .effectType)
+            try container.encode(amount, forKey: .value)
         }
     }
     
@@ -136,6 +143,8 @@ public enum Effect: Codable, CustomStringConvertible {
             return player.extraBuildPoints(amount: amount)
         case .extraComponentBuildPointsFlat(let amount):
             return player.extraComponentBuildPoints(amount: amount)
+        case .extraActionPointsFlat(let amount):
+            return player.extraActionPoints(amount: amount)
         default:
             return player
         }
@@ -155,6 +164,8 @@ public enum Effect: Codable, CustomStringConvertible {
             return "Build improvements \(amount * 100.0)% faster"
         case .extraComponentBuildPointsFlat(let amount):
             return "Build improvements \(amount * 100.0)% faster"
+        case .extraActionPointsFlat(let amount):
+            return "+\(amount) Actions Points per day"
         default:
             return "Effect \(self). Add a description for a more descriptive message."
         }

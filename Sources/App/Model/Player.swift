@@ -211,6 +211,12 @@ public struct Player: Content {
         return changedPlayer
     }
     
+    func extraActionPoints(amount: Int) -> Player {
+        var changedPlayer = self
+        changedPlayer.actionPoints += amount
+        return changedPlayer
+    }
+    
     func donate(cash amount: Double, to player: Player) throws -> (donatingPlayer: Player, receivingPlayer: Player) {
         guard amount <= self.cash else {
             throw PlayerError.insufficientFunds

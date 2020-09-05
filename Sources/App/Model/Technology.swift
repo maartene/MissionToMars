@@ -27,6 +27,7 @@ public struct Technology: Equatable, Codable {
         //case AdvancedRocketry
         case RadiationShielding = 13
         case AutonomousDriving = 14
+        case AgileLeadership = 15
     }
     
     public static let allTechnologies = [
@@ -46,7 +47,7 @@ public struct Technology: Equatable, Codable {
         Technology(shortName: .RenewableRocketFuel, name: "Renewable Rocket Fuel", description: "Renewable rocket fuel alleviates many of the disadvantages of rocket fuel and makes sending your first rocket to Mars a possibility.", cost: 150, prerequisites: [.FuelConservation_2]),
         Technology(shortName: .FuelExtraction, name: "Fuel Extraction", description: "The Mars soil and atmosphere contain substances that when correctly extracted and processed can be used as rocket fuel. To create a self sustaining colony and Mars economy, creating fuel locally is of paramount importance.", cost: 300, prerequisites: [.FuelExtraction]),
         Technology(shortName: .PackageOptimization, name: "Optimized Packing", description: "Packing might sound simple, but packing with as high as possible densite while keeping packages small, standard size and manageble in weight in a very complex puzzle to solve.", cost: 200, prerequisites: []),
-        
+        Technology(shortName: .AgileLeadership, name: "Agile Leadership", description: "Changing the leadership culture of your company offers makes it more efficient in the long run.", cost: 300, prerequisites: [])
     ]
     
     public static func getTechnologyByName(_ shortName: ShortName) -> Technology? {
@@ -61,6 +62,7 @@ public struct Technology: Equatable, Codable {
     public let name: String
     public let description: String
     public let cost: Double                           // in tech points
+    // public let updateEffects: [Effect]
     public let prerequisites: [ShortName]
     
     public func playerHasPrerequisitesForTechnology(_ player: Player) -> Bool {

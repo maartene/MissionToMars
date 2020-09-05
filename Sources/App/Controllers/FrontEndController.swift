@@ -659,7 +659,7 @@ func createFrontEndRoutes(_ app: Application) {
         }
         
         let dataDir = Environment.get("DATA_DIR") ?? ""
-        let data = try app.simulation.save(fileName: SIMULATION_FILENAME, path: dataDir)
+        let data = try app.simulation.save(fileName: "\(SIMULATION_FILENAME).json", path: dataDir)
         let bucket = Environment.get("DO_SPACES_FOLDER") ?? "default"
         
         guard let accessKey = Environment.get("DO_SPACES_ACCESS_KEY"), let secretKey = Environment.get("DO_SPACES_SECRET") else {
