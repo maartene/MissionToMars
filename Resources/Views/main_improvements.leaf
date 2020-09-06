@@ -25,26 +25,26 @@
                     </tr>
                 </thead>
                 <tbody>
-                #for(improvement in player.improvements):
+                #for(improvementContext in improvements):
                     <tr>
-                        <td><img src="/images/Improvements/#(improvement.shortName)-w.png"/></td>
-                        <td><b>#(improvement.name)</b> #(improvement.description)
-                            #if(improvement.percentageCompleted < 100):
+                        <td><img src="/images/Improvements/#(improvementContext.improvement.shortName)-w.png"/></td>
+                        <td><b>#(improvementContext.improvement.name)</b> #(improvementContext.improvement.description)
+                            #if(improvementContext.improvement.percentageCompleted < 100):
                                 <br/>
                                 Currently building: 
                         <div class="progress">
-                                <div class="progress-bar" role="progressbar" style="width: #decimal(improvement.percentageCompleted)%" aria-valuenow="#decimal(improvement.percentageCompleted)" aria-valuemin="0" aria-valuemax="100"></div>
-                        </div>#decimal(improvement.percentageCompleted)% done.
+                                <div class="progress-bar" role="progressbar" style="width: #decimal(improvementContext.improvement.percentageCompleted)%" aria-valuenow="#decimal(improvementContext.improvement.percentageCompleted)" aria-valuemin="0" aria-valuemax="100"></div>
+                        </div>#decimal(improvementContext.improvement.percentageCompleted)% done.
                             #endif
                         </td>
-                        <td><span class="text-info">#improvementEffects(improvement.shortName)</span></td>
-                        <td>#for(tag in improvement.tags): <span class="badge badge-success">#tag(tag)</span> #endfor</td>
-                        <td>#if(improvement.percentageCompleted < 100): 
-                                #if(improvement.rushable): <a class="btn btn-sm btn-warning #if(improvement.cost > player.cash): disabled #endif" href="/rush/improvements/#(improvement.shortName)">Rush</a> #endif
+                        <td><span class="text-info">#improvementEffects(improvementContext.improvement.shortName)</span></td>
+                        <td>#for(tag in improvementContext.improvement.tags): <span class="badge badge-success">#tag(tag)</span> #endfor</td>
+                        <td>#if(improvementContext.improvement.percentageCompleted < 100): 
+                                #if(improvementContext.improvement.rushable): <a class="btn btn-sm btn-warning #if(improvementContext.improvement.cost > player.cash): disabled #endif" href="/rush/improvements/#(improvementContext.slot)">Rush</a> #endif
                             #else:
-                                <a class="btn btn-sm btn-danger mt-1" href="/sell/improvement/#(improvement.shortName)">Sell</a>
+                                <a class="btn btn-sm btn-danger mt-1" href="/sell/improvement/#(improvementContext.improvement.shortName)">Sell</a>
                             #endif
-                            <a class="btn btn-sm btn-primary mt-1 #if(player.actionPoints <= 0 || improvement.triggerable == false): disabled #endif" href="/trigger/improvements/#(improvement.shortName)">Trigger (1 AP)</a>
+                            <a class="btn btn-sm btn-primary mt-1 #if(player.actionPoints <= 0 || improvementContext.improvement.triggerable == false): disabled #endif" href="/trigger/improvements/#(improvementContext.slot)">Trigger (1 AP)</a>
                         </td>
                     </tr>
                 #endfor

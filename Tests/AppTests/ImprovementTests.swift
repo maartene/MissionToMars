@@ -305,6 +305,21 @@ final class ImprovementTests : XCTestCase {
         
     }
     
+    func testRushSlot() throws {
+        var player = Player(emailAddress: "example@example.com", name: "testUser")
+               
+        let improvement = Improvement.getImprovementByName(.AI_TAG)!
+        player = player.extraIncome(amount: improvement.cost * 4)
+        player = unlockTechnologiesForImprovement(player: player, improvement: improvement)
+        
+        player = try player.startBuildImprovement(improvement, startDate: Date())
+        XCTAssertLessThan(player.completedImprovements.count, player.improvements.count)
+        
+        let rushingPlayer = try player.rushImprovement(in: player.improvements.count - 1)
+               
+        XCTAssertGreaterThan(rushingPlayer.completedImprovements.count, player.completedImprovements.count)
+    }
+    
     func testCannotBuildMoreImprovementsThanNumberOfSlots() throws {
         var player = Player(emailAddress: "example@example.com", name: "testUser")
         player = try player.removeImprovementInSlot(0)

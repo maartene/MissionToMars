@@ -348,6 +348,30 @@ public struct Player: Content {
         }
     }
     
+    public func rushImprovement(in slot: Int) throws -> Player {
+        guard (0 ..< improvements.count).contains(slot) else {
+            throw PlayerError.illegalImprovementSlot
+        }
+        
+        let improvement = improvements[slot]
+        
+        guard cash >= improvement.cost else {
+            throw PlayerError.insufficientFunds
+        }
+        
+        guard improvement.isCompleted == false else {
+            throw Improvement.ImprovementError.improvementCannotBeRushed
+        }
+        
+        var rushingPlayer = self
+        
+        let rushedImprovement = try improvement.rush()
+        rushingPlayer.cash -= improvement.cost
+        
+        return try rushingPlayer.replaceImprovementInSlot(slot, with: rushedImprovement)
+    }
+    
+    @available(*, deprecated, message: "This function has been replaced with 'rushImprovement(in:)'.")
     public func rushImprovement(_ improvement: Improvement) throws -> Player {
         guard cash >= improvement.cost else {
             throw PlayerError.insufficientFunds

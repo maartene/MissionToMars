@@ -429,19 +429,17 @@ func createFrontEndRoutes(_ app: Application) {
             throw Abort (.badRequest, reason: "\(req.parameters.get("number") ?? "") is not a valid Integer.")
         }
         
-        guard let shortName = Improvement.ShortName(rawValue: number) else {
-            return req.redirect(to: "/main")
-        }
-        
         let player = try getPlayerFromSession(on: req, in: app.simulation)
         
-        guard let improvement = Improvement.getImprovementByName(shortName) else {
-            app.errorMessages[player.id] = "No improvement with shortName \(shortName) found."
+        guard (0 ..< player.improvements.count).contains(number) else {
+            app.logger.error("/rush/improvements/:number - number \(number) out of bounds.")
             return req.redirect(to: "/main")
         }
+            
+        let improvement = player.improvements[number]
         
         do {
-            let rushingPlayer = try player.rushImprovement(improvement)
+            let rushingPlayer = try player.rushImprovement(in: number)
             app.simulation = try app.simulation.replacePlayer(rushingPlayer)
             app.infoMessages[rushingPlayer.id] = "Succesfully rushed \(improvement.name)."
             return req.redirect(to: "/improvements")
@@ -499,7 +497,7 @@ func createFrontEndRoutes(_ app: Application) {
             throw Abort (.badRequest, reason: "\(req.parameters.get("number") ?? "") is not a valid Integer.")
         }
         
-        guard let shortName = Improvement.ShortName(rawValue: number) else {
+        /*guard let shortName = Improvement.ShortName(rawValue: number) else {
             return req.redirect(to: "/main")
         }
         
@@ -507,15 +505,24 @@ func createFrontEndRoutes(_ app: Application) {
             return req.redirect(to: "/main")
         }
         
-        let player = try getPlayerFromSession(on: req, in: app.simulation)
+        
         
         guard let index = player.improvements.firstIndex(where: { $0.shortName == shortName }) else {
             app.errorMessages[player.id] = "Player does not have \(improvement.name)."
             return req.redirect(to: "/main")
+        }*/
+        
+        let player = try getPlayerFromSession(on: req, in: app.simulation)
+        
+        guard (0 ..< player.improvements.count).contains(number) else {
+            app.logger.error("/trigger/improvements/:number Index \(number) out of bounds.")
+            return req.redirect(to: "/main")
         }
         
+        let improvement = player.improvements[number]
+        
         do {
-            let triggeringPlayer = try player.triggerImprovement(index)
+            let triggeringPlayer = try player.triggerImprovement(number)
             app.simulation = try app.simulation.replacePlayer(triggeringPlayer)
             app.infoMessages[triggeringPlayer.id] = "Succesfully triggered \(improvement.name)."
             return req.redirect(to: "/improvements")
@@ -852,6 +859,11 @@ func createFrontEndRoutes(_ app: Application) {
     }
     
     func getMainViewForPlayer(with id: UUID, simulation: Simulation, on req: Request, page: String = "main") throws -> EventLoopFuture<View> {
+        struct ImprovementContext: Codable {
+            let slot: Int
+            let improvement: Improvement
+        }
+        
         struct MainContext: Codable {
             let player: Player
             let mission: Mission?
@@ -871,6 +883,7 @@ func createFrontEndRoutes(_ app: Application) {
             let componentBuildPointsPerDay: Double
             let page: String
             let simulationIsUpdating: Bool
+            let improvements: [ImprovementContext]
         }
         
         guard let player = app.simulation.players.first(where: {somePlayer in somePlayer.id == id}) else {
@@ -888,6 +901,11 @@ func createFrontEndRoutes(_ app: Application) {
         infoMessages.removeValue(forKey: id)
         app.infoMessages = infoMessages
  
+        var improvements = [ImprovementContext]()
+        for i in 0 ..< player.improvements.count {
+            improvements.append(ImprovementContext(slot: i, improvement: player.improvements[i]))
+        }
+        
         if let mission = app.simulation.getSupportedMissionForPlayer(player) {
             if mission.missionComplete {
                 return req.view.render("win")
@@ -904,12 +922,12 @@ func createFrontEndRoutes(_ app: Application) {
                 }
             }
             
-            let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponents: mission.currentStage.currentlyBuildingComponents, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage, currentStageComplete: mission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: unlockedComponents, techlockedComponents: techlockedComponents, playerIsBuildingComponent: mission.currentStage.playerIsBuildingComponentInStage(player), cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, componentBuildPointsPerDay: player.componentBuildPointsPerTick,  page: page, simulationIsUpdating: false)
+            let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponents: mission.currentStage.currentlyBuildingComponents, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage, currentStageComplete: mission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: unlockedComponents, techlockedComponents: techlockedComponents, playerIsBuildingComponent: mission.currentStage.playerIsBuildingComponentInStage(player), cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, componentBuildPointsPerDay: player.componentBuildPointsPerTick,  page: page, simulationIsUpdating: false, improvements: improvements)
             
             return req.view.render("main_\(page)", context)
         } else {
             // no mission
-            let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponents: [], simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage,  currentStageComplete: false, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: [], techlockedComponents: [], playerIsBuildingComponent: false, cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, componentBuildPointsPerDay: player.componentBuildPointsPerTick, page: page, simulationIsUpdating: false)
+            let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponents: [], simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage,  currentStageComplete: false, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: [], techlockedComponents: [], playerIsBuildingComponent: false, cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, componentBuildPointsPerDay: player.componentBuildPointsPerTick, page: page, simulationIsUpdating: false, improvements: improvements)
             
             return req.view.render("main_\(page)", context)
         }
