@@ -90,7 +90,7 @@ public struct Player: Content {
         updatedPlayer.componentBuildPoints = 1
         
         updatedPlayer.buildPoints = 1
-        updatedPlayer.actionPoints = min(MAXIMUM_PLAYER_ACTION_POINTS, updatedPlayer.actionPoints + 1)
+        updatedPlayer.actionPoints = min(maxActionPoints, updatedPlayer.actionPoints + 1)
         
         for improvement in updatedPlayer.improvements {
             updatedPlayer = improvement.applyEffectForOwner(player: updatedPlayer)
@@ -184,7 +184,19 @@ public struct Player: Content {
     }
 
     public var improvementSlotsCount: Int {
-        return 5
+        var count = 5
+        if unlockedTechnologyNames.contains(.PackageOptimization) {
+            count += 1
+        }
+        return count
+    }
+    
+    public var maxActionPoints: Int {
+        var count = MAXIMUM_PLAYER_ACTION_POINTS
+        if unlockedTechnologyNames.contains(.ScaledAgileLeadership) {
+            count += TECH_EXTRA_MAXIMUM_PLAYER_ACTION_POINTS
+        }
+        return count
     }
     
     func extraIncome(amount: Double) -> Player {
@@ -253,7 +265,7 @@ public struct Player: Content {
         return (donatingPlayer, receivingPlayer)
     }
     
-    func investInComponent(_ component: Component, in mission: Mission, date: Date) throws -> (changedPlayer: Player, changedMission: Mission) {
+    func investInComponent(_ component: Component, in mission: Mission, date: Date, ignoreTechPrereqs: Bool = false) throws -> (changedPlayer: Player, changedMission: Mission) {
         var updatedPlayer = self
         var updatedMission = mission
         
@@ -267,7 +279,7 @@ public struct Player: Content {
             throw PlayerError.insufficientFunds
         }
         
-        guard component.playerHasPrerequisitesForComponent(self) else {
+        guard component.playerHasPrerequisitesForComponent(self) || ignoreTechPrereqs else {
             throw PlayerError.playerMissesPrerequisiteTechnology
         }
         

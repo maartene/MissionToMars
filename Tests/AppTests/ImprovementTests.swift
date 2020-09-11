@@ -172,8 +172,13 @@ final class ImprovementTests : XCTestCase {
         var buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
         XCTAssertEqual(buildingPlayer.currentlyBuildingImprovement!.percentageCompleted, 0, "% complete")
         
+        guard let slot = buildingPlayer.improvements.firstIndex(of: improvement) else {
+            XCTFail("Could not find slot.")
+            return
+        }
+        
         let cashBeforeRush = buildingPlayer.cash
-        buildingPlayer = try buildingPlayer.rushImprovement(improvement)
+        buildingPlayer = try buildingPlayer.rushImprovement(in: slot)
         
         XCTAssertEqual(buildingPlayer.improvements.last!.shortName, Improvement.ShortName.DesignStudio)
         XCTAssertGreaterThanOrEqual(buildingPlayer.improvements.last!.percentageCompleted, 100.0, "% complete")
@@ -190,7 +195,12 @@ final class ImprovementTests : XCTestCase {
         let buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
         XCTAssertEqual(buildingPlayer.currentlyBuildingImprovement!.percentageCompleted, 0, "% complete")
         
-        XCTAssertThrowsError(try buildingPlayer.rushImprovement(improvement))
+        guard let slot = buildingPlayer.improvements.firstIndex(of: improvement) else {
+            XCTFail("Could not find slot.")
+            return
+        }
+        
+        XCTAssertThrowsError(try buildingPlayer.rushImprovement(in: slot))
     }
     
     func testPlayerCannotRushWithInsufficientFunds() throws {
@@ -202,7 +212,12 @@ final class ImprovementTests : XCTestCase {
         let buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
         XCTAssertEqual(buildingPlayer.currentlyBuildingImprovement!.percentageCompleted, 0, "% complete")
         
-        XCTAssertThrowsError(try buildingPlayer.rushImprovement(improvement))
+        guard let slot = buildingPlayer.improvements.firstIndex(of: improvement) else {
+            XCTFail("Could not find slot.")
+            return
+        }
+        
+        XCTAssertThrowsError(try buildingPlayer.rushImprovement(in: slot))
     }
     
     // test static effect
@@ -240,7 +255,7 @@ final class ImprovementTests : XCTestCase {
         mission.id = UUID()
         player.ownsMissionID = mission.id
         player = player.extraIncome(amount: mission.currentStage.components[1].cost)
-        let result = try player.investInComponent(mission.currentStage.components[1], in: mission, date: Date())
+        let result = try player.investInComponent(mission.currentStage.components[1], in: mission, date: Date(), ignoreTechPrereqs: true)
         
         var missionWithoutBuilding = result.changedMission
         var playerWithoutBuilding = result.changedPlayer
@@ -299,7 +314,10 @@ final class ImprovementTests : XCTestCase {
         XCTAssertEqual(player.completedImprovements.filter({$0 == improvement}).count, 1)
         
         player = try player.startBuildImprovement(improvement, startDate: Date())
-        player = try player.rushImprovement(improvement)
+        
+        let slot = player.improvements.count - 1
+        
+        player = try player.rushImprovement(in: slot)
         
         XCTAssertEqual(player.completedImprovements.filter({$0 == improvement}).count, 2)
         

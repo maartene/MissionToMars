@@ -23,3 +23,19 @@ public struct ImprovementEffectTag: LeafTag {
         return .trueNil
     }
 }
+
+public struct TechnologyEffectsTag: LeafTag {
+    static let name = "technologyEffects"
+    
+    public func render(_ ctx: LeafContext) throws -> LeafData {
+        try ctx.requireParameterCount(1)
+        
+        if let technologyShortName = Technology.ShortName(rawValue: ctx.parameters[0].int ?? -1) {
+            if let technology = Technology.getTechnologyByName(technologyShortName){
+                return .string(technology.effectDescription)
+            }
+        }
+        
+        return .trueNil
+    }
+}
