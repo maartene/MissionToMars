@@ -25,6 +25,7 @@ public func configure(_ app: Application) throws {
     app.leaf.tags[DateTag.name] = DateTag()
     app.leaf.tags[ImprovementEffectTag.name] = ImprovementEffectTag()
     app.leaf.tags[ImprovementTagTag.name] = ImprovementTagTag()
+    app.leaf.tags[TechnologyEffectsTag.name] = TechnologyEffectsTag()
     
  
     // Register middleware (file serving and sessions)

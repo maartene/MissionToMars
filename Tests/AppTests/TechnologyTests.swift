@@ -37,6 +37,7 @@ class TechnologyTests: XCTestCase {
     
     static let allTests = [
         ("testPlayerStartsWithTechnology", testPlayerStartsWithTechnology),
+        ("testPlayerHasPrerequisiteTechnologies", testPlayerStartsWithTechnology),
     ]
 
 }

@@ -17,7 +17,7 @@ public enum Tag: Int, Codable {
     case Retail
 }
 
-public struct Improvement: Codable, Equatable {
+public struct Improvement: Codable, Equatable, Effector {
     public enum ImprovementError: Error {
         case componentAlreadyBeingBuilt
         case improvementCannotBeRushed
@@ -49,18 +49,19 @@ public struct Improvement: Codable, Equatable {
         case Retail_TAG = 20
         case TuningShop = 21
         case DesignStudio = 22
+        case SecondBranch = 23
     }
     
     public static let allImprovements = [
         // Start improvements
         Improvement(shortName: .TechConsultancy, name: "Technology Consultancy firm", description: "This firm provides a great versetile start if you don't want to commit to money making or researching new technologies. Good fit if you want to go solo, but in the long run specializing might be more attractive.", cost: 0, buildTime: 365 / 6, updateEffects: [.extraIncomeFlat(amount: 6500), .extraTechFlat(amount: 2)], tags: [.AI, .SpaceTravel]),
         Improvement(shortName: .Faculty, name: "Faculty of Applied Sciences", description: "You start with a faculty on a prestigious University and assure yourself of a steady supply of extra technology points and a little income.", cost: 0, buildTime: 365 / 12, updateEffects: [.extraTechFlat(amount: 15), .extraIncomeFlat(amount: 1000)], tags: [.Biotech, .AI, .SpaceTravel]),
-        Improvement(shortName: .InvestmentBank, name: "Investment Bank", description: "If you want to make it rain (become very VERY rich), starting an investment bank is a great start. The bank provides extra income as well as ROI on your outstanding balance. However, it doesn't generate any technology. You will need to find other ways if you want to advance the tech tree.", cost: 0, buildTime: 365 / 12, updateEffects: [.extraIncomeFlat(amount: 15_000), .interestOnCash(percentage: 0.1)], tags: [.Finance]),
+        Improvement(shortName: .InvestmentBank, name: "Investment Bank", description: "If you want to make it rain (become very VERY rich), starting an investment bank is a great start. The bank provides extra income as well as ROI on your outstanding balance. However, it doesn't generate any technology. You will need to find other ways if you want to advance the tech tree.", cost: 0, buildTime: 365 / 12, updateEffects: [.extraIncomeFlat(amount: 15_000), .interestOnCash(percentage: 0.5)], tags: [.Finance]),
         
         // Economy improvements
         Improvement(shortName: .BatteryOutlet, name: "Batteries'r'Us", description: "Create an outlet selling your new battery tech in all units of all shapes and sizes. And make a little profit as you go.", cost: 500_000, buildTime: 365 / 12, requiredTechnologyShortnames: [.LiIonBattery_HY], updateEffects: [.extraIncomeFlat(amount: 5000)],tags: [.Retail]),
         Improvement(shortName: .DroneDeliveryService, name: "Drone Delivery Service", description: "There's a lot of money to be made if you can delivery parcels more effeciently. Just make sure the drones don't get lost on their way.", cost: 1_000_000, buildTime: 365 / 6, requiredTechnologyShortnames: [.RecoverableAI, .LiIonBattery_HY], updateEffects: [.extraIncomeFlat(amount: 10_000)], tags: [.Retail, .AI]),
-        Improvement(shortName: .GrapheneSolarCellsPlant, name: "Graphene Solar Plant", description: "While the regular solar cells market is highly saturated and has very small margins, the new graphene based ones create a new market, with comparatively interesting margins.", cost: 5_000_000, buildTime: 365, requiredTechnologyShortnames: [.GrapheneSolarCells], updateEffects: [.extraIncomeFlat(amount: 50_000)], tags: [.Construction]),
+        Improvement(shortName: .GrapheneSolarCellsPlant, name: "Graphene Solar Plant", description: "While the regular solar cells market is highly saturated and has very small margins, the new graphene based ones create a new market, with comparatively interesting margins.", cost: 5_000_000, buildTime: 365 / 2, requiredTechnologyShortnames: [.GrapheneSolarCells], updateEffects: [.extraIncomeFlat(amount: 50_000)], tags: [.Construction]),
         Improvement(shortName: .SolarAirLine, name: "Solar Airline", description: "The world first commercial airline powered completely using solar aircraft. This is guaranteerd to provide a great and steady income.", cost: 10_000_000, buildTime: 365*2, requiredTechnologyShortnames: [.SolarFlight], updateEffects: [.extraIncomeFlat(amount: 100_000)], tags: []),
         Improvement(shortName: .SpaceTourism, name: "Space Tourism Agency", description: "Allow the rich the opportunity to look at Earth from Space! As you are piggy backing on your existing technology, this is a very cost effective way of generating some extra income.", cost: 100_000_000, buildTime: 365 / 12, requiredTechnologyShortnames: [.FuelConservation_2], updateEffects: [.extraIncomeFlat(amount: 1_000_000)], tags: [.SpaceTravel]),
         Improvement(shortName: .PrefabFurniture, name: "Prefab Furniture Store", description: "A Swedish innovation! Furniture you can immediately pick-up, take home in flat boxes. Some assembly required. Extra income and also lowers improvement building time.", cost: 1_000_000, buildTime: 365 / 4, requiredTechnologyShortnames: [.PackageOptimization], rushable: false,  updateEffects: [.extraIncomeFlat(amount: 5_000), .extraBuildPointsFlat(amount: 0.2)], tags: [.Retail, .Construction]),
@@ -72,6 +73,7 @@ public struct Improvement: Codable, Equatable {
         
         // Generic improvements
         Improvement(shortName: .DesignStudio, name: "Design Studio (STUB)", description: "(STUB: required to give something to build if you not yet selected a tech.) Not very efficient - unlock technologies to unlock better improvements.", cost: 500_000, buildTime: 365 / 6, updateEffects: [.extraIncomeFlat(amount: 1_000), .extraTechFlat(amount: 1)]),
+        Improvement(shortName: .SecondBranch, name: "Second Branch", description: "A second branch for your company brings additional Action Points.", cost: 500_000, buildTime: 365 / 3, requiredTechnologyShortnames: [.AgileLeadership], rushable: false, triggerable: false, updateEffects: [.extraActionPointsFlat(amount: 1)], tags: [.Finance]),
         
         // Mission improvements
         Improvement(shortName: .OrbitalShipyard, name: "Orbital Shipyard", description: "Although very expensive to construct, it will make building components much easier. Component build time is reduced.", cost: 750_000_000, buildTime: 365, requiredTechnologyShortnames: [.FuelConservation_2, .PackageOptimization], rushable: false, updateEffects: [.extraComponentBuildPointsFlat(amount: 0.4)], tags: [.Construction, .SpaceTravel]),
@@ -112,14 +114,6 @@ public struct Improvement: Codable, Equatable {
     public let shortName: ShortName
     public let name: String
     public let description: String
-    
-    public var effectDescription: String {
-        let effectStrings = updateEffects.map { effect in
-            effect.description
-        }
-        
-        return effectStrings.joined(separator: "\n")
-    }
     
     public let cost: Double
     public let buildTime: Int // in days/ticks

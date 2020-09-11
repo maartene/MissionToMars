@@ -90,7 +90,7 @@ public struct Player: Content {
         updatedPlayer.componentBuildPoints = 1
         
         updatedPlayer.buildPoints = 1
-        updatedPlayer.actionPoints = min(MAXIMUM_PLAYER_ACTION_POINTS, updatedPlayer.actionPoints + 1)
+        updatedPlayer.actionPoints = min(maxActionPoints, updatedPlayer.actionPoints + 1)
         
         for improvement in updatedPlayer.improvements {
             updatedPlayer = improvement.applyEffectForOwner(player: updatedPlayer)
@@ -184,7 +184,19 @@ public struct Player: Content {
     }
 
     public var improvementSlotsCount: Int {
-        return 5
+        var count = 5
+        if unlockedTechnologyNames.contains(.PackageOptimization) {
+            count += 1
+        }
+        return count
+    }
+    
+    public var maxActionPoints: Int {
+        var count = MAXIMUM_PLAYER_ACTION_POINTS
+        if unlockedTechnologyNames.contains(.ScaledAgileLeadership) {
+            count += TECH_EXTRA_MAXIMUM_PLAYER_ACTION_POINTS
+        }
+        return count
     }
     
     func extraIncome(amount: Double) -> Player {
@@ -208,6 +220,12 @@ public struct Player: Content {
     func extraComponentBuildPoints(amount: Double) -> Player {
         var changedPlayer = self
         changedPlayer.componentBuildPoints += amount
+        return changedPlayer
+    }
+    
+    func extraActionPoints(amount: Int) -> Player {
+        var changedPlayer = self
+        changedPlayer.actionPoints += amount
         return changedPlayer
     }
     
@@ -247,7 +265,7 @@ public struct Player: Content {
         return (donatingPlayer, receivingPlayer)
     }
     
-    func investInComponent(_ component: Component, in mission: Mission, date: Date) throws -> (changedPlayer: Player, changedMission: Mission) {
+    func investInComponent(_ component: Component, in mission: Mission, date: Date, ignoreTechPrereqs: Bool = false) throws -> (changedPlayer: Player, changedMission: Mission) {
         var updatedPlayer = self
         var updatedMission = mission
         
@@ -261,7 +279,7 @@ public struct Player: Content {
             throw PlayerError.insufficientFunds
         }
         
-        guard component.playerHasPrerequisitesForComponent(self) else {
+        guard component.playerHasPrerequisitesForComponent(self) || ignoreTechPrereqs else {
             throw PlayerError.playerMissesPrerequisiteTechnology
         }
         
@@ -342,6 +360,30 @@ public struct Player: Content {
         }
     }
     
+    public func rushImprovement(in slot: Int) throws -> Player {
+        guard (0 ..< improvements.count).contains(slot) else {
+            throw PlayerError.illegalImprovementSlot
+        }
+        
+        let improvement = improvements[slot]
+        
+        guard cash >= improvement.cost else {
+            throw PlayerError.insufficientFunds
+        }
+        
+        guard improvement.isCompleted == false else {
+            throw Improvement.ImprovementError.improvementCannotBeRushed
+        }
+        
+        var rushingPlayer = self
+        
+        let rushedImprovement = try improvement.rush()
+        rushingPlayer.cash -= improvement.cost
+        
+        return try rushingPlayer.replaceImprovementInSlot(slot, with: rushedImprovement)
+    }
+    
+    @available(*, deprecated, message: "This function has been replaced with 'rushImprovement(in:)'.")
     public func rushImprovement(_ improvement: Improvement) throws -> Player {
         guard cash >= improvement.cost else {
             throw PlayerError.insufficientFunds
