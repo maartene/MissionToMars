@@ -76,7 +76,7 @@ public struct Improvement: Codable, Equatable, Effector {
         Improvement(shortName: .SecondBranch, name: "Second Branch", description: "A second branch for your company brings additional Action Points.", cost: 500_000, buildTime: 365 / 3, requiredTechnologyShortnames: [.AgileLeadership], rushable: false, triggerable: false, updateEffects: [.extraActionPointsFlat(amount: 1)], tags: [.Finance]),
         
         // Mission improvements
-        Improvement(shortName: .OrbitalShipyard, name: "Orbital Shipyard", description: "Although very expensive to construct, it will make building components much easier. Component build time is reduced.", cost: 750_000_000, buildTime: 365, requiredTechnologyShortnames: [.FuelConservation_2, .PackageOptimization], rushable: false, updateEffects: [.extraComponentBuildPointsFlat(amount: 0.4)], tags: [.Construction, .SpaceTravel]),
+        Improvement(shortName: .OrbitalShipyard, name: "Orbital Shipyard", description: "Although very expensive to construct, it will make building components much easier. Component build time is reduced.", cost: 750_000_000, buildTime: 365, requiredTechnologyShortnames: [.FuelConservation_2, .PackageOptimization], rushable: false, triggerable: false, updateEffects: [.extraComponentBuildPointsFlat(amount: 0.4)], tags: [.Construction, .SpaceTravel]),
         
         // Tag based improvements
         Improvement(shortName: .AI_TAG, name: "AI specilization", description: "Your focus on AI related improvements makes these improvements twice as effective.", cost: 100_000, buildTime: 7, requiredTechnologyShortnames: [.RecoverableAI], triggerable: false, updateEffects: [.tagEffectDoubler(tag: .AI)]),

@@ -177,7 +177,7 @@ public enum Effect: Codable, CustomStringConvertible {
         case .extraBuildPointsFlat(let amount):
             return "Build improvements \(amount * 100.0)% faster"
         case .extraComponentBuildPointsFlat(let amount):
-            return "Build improvements \(amount * 100.0)% faster"
+            return "Build components \(amount * 100.0)% faster"
         case .extraActionPointsFlat(let amount):
             return "+\(amount) Actions Points per day"
         case .extraImprovementSlots(let amount):
