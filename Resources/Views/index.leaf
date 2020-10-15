@@ -50,7 +50,7 @@
                 </ul>
             </p>
             <p>
-                Current version: <span class="text-danger">0.0.16 (Vapor 4 conversion)</span>
+                Current version: <span class="text-danger">0.0.18 (Vapor 4 conversion)</span>
             </p>
         </div>
     #endexport
