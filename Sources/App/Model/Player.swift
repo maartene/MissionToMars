@@ -453,4 +453,10 @@ public struct Player: Content {
         blessedPlayer.isAdmin = true
         return blessedPlayer
     }
+    
+    public func unbless() -> Player {
+        var unblessedPlayer = self
+        unblessedPlayer.isAdmin = false
+        return unblessedPlayer
+    }
 }

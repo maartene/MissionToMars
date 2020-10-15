@@ -14,7 +14,7 @@
         </div>
     #endif
     <h3>Administration</h3>
-    <p>Simulation State: #if(state == 0) { admin mode } else { running }</p>
+    <p>Simulation State: #if(state == 0): admin mode  #else: running #endif</p>
     #if(state == 0):
       <p><a href="/admin/load" class="btn btn-warning btn-lg">Load Simulation</a>&nbsp;<a href="/admin/save" class="btn btn-primary btn-lg">Save Simulation</a></p>
       <p><a href="/admin/leaveAdminMode" class="btn btn-primary btn-lg">Leave Admin Mode</a></p>
@@ -42,7 +42,7 @@
           <td>#if(p.isAdmin == false):
             <a href="/admin/bless/#(p.name)" class="btn btn-sm btn-info">Bless</a>
           #else:
-            <a href="/admin/unbless/#(p.name)" class="btn btn-sm btn-info #if(p.name == player.name) { disabled }">Unbless</a>
+            <a href="/admin/unbless/#(p.name)" class="btn btn-sm btn-info #if(p.name == player.name): disabled #endif">Unbless</a>
           #endif
         </tr>
       #endfor

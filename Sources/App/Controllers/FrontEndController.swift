@@ -726,6 +726,25 @@ func createFrontEndRoutes(_ app: Application) {
         app.simulation = try app.simulation.replacePlayer(blessedPlayer)
         return req.redirect(to: "/admin")
     }
+    
+    app.get("admin", "unbless", ":userName") { req -> Response in
+        let player = try getPlayerFromSession(on: req, in: app.simulation)
+        guard player.isAdmin else {
+            throw Abort(.unauthorized, reason: "Player \(player.name) is not an admin.")
+        }
+        
+        guard let playerToBlessName = req.parameters.get("userName") else {
+            throw Abort(.badRequest, reason: "\(req.parameters.get("userName") ?? "unknown") is not a valid string value.")
+        }
+        
+        guard let playerToBless = app.simulation.players.first(where: {$0.name == playerToBlessName }) else {
+            throw Abort(.notFound, reason: "Could not find player with name \(playerToBlessName).")
+        }
+        
+        let unblessedPlayer = playerToBless.unbless()
+        app.simulation = try app.simulation.replacePlayer(unblessedPlayer)
+        return req.redirect(to: "/admin")
+    }
         
     app.get("admin", "load") { req -> EventLoopFuture<Response> in
         let player = try getPlayerFromSession(on: req, in: app.simulation)
@@ -909,7 +928,7 @@ func createFrontEndRoutes(_ app: Application) {
         
         if let mission = app.simulation.getSupportedMissionForPlayer(player) {
             if mission.missionComplete {
-                return req.view.render("win")
+                return req.view.render("win", ["player": player])
             }
             
             var unlockedComponents = [Component]()

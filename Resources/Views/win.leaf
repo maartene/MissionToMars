@@ -1,5 +1,8 @@
 #extend("master"):
     #export("body"):
-        <h2>Congratulations! You finished the game!</h2>
+        <div class="jumbotron mt-3">
+            <h2>Congratulations #(player.name)! You finished the game!</h2>
+            <p>If you want to try again, you can create a new character. Perhaps choose a different starting improvement this time?</p>
+        </div>
     #endexport
 #endextend
