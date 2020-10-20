@@ -6,7 +6,7 @@
         #for(tech in possibleTechnologies):
           <li class="list-group-item">
             <div class="row">
-              <div class="col-md-1"><img src="/images/Technologies/#(tech.shortName)-w.png" alt="#(tech.name)"/></div>
+              <div class="col-md-1"><img src="/images/Technologies/#(tech.shortName)-w.png" alt="#(tech.name)"  width="48" height="48"/></div>
               <div class="col-md">
                 <b>#(tech.name)</b> - #(tech.description)<br/>
                 #if(techUnlocksImprovements(tech.shortName) != "-"): <span class="text-info">Unlocks improvements: #techUnlocksImprovements(tech.shortName)<br/></span>#endif

@@ -30,6 +30,8 @@ public struct Technology: Equatable, Codable, Effector {
         case AgileLeadership = 15
         case AdvancedSignalModulation = 16
         case ScaledAgileLeadership = 17
+        case Specilization_1 = 18
+        case Specilization_2 = 19
     }
     
     public static let allTechnologies = [
@@ -42,7 +44,7 @@ public struct Technology: Equatable, Codable, Effector {
         Technology(shortName: .AdaptiveML, name: "Adaptive Machine Learning", description: "The benefits of Machine Learning well known and understood. The next step is Machine Learning that can adapt to changing circumstances and detect internal bias. This technology has many medical applications.", cost: 50, updateEffects: [], prerequisites: []),
         Technology(shortName: .LiIonBattery, name: "Litium-Ion Battery", description: "Mature battery technology based on the well known LiIon technology. You start with this technology.", cost: 50, updateEffects: [], prerequisites: []),
         Technology(shortName: .LiIonBattery_HY, name: "High-yield LiIon Battery", description: "There is still more efficiency to get out of LiIon batteries. More efficiency leads to a higher energy density meaning either smaller batteries or longer battery life.", cost: 150, updateEffects: [], prerequisites: [.LiIonBattery]),
-        Technology(shortName: .GrapheneMaterials, name: "Graphene Materials", description: "Graphine is a very promising material for all sorts of (photo) electric circuits. Costs remained prohibitive for a long time, but new processes finally make creating on graphene based materials feasible.", cost: 400, updateEffects: [], prerequisites: [.LiIonBattery_HY]),
+        Technology(shortName: .GrapheneMaterials, name: "Graphene Materials", description: "Graphine is a very promising material for all sorts of (photo) electric circuits. Costs remained prohibitive for a long time, but new processes finally make creating on graphene based materials feasible.", cost: 400, updateEffects: [.extraImprovementSlots(amount: 1)], prerequisites: [.LiIonBattery_HY]),
         Technology(shortName: .GrapheneSolarCells, name: "Graphene Solar Cells", description: "Graphene based solar cells provide a lot more output per m2 than their silicon based brethren. Undoubtly this ushers in a new golden age of solar installation opportunities.", cost: 600, updateEffects: [], prerequisites: [.GrapheneMaterials]),
         Technology(shortName: .GrapheneBatteries, name: "Graphene Batteries", description: "The first major improvement to battery technology after LiIon.", cost: 800, updateEffects: [], prerequisites: [.GrapheneMaterials]),
         Technology(shortName: .SolarFlight, name: "Solar Energy Flight", description: "The development of graphene based solar panels and batteries finally made commercial solar flight possible, decreasing the cost and energy footprint of flight dramatically. Will you create the first commercial solar airline?", cost: 800, updateEffects: [], prerequisites: [.GrapheneBatteries, .GrapheneSolarCells]),
@@ -52,6 +54,8 @@ public struct Technology: Equatable, Codable, Effector {
         Technology(shortName: .AgileLeadership, name: "Agile Leadership", description: "Changing the leadership culture of your company offers makes it more efficient in the long run.", cost: 300, updateEffects: [], prerequisites: []),
         Technology(shortName: .AdvancedSignalModulation, name: "Advanced Signal Modulation", description: "Better signal modulation techniques increase bandwidth over extremely large distances.", cost: 300, updateEffects: [], prerequisites: [.RecoverableAI]),
         Technology(shortName: .ScaledAgileLeadership, name: "Scaled Agile Leadership", description: "Scaling your agile practives to enterprise level increases the maximum output your enterprises can create.", cost: 600, updateEffects: [.extraMaxActionPoints(amount: TECH_EXTRA_MAXIMUM_PLAYER_ACTION_POINTS)], prerequisites: [.AgileLeadership]),
+        Technology(shortName: .Specilization_1, name: "Specilization 1", description: "By speciliazing in a specific industry, you can increase the yields from improvements.", cost: 500, updateEffects: [.extraSpeciliazationSlots(amount: 1)], prerequisites: [.RecoverableAI]),
+        Technology(shortName: .Specilization_2, name: "Specilization 2", description: "Allows a diversification into a second specialization.", cost: 5000, updateEffects: [.extraSpeciliazationSlots(amount: 1), .extraImprovementSlots(amount: 1)], prerequisites: [.Specilization_1])
     ]
     
     public static func getTechnologyByName(_ shortName: ShortName) -> Technology? {

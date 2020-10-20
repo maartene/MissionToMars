@@ -26,6 +26,7 @@ public struct Player: Content {
         case illegalImprovementSlot
         
         case insufficientImprovementSlots
+        case insufficientSpecializationSlots
         
         case missingImprovement
         case insufficientActionPoints
@@ -40,11 +41,6 @@ public struct Player: Content {
     public var supportsPlayerID: UUID?
     
     public private(set) var unlockedTechnologyNames: [Technology.ShortName]
-    public var unlockedTechnologies: [Technology] {
-        return unlockedTechnologyNames.compactMap { techName in
-            return Technology.getTechnologyByName(techName)
-        }
-    }
     
     // resources
     public private(set) var cash: Double = 2_500_000
@@ -54,6 +50,14 @@ public struct Player: Content {
     public private(set) var actionPoints: Int = 10
     
     public private(set) var improvements: [Improvement]
+    
+    // MARK: Calculated properties
+    public var unlockedTechnologies: [Technology] {
+        return unlockedTechnologyNames.compactMap { techName in
+            return Technology.getTechnologyByName(techName)
+        }
+    }
+    
     public var currentlyBuildingImprovement: Improvement? {
         let unfinishedImprovements = improvements.filter { improvement in
             return improvement.buildStartedOn != nil && improvement.isCompleted == false
@@ -65,85 +69,10 @@ public struct Player: Content {
         return currentlyBuildingImprovement != nil
     }
     
-    public init(emailAddress: String, name: String, startImprovementShortName: Improvement.ShortName = .TechConsultancy) {
-        self.emailAddress = emailAddress
-        self.name = name
-        self.improvements = []
-        
-        let startImprovement = Improvement.getImprovementByName(startImprovementShortName)!
-        if let completedStartImprovement = try? startImprovement.startBuild(startDate: Date()).updateImprovement(buildPoints: Double(startImprovement.buildTime)) {
-            assert(completedStartImprovement.updatedImprovement.isCompleted, "Your starting tech consultancy firm should be complete.")
-            self.improvements = [completedStartImprovement.updatedImprovement]
-        }
-        
-        self.unlockedTechnologyNames = [Technology.ShortName.LiIonBattery]
-    }
-    
     var completedImprovements: [Improvement] {
         return improvements.filter { improvement in
             return improvement.isCompleted
         }
-    }
-    
-    public func updatePlayer() -> Player {
-        var updatedPlayer = self
-        updatedPlayer.componentBuildPoints = 1
-        
-        updatedPlayer.buildPoints = 1
-        updatedPlayer.actionPoints = min(maxActionPoints, updatedPlayer.actionPoints + 1)
-        
-        for improvement in updatedPlayer.improvements {
-            updatedPlayer = improvement.applyEffectForOwner(player: updatedPlayer)
-        }
-        //print("Player build points before: \(updatedPlayer.componentBuildPoints)")
-        
-        var updatedImprovements = updatedPlayer.improvements
-        
-        for i in 0 ..< updatedPlayer.improvements.count {
-            let result = updatedImprovements[i].updateImprovement(buildPoints: updatedPlayer.buildPoints)
-            updatedImprovements[i] = result.updatedImprovement
-            updatedPlayer.buildPoints = result.remainingBuildPoints
-        }
-        
-        updatedPlayer.improvements = updatedImprovements
-        //print("Player build points after: \(updatedPlayer.buildPoints)")
-        
-        //print("cashPerTick: \(cashPerTick)")
-        //print(updatedPlayer)
-        return updatedPlayer
-    }
-    
-    public func triggerImprovement(_ index: Int) throws -> Player {
-        guard (0 ..< improvements.count).contains(index) else {
-            throw PlayerError.missingImprovement
-        }
-        
-        guard actionPoints > 0 else {
-            throw PlayerError.insufficientActionPoints
-        }
-        
-        let improvement = improvements[index]
-    
-        guard improvement.triggerable else {
-            throw Improvement.ImprovementError.improvementCannotBeTriggered
-        }
-        
-        var updatedPlayer = self
-        updatedPlayer.actionPoints -= 1
-        
-        if improvement.isCompleted {
-            
-            return improvement.applyEffectForOwner(player: updatedPlayer)
-        } else {
-            let updatedImprovement = improvement.updateImprovement(buildPoints: 1)
-            updatedPlayer.improvements[index] = updatedImprovement.updatedImprovement
-            return updatedPlayer
-        }
-    }
-    
-    @available(*, deprecated, message: "This function is for internal, testing purposes only.")
-    mutating func forceUnlockTechnology(shortName: Technology.ShortName) {
-        unlockedTechnologyNames.append(shortName)
     }
     
     public var cashPerTick: Double {
@@ -185,8 +114,16 @@ public struct Player: Content {
 
     public var improvementSlotsCount: Int {
         var count = 5
-        if unlockedTechnologyNames.contains(.PackageOptimization) {
-            count += 1
+        
+        unlockedTechnologies.forEach { tech in
+            tech.updateEffects.forEach{ effect in
+                switch effect {
+                case .extraImprovementSlots(let amount):
+                    count += amount
+                default:
+                    break;
+                }
+            }
         }
         return count
     }
@@ -199,6 +136,71 @@ public struct Player: Content {
         return count
     }
     
+    public var maximumNumberOfSpecializations: Int {
+        var count = BASE_PLAYER_SPECILIAZATION_SLOTS
+        for tech in unlockedTechnologies {
+            for effect in tech.updateEffects {
+                switch effect {
+                case .extraSpeciliazationSlots(let amount):
+                    count += amount
+                default:
+                    break
+                }
+            }
+        }
+        return count
+    }
+    
+    public var specilizationCount: Int {
+        improvements.filter({ improvement in improvement.tags.contains(.Specialization)}).count
+    }
+    
+    
+    // MARK: Init
+    public init(emailAddress: String, name: String, startImprovementShortName: Improvement.ShortName = .TechConsultancy) {
+        self.emailAddress = emailAddress
+        self.name = name
+        self.improvements = []
+        
+        let startImprovement = Improvement.getImprovementByName(startImprovementShortName)!
+        if let completedStartImprovement = try? startImprovement.startBuild(startDate: Date()).updateImprovement(buildPoints: Double(startImprovement.buildTime)) {
+            assert(completedStartImprovement.updatedImprovement.isCompleted, "Your starting tech consultancy firm should be complete.")
+            self.improvements = [completedStartImprovement.updatedImprovement]
+        }
+        
+        self.unlockedTechnologyNames = [Technology.ShortName.LiIonBattery]
+    }
+    
+    // MARK: Update
+    public func updatePlayer() -> Player {
+        var updatedPlayer = self
+        updatedPlayer.componentBuildPoints = 1
+        
+        updatedPlayer.buildPoints = 1
+        updatedPlayer.actionPoints = min(maxActionPoints, updatedPlayer.actionPoints + 1)
+        
+        for improvement in updatedPlayer.improvements {
+            updatedPlayer = improvement.applyEffectForOwner(player: updatedPlayer)
+        }
+        //print("Player build points before: \(updatedPlayer.componentBuildPoints)")
+        
+        var updatedImprovements = updatedPlayer.improvements
+        
+        for i in 0 ..< updatedPlayer.improvements.count {
+            let result = updatedImprovements[i].updateImprovement(buildPoints: updatedPlayer.buildPoints)
+            updatedImprovements[i] = result.updatedImprovement
+            updatedPlayer.buildPoints = result.remainingBuildPoints
+        }
+        
+        updatedPlayer.improvements = updatedImprovements
+        //print("Player build points after: \(updatedPlayer.buildPoints)")
+        
+        //print("cashPerTick: \(cashPerTick)")
+        //print(updatedPlayer)
+        return updatedPlayer
+    }
+    
+    // MARK: Effect helpers
     func extraIncome(amount: Double) -> Player {
         var changedPlayer = self
         changedPlayer.cash += amount
@@ -229,6 +231,7 @@ public struct Player: Content {
         return changedPlayer
     }
     
+    // MARK: Player-to-player interaction
     func donate(cash amount: Double, to player: Player) throws -> (donatingPlayer: Player, receivingPlayer: Player) {
         guard amount <= self.cash else {
             throw PlayerError.insufficientFunds
@@ -265,6 +268,7 @@ public struct Player: Content {
         return (donatingPlayer, receivingPlayer)
     }
     
+    // MARK: Components
     func investInComponent(_ component: Component, in mission: Mission, date: Date, ignoreTechPrereqs: Bool = false) throws -> (changedPlayer: Player, changedMission: Mission) {
         var updatedPlayer = self
         var updatedMission = mission
@@ -289,7 +293,12 @@ public struct Player: Content {
         return (updatedPlayer, updatedMission)
     }
         
-    public func startBuildImprovement(_ improvement: Improvement, startDate: Date) throws -> Player {
+    // MARK: Improvements
+    public func canBuildImprovement(_ improvement: Improvement) -> Bool {
+        (try? startBuildImprovement(improvement, startDate: Date())) != nil
+    }
+    
+    public func startBuildImprovement(_ improvement: Improvement, startDate: Date, options: [BuildImprovementOption] = []) throws -> Player {
         // This is no longer relevant if we want to allow the same building built more than once. 
         /*guard improvements.contains(improvement) == false else {
             throw PlayerError.playerAlreadyHasImprovement
@@ -299,19 +308,27 @@ public struct Player: Content {
             throw PlayerError.insufficientImprovementSlots
         }
         
-        guard improvement.playerHasPrerequisitesForImprovement(self) else {
+        guard options.contains(.ignoreTechPrereqs) || improvement.playerHasPrerequisitesForImprovement(self) else {
             throw PlayerError.playerMissesPrerequisiteTechnology
+        }
+        
+        guard options.contains(.ignoreUniqueness) || (improvement.tags.contains(.Unique) && improvements.contains(improvement)) == false else {
+            throw Improvement.ImprovementError.improvementIsUnique
+        }
+        
+        guard options.contains(.ignoreSpecializationSlotCount) || (improvement.tags.contains(.Specialization) && improvements.filter({$0.tags.contains(.Specialization)}).count >= maximumNumberOfSpecializations) == false else {
+            throw PlayerError.insufficientSpecializationSlots
         }
         
         guard cash >= improvement.cost else {
             throw PlayerError.insufficientFunds
         }
         
-        if let buildingImprovement = currentlyBuildingImprovement {
-            if buildingImprovement.allowsParrallelBuild == false || improvement.allowsParrallelBuild == false {
-                throw PlayerError.playerIsAlreadyBuildingImprovement
-            }
+        if currentlyBuildingImprovement != nil {
+            throw PlayerError.playerIsAlreadyBuildingImprovement
         }
+        
+        
         
         let buildingImprovement = try improvement.startBuild(startDate: startDate)
         
@@ -323,6 +340,34 @@ public struct Player: Content {
         changedPlayer.cash -= improvement.cost
         
         return changedPlayer
+    }
+    
+    public func triggerImprovement(_ index: Int) throws -> Player {
+        guard (0 ..< improvements.count).contains(index) else {
+            throw PlayerError.missingImprovement
+        }
+        
+        guard actionPoints > 0 else {
+            throw PlayerError.insufficientActionPoints
+        }
+        
+        let improvement = improvements[index]
+    
+        guard improvement.triggerable else {
+            throw Improvement.ImprovementError.improvementCannotBeTriggered
+        }
+        
+        var updatedPlayer = self
+        updatedPlayer.actionPoints -= 1
+        
+        if improvement.isCompleted {
+            
+            return improvement.applyEffectForOwner(player: updatedPlayer)
+        } else {
+            let updatedImprovement = improvement.updateImprovement(buildPoints: 1)
+            updatedPlayer.improvements[index] = updatedImprovement.updatedImprovement
+            return updatedPlayer
+        }
     }
     
     func replaceImprovementInSlot(_ slot: Int, with improvement: Improvement) throws -> Player {
@@ -383,7 +428,7 @@ public struct Player: Content {
         return try rushingPlayer.replaceImprovementInSlot(slot, with: rushedImprovement)
     }
     
-    @available(*, deprecated, message: "This function has been replaced with 'rushImprovement(in:)'.")
+    /*@available(*, deprecated, message: "This function has been replaced with 'rushImprovement(in:)'.")
     public func rushImprovement(_ improvement: Improvement) throws -> Player {
         guard cash >= improvement.cost else {
             throw PlayerError.insufficientFunds
@@ -401,8 +446,9 @@ public struct Player: Content {
         }
         
         return rushingPlayer
-    }
-    
+    }*/
+        
+    // MARK: Technology
     public func investInTechnology(_ technology: Technology) throws -> Player {
         guard technologyPoints >= technology.cost else {
             throw PlayerError.insufficientTechPoints
@@ -458,5 +504,11 @@ public struct Player: Content {
         var unblessedPlayer = self
         unblessedPlayer.isAdmin = false
         return unblessedPlayer
+    }
+    
+    // MARK: Internal - for testing only
+    @available(*, deprecated, message: "This function is for internal, testing purposes only.")
+    mutating func forceUnlockTechnology(shortName: Technology.ShortName) {
+        unlockedTechnologyNames.append(shortName)
     }
 }

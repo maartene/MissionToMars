@@ -372,15 +372,21 @@ func createFrontEndRoutes(_ app: Application) {
     }
         
     app.get("build", "improvements") { req -> EventLoopFuture<View> in
+        struct ImprovementInfo: Codable {
+            let improvement: Improvement
+            let canBuild: Bool
+        }
         struct ImprovementBuildContext: Codable {
             let player: Player
             let buildPointsPerTick: Double
-            let possibleImprovements: [Improvement]
+            let possibleImprovements: [ImprovementInfo]
         }
         
         let player = try getPlayerFromSession(on: req, in: app.simulation)
         
-        let possibleImprovements = Improvement.unlockedImprovementsForPlayer(player)
+        let possibleImprovements = Improvement.unlockedImprovementsForPlayer(player).map { improvement in
+            ImprovementInfo(improvement: improvement, canBuild: player.canBuildImprovement(improvement))
+        }
         let context = ImprovementBuildContext(player: player, buildPointsPerTick: player.buildPointsPerTick, possibleImprovements: possibleImprovements)
         
         return req.view.render("improvements", context)
@@ -416,6 +422,11 @@ func createFrontEndRoutes(_ app: Application) {
                 return req.redirect(to: "/main")
             case Player.PlayerError.playerIsAlreadyBuildingImprovement:
                 app.errorMessages[player.id] = "You can't build \(improvement.name) while you are building \(player.currentlyBuildingImprovement?.name ?? "unknown")"
+                return req.redirect(to: "/main")
+            case Player.PlayerError.insufficientSpecializationSlots:
+                app.errorMessages[player.id] = "You can't build \(improvement.name) because you don't have any available specialization slots)"
+            case Improvement.ImprovementError.improvementIsUnique:
+                app.errorMessages[player.id] = "\(improvement.name) is unique. This means you can't build more than one of each."
                 return req.redirect(to: "/main")
             default:
                 throw error
@@ -792,7 +803,6 @@ func createFrontEndRoutes(_ app: Application) {
         }
     }
         
-        
     app.get("debug", "allUsers") { req -> [Player] in
         guard (Environment.get("DEBUG_MODE") ?? "inactive") == "active" else {
             throw Abort(.notFound)
@@ -904,6 +914,10 @@ func createFrontEndRoutes(_ app: Application) {
             let simulationIsUpdating: Bool
             let improvements: [ImprovementContext]
             let maxActionPoints: Int
+            let improvementSlots: Int
+            let specializationSlots: Int
+            let specilizationCount: Int
+            let improvementCount: Int
         }
         
         guard let player = app.simulation.players.first(where: {somePlayer in somePlayer.id == id}) else {
@@ -942,12 +956,12 @@ func createFrontEndRoutes(_ app: Application) {
                 }
             }
             
-            let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponents: mission.currentStage.currentlyBuildingComponents, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage, currentStageComplete: mission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: unlockedComponents, techlockedComponents: techlockedComponents, playerIsBuildingComponent: mission.currentStage.playerIsBuildingComponentInStage(player), cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, componentBuildPointsPerDay: player.componentBuildPointsPerTick,  page: page, simulationIsUpdating: false, improvements: improvements, maxActionPoints: player.maxActionPoints)
+            let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponents: mission.currentStage.currentlyBuildingComponents, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage, currentStageComplete: mission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: unlockedComponents, techlockedComponents: techlockedComponents, playerIsBuildingComponent: mission.currentStage.playerIsBuildingComponentInStage(player), cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, componentBuildPointsPerDay: player.componentBuildPointsPerTick,  page: page, simulationIsUpdating: false, improvements: improvements, maxActionPoints: player.maxActionPoints, improvementSlots: player.improvementSlotsCount, specializationSlots: player.maximumNumberOfSpecializations, specilizationCount: player.specilizationCount, improvementCount: player.improvements.count)
             
             return req.view.render("main_\(page)", context)
         } else {
             // no mission
-            let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponents: [], simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage,  currentStageComplete: false, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: [], techlockedComponents: [], playerIsBuildingComponent: false, cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, componentBuildPointsPerDay: player.componentBuildPointsPerTick, page: page, simulationIsUpdating: false, improvements: improvements, maxActionPoints: player.maxActionPoints)
+            let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponents: [], simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage,  currentStageComplete: false, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: [], techlockedComponents: [], playerIsBuildingComponent: false, cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, componentBuildPointsPerDay: player.componentBuildPointsPerTick, page: page, simulationIsUpdating: false, improvements: improvements, maxActionPoints: player.maxActionPoints, improvementSlots: player.improvementSlotsCount, specializationSlots: player.maximumNumberOfSpecializations, specilizationCount: player.specilizationCount, improvementCount: player.improvements.count)
             
             return req.view.render("main_\(page)", context)
         }

@@ -33,6 +33,7 @@ public enum Effect: Codable, CustomStringConvertible {
     case extraActionPointsFlat(amount: Int)
     case extraImprovementSlots(amount: Int)
     case extraMaxActionPoints(amount: Int)
+    case extraSpeciliazationSlots(amount: Int)
     
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: EffectCodingKeys.self)
@@ -77,6 +78,9 @@ public enum Effect: Codable, CustomStringConvertible {
         case "extraImprovementSlots":
             let amount = try values.decode(Int.self, forKey: .value)
             self = .extraImprovementSlots(amount: amount)
+        case "extraSpeciliazationSlots":
+            let amount = try values.decode(Int.self, forKey: .value)
+            self = .extraSpeciliazationSlots(amount: amount)
         case "extraMaxActionPoints":
             let amount = try values.decode(Int.self, forKey: .value)
             self = .extraMaxActionPoints(amount: amount)
@@ -127,6 +131,9 @@ public enum Effect: Codable, CustomStringConvertible {
             try container.encode(amount, forKey: .value)
         case .extraImprovementSlots(let amount):
             try container.encode("extraImprovementSlots", forKey: .effectType)
+            try container.encode(amount, forKey: .value)
+        case .extraSpeciliazationSlots(let amount):
+            try container.encode("extraSpeciliazationSlots", forKey: .effectType)
             try container.encode(amount, forKey: .value)
         case .extraMaxActionPoints(let amount):
             try container.encode("extraMaxActionPoints", forKey: .effectType)
@@ -182,6 +189,8 @@ public enum Effect: Codable, CustomStringConvertible {
             return "+\(amount) Actions Points per day"
         case .extraImprovementSlots(let amount):
             return "+\(amount) extra improvement slot\(amount > 1 ? "s" : "")."
+        case .extraSpeciliazationSlots(let amount):
+            return "+\(amount) extra specilization slot\(amount > 1 ? "s" : "")."
         case .extraMaxActionPoints(let amount):
             return "+\(amount) to maximum action point\(amount > 1 ? "s" : "")."
         default:

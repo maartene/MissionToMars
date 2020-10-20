@@ -8,13 +8,21 @@
 import Foundation
 //import Vapor
 
-public enum Tag: Int, Codable {
+public enum Tag: String, Codable {
     case Finance
     case AI
     case Construction
     case Biotech
-    case SpaceTravel
+    case SpaceTravel = "Space Travel"
     case Retail
+    case Specialization
+    case Unique
+}
+
+public enum BuildImprovementOption: Int, Codable {
+    case ignoreUniqueness
+    case ignoreSpecializationSlotCount
+    case ignoreTechPrereqs
 }
 
 public struct Improvement: Codable, Equatable, Effector {
@@ -23,6 +31,7 @@ public struct Improvement: Codable, Equatable, Effector {
         case improvementCannotBeRushed
         case improvementIncomplete
         case improvementCannotBeTriggered
+        case improvementIsUnique
     }
     
     public enum ShortName: Int, CaseIterable, Codable {
@@ -79,11 +88,11 @@ public struct Improvement: Codable, Equatable, Effector {
         Improvement(shortName: .OrbitalShipyard, name: "Orbital Shipyard", description: "Although very expensive to construct, it will make building components much easier. Component build time is reduced.", cost: 750_000_000, buildTime: 365, requiredTechnologyShortnames: [.FuelConservation_2, .PackageOptimization], rushable: false, triggerable: false, updateEffects: [.extraComponentBuildPointsFlat(amount: 0.4)], tags: [.Construction, .SpaceTravel]),
         
         // Tag based improvements
-        Improvement(shortName: .AI_TAG, name: "AI specilization", description: "Your focus on AI related improvements makes these improvements twice as effective.", cost: 100_000, buildTime: 7, requiredTechnologyShortnames: [.RecoverableAI], triggerable: false, updateEffects: [.tagEffectDoubler(tag: .AI)]),
-        Improvement(shortName: .BioTech_TAG, name: "BioTech specilization", description: "Your focus on BioTech related improvements makes these improvements twice as effective.", cost: 100_000, buildTime: 7, requiredTechnologyShortnames: [.AdaptiveML], triggerable: false, updateEffects: [.tagEffectDoubler(tag: .Biotech)]),
-        Improvement(shortName: .Construction_TAG , name: "Construction specilization", description: "Your focus on Construction related improvements makes these improvements twice as effective.", cost: 100_000, buildTime: 7, requiredTechnologyShortnames: [.PackageOptimization], triggerable: false, updateEffects: [.tagEffectDoubler(tag: .Construction)]),
-        Improvement(shortName: .Retail_TAG, name: "Retail specilization", description: "Your focus on Retail related improvements makes these improvements twice as effective.", cost: 100_000, buildTime: 7, requiredTechnologyShortnames: [.LiIonBattery_HY], triggerable: false, updateEffects: [.tagEffectDoubler(tag: .Retail)]),
-        Improvement(shortName: .SpaceTravel_TAG, name: "Space Travel specilization", description: "Your focus on Space Travel related improvements makes these improvements twice as effective.", cost: 100_000, buildTime: 7, requiredTechnologyShortnames: [.FuelConservation_2], triggerable: false, updateEffects: [.tagEffectDoubler(tag: .SpaceTravel)]),
+        Improvement(shortName: .AI_TAG, name: "AI specilization", description: "Your focus on AI related improvements makes these improvements twice as effective.", cost: 100_000, buildTime: 7, requiredTechnologyShortnames: [.RecoverableAI], triggerable: false, updateEffects: [.tagEffectDoubler(tag: .AI)], tags: [.Specialization, .Unique]),
+        Improvement(shortName: .BioTech_TAG, name: "BioTech specilization", description: "Your focus on BioTech related improvements makes these improvements twice as effective.", cost: 100_000, buildTime: 7, requiredTechnologyShortnames: [.AdaptiveML], triggerable: false, updateEffects: [.tagEffectDoubler(tag: .Biotech)], tags: [.Specialization, .Unique]),
+        Improvement(shortName: .Construction_TAG , name: "Construction specilization", description: "Your focus on Construction related improvements makes these improvements twice as effective.", cost: 100_000, buildTime: 7, requiredTechnologyShortnames: [.PackageOptimization], triggerable: false, updateEffects: [.tagEffectDoubler(tag: .Construction)], tags: [.Specialization, .Unique]),
+        Improvement(shortName: .Retail_TAG, name: "Retail specilization", description: "Your focus on Retail related improvements makes these improvements twice as effective.", cost: 100_000, buildTime: 7, requiredTechnologyShortnames: [.LiIonBattery_HY], triggerable: false, updateEffects: [.tagEffectDoubler(tag: .Retail)], tags: [.Specialization, .Unique]),
+        Improvement(shortName: .SpaceTravel_TAG, name: "Space Travel specilization", description: "Your focus on Space Travel related improvements makes these improvements twice as effective.", cost: 100_000, buildTime: 7, requiredTechnologyShortnames: [.FuelConservation_2], triggerable: false, updateEffects: [.tagEffectDoubler(tag: .SpaceTravel)], tags: [.Specialization, .Unique]),
         
         
         // repeatable improvements - for testing purposes, keep these at the end of the array.
@@ -118,20 +127,18 @@ public struct Improvement: Codable, Equatable, Effector {
     public let cost: Double
     public let buildTime: Int // in days/ticks
     public let requiredTechnologyShortnames: [Technology.ShortName]
-    public let allowsParrallelBuild: Bool
     public let rushable: Bool
     public let triggerable: Bool
     public let updateEffects: [Effect]
     public let tags: [Tag]
     
-    init(shortName: ShortName, name: String, description: String, cost: Double, buildTime: Int, requiredTechnologyShortnames: [Technology.ShortName] = [], allowsParrallelBuild: Bool = true, rushable: Bool = true, triggerable: Bool = true, updateEffects: [Effect] = [], tags: [Tag] = []) {
+    init(shortName: ShortName, name: String, description: String, cost: Double, buildTime: Int, requiredTechnologyShortnames: [Technology.ShortName] = [], rushable: Bool = true, triggerable: Bool = true, updateEffects: [Effect] = [], tags: [Tag] = []) {
         self.shortName = shortName
         self.name = name
         self.description = description
         self.cost = cost
         self.buildTime = buildTime
         self.requiredTechnologyShortnames = requiredTechnologyShortnames
-        self.allowsParrallelBuild = allowsParrallelBuild
         self.rushable = rushable
         self.triggerable = triggerable
         self.updateEffects = updateEffects

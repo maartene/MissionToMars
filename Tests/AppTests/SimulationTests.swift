@@ -116,8 +116,7 @@ final class SimulationTests : XCTestCase {
         simulation = createPlayerResult.updatedSimulation
         var player = createPlayerResult.newPlayer
         
-        player = unlockTechnologiesForImprovement(player: player, improvement: improvement)
-        player = try player.startBuildImprovement(improvement, startDate: Date())
+        player = try player.startBuildImprovement(improvement, startDate: Date(), options: [.ignoreTechPrereqs])
         let extraCash = player.cashPerTick
         
         player = playerCompleteImprovement(player: player, improvement: improvement)
@@ -275,13 +274,13 @@ final class SimulationTests : XCTestCase {
         XCTAssertEqual(simulation.players[1].id, playerCreateResult.newPlayer.id)
     }
     
-    func unlockTechnologiesForImprovement(player: Player, improvement: Improvement) -> Player {
+    /*func unlockTechnologiesForImprovement(player: Player, improvement: Improvement) -> Player {
         var changedPlayer = player
         for tech in improvement.requiredTechnologyShortnames {
-            changedPlayer.forceUnlockTechnology(shortName: tech)
+            //changedPlayer.forceUnlockTechnology(shortName: tech)
         }
         return changedPlayer
-    }
+    }*/
     
     func unlockTechnologiesForComponent(player: Player, component: Component) -> Player {
         var changedPlayer = player

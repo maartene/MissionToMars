@@ -13,8 +13,9 @@ public struct ImprovementTagTag: LeafTag {
     
     public func render(_ ctx: LeafContext) throws -> LeafData {
         try ctx.requireParameterCount(1)
+        return .string("Unknown")
         
-        if let improvementTag = Tag.init(rawValue: ctx.parameters[0].int ?? -1) {
+        /*if let improvementTag = Tag.init(rawValue: ctx.parameters[0].int ?? -1) {
             switch improvementTag {
             case .AI:
                 return .string("AI")
@@ -28,9 +29,13 @@ public struct ImprovementTagTag: LeafTag {
                 return .string("Space Travel")
             case .Retail:
                 return .string("Retail")
+            case .Specialization:
+                return .string("Specialization")
+            default:
+                return .string("Unknown")
             }
         }
         
-        return .trueNil
+        return .trueNil*/
     }
 }

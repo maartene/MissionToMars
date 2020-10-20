@@ -13,7 +13,7 @@ import XCTest
 
 final class ImprovementTests : XCTestCase {
     func testStartBuildImprovement() throws {
-        let improvement = Improvement(shortName: .Faculty, name: "Factory", description: "Test", cost: 200, buildTime: 100, requiredTechnologyShortnames: [], allowsParrallelBuild: true, rushable: true)
+        let improvement = Improvement(shortName: .Faculty, name: "Factory", description: "Test", cost: 200, buildTime: 100, requiredTechnologyShortnames: [], rushable: true)
         XCTAssertNil(improvement.buildStartedOn)
         let buildingComponent = try improvement.startBuild(startDate: Date())
         XCTAssertNotNil(buildingComponent.buildStartedOn)
@@ -86,21 +86,20 @@ final class ImprovementTests : XCTestCase {
         XCTAssertGreaterThan(updatedPlayer.technologyPoints, player.technologyPoints, " tech points")
     }*/
     
-    func unlockTechnologiesForImprovement(player: Player, improvement: Improvement) -> Player {
+    /*func unlockTechnologiesForImprovement(player: Player, improvement: Improvement) -> Player {
         var changedPlayer = player
         for tech in improvement.requiredTechnologyShortnames {
-            changedPlayer.forceUnlockTechnology(shortName: tech)
+            //changedPlayer.forceUnlockTechnology(shortName: tech)
         }
         return changedPlayer
-    }
+    }*/
     
     func testUpdateOfPlayerImprovesBuildProgress() throws {
         var player = Player(emailAddress: "example@example.com", name: "testUser")
         let improvement = Improvement.getImprovementByName(.BioTech_TAG)!
         player.debug_setCash(improvement.cost)
         
-        var buildingPlayer = unlockTechnologiesForImprovement(player: player, improvement: improvement)
-        buildingPlayer = try buildingPlayer.startBuildImprovement(improvement, startDate: Date())
+        let buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date(), options: [.ignoreUniqueness, .ignoreSpecializationSlotCount, .ignoreTechPrereqs])
         let updatedPlayer = buildingPlayer.updatePlayer()
         XCTAssertGreaterThan(updatedPlayer.improvements.last!.percentageCompleted, buildingPlayer.improvements.last!.percentageCompleted, "Improvement building progress should increase after update.")
     }
@@ -189,10 +188,9 @@ final class ImprovementTests : XCTestCase {
     func testPlayerCannotRushUnrushableImprovement() throws {
         var player = Player(emailAddress: "example@example.com", name: "testUser")
         let improvement = Improvement.getImprovementByName(.PrefabFurniture)!
-        player = unlockTechnologiesForImprovement(player: player, improvement: improvement)
         player = player.extraIncome(amount: improvement.cost * 2)
         
-        let buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
+        let buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date(), options: [.ignoreTechPrereqs])
         XCTAssertEqual(buildingPlayer.currentlyBuildingImprovement!.percentageCompleted, 0, "% complete")
         
         guard let slot = buildingPlayer.improvements.firstIndex(of: improvement) else {
@@ -206,10 +204,9 @@ final class ImprovementTests : XCTestCase {
     func testPlayerCannotRushWithInsufficientFunds() throws {
         var player = Player(emailAddress: "example@example.com", name: "testUser")
         let improvement = Improvement.getImprovementByName(.PrefabFurniture)!
-        player = unlockTechnologiesForImprovement(player: player, improvement: improvement)
         player = player.extraIncome(amount: improvement.cost)
         
-        let buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
+        let buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date(), options: [.ignoreTechPrereqs])
         XCTAssertEqual(buildingPlayer.currentlyBuildingImprovement!.percentageCompleted, 0, "% complete")
         
         guard let slot = buildingPlayer.improvements.firstIndex(of: improvement) else {
@@ -228,18 +225,15 @@ final class ImprovementTests : XCTestCase {
         
         var player1 = Player(emailAddress: "example@example.com", name: "testUser")
         player1 = player1.extraIncome(amount: improvement1.cost)
-        player1 = unlockTechnologiesForImprovement(player: player1, improvement: improvement1)
-        player1 = try player1.startBuildImprovement(improvement1, startDate: Date())
+        player1 = try player1.startBuildImprovement(improvement1, startDate: Date(), options: [.ignoreUniqueness, .ignoreSpecializationSlotCount, .ignoreTechPrereqs])
         XCTAssertEqual(player1.currentlyBuildingImprovement?.percentageCompleted ?? 1.0, 0.0, "%")
         
         var player2 = Player(emailAddress: "example2@example.com", name: "testUser2")
-        player2 = unlockTechnologiesForImprovement(player: player2, improvement: improvement2)
-        player2 = unlockTechnologiesForImprovement(player: player2, improvement: ikea)
         player2 = player2.extraIncome(amount: improvement2.cost + ikea.cost)
-        player2 = try player2.startBuildImprovement(ikea, startDate: Date())
+        player2 = try player2.startBuildImprovement(ikea, startDate: Date(), options: [.ignoreTechPrereqs])
         player2 = playerCompleteImprovement(player: player2, improvement: ikea)
         XCTAssert(player2.improvements.filter { improvement in improvement.isCompleted }.contains(ikea))
-        player2 = try player2.startBuildImprovement(improvement2, startDate: Date())
+        player2 = try player2.startBuildImprovement(improvement2, startDate: Date(), options: [.ignoreUniqueness, .ignoreSpecializationSlotCount, .ignoreTechPrereqs])
         XCTAssertEqual(player2.currentlyBuildingImprovement?.percentageCompleted ?? 1.0, 0.0, "%")
         player1 = player1.updatePlayer()
         player2 = player2.updatePlayer()
@@ -269,8 +263,7 @@ final class ImprovementTests : XCTestCase {
         
         let improvement = Improvement.getImprovementByName(.OrbitalShipyard)!
         var playerWithBuilding = result.changedPlayer.extraIncome(amount: improvement.cost * 2)
-        playerWithBuilding = unlockTechnologiesForImprovement(player: playerWithBuilding, improvement: improvement)
-        playerWithBuilding = try playerWithBuilding.startBuildImprovement(improvement, startDate: Date())
+        playerWithBuilding = try playerWithBuilding.startBuildImprovement(improvement, startDate: Date(), options: [.ignoreTechPrereqs])
         for _ in 0 ... improvement.buildTime {
             playerWithBuilding = playerWithBuilding.updatePlayer()
         }
@@ -295,8 +288,7 @@ final class ImprovementTests : XCTestCase {
         // Build Ikea store
         let ikea = Improvement.getImprovementByName(.PrefabFurniture)!
         var ikeaPlayer = player.extraIncome(amount: ikea.cost)
-        ikeaPlayer = unlockTechnologiesForImprovement(player: ikeaPlayer, improvement: ikea)
-        ikeaPlayer = try ikeaPlayer.startBuildImprovement(ikea, startDate: Date())
+        ikeaPlayer = try ikeaPlayer.startBuildImprovement(ikea, startDate: Date(), options: [.ignoreTechPrereqs])
         ikeaPlayer = playerCompleteImprovement(player: ikeaPlayer, improvement: ikea)
         
         //XCTAssertLessThan(ikeaPlayer.buildTimeFactor, player.buildTimeFactor)
@@ -307,13 +299,12 @@ final class ImprovementTests : XCTestCase {
         
         let improvement = Improvement.getImprovementByName(.AI_TAG)!
         player = player.extraIncome(amount: improvement.cost * 4)
-        player = unlockTechnologiesForImprovement(player: player, improvement: improvement)
         
-        player = try player.startBuildImprovement(improvement, startDate: Date())
+        player = try player.startBuildImprovement(improvement, startDate: Date(), options: [.ignoreUniqueness, .ignoreSpecializationSlotCount, .ignoreTechPrereqs])
         player = playerCompleteImprovement(player: player, improvement: improvement)
         XCTAssertEqual(player.completedImprovements.filter({$0 == improvement}).count, 1)
         
-        player = try player.startBuildImprovement(improvement, startDate: Date())
+        player = try player.startBuildImprovement(improvement, startDate: Date(), options: [.ignoreUniqueness, .ignoreSpecializationSlotCount, .ignoreTechPrereqs])
         
         let slot = player.improvements.count - 1
         
@@ -328,9 +319,8 @@ final class ImprovementTests : XCTestCase {
                
         let improvement = Improvement.getImprovementByName(.AI_TAG)!
         player = player.extraIncome(amount: improvement.cost * 4)
-        player = unlockTechnologiesForImprovement(player: player, improvement: improvement)
         
-        player = try player.startBuildImprovement(improvement, startDate: Date())
+        player = try player.startBuildImprovement(improvement, startDate: Date(), options: [.ignoreUniqueness, .ignoreSpecializationSlotCount, .ignoreTechPrereqs])
         XCTAssertLessThan(player.completedImprovements.count, player.improvements.count)
         
         let rushingPlayer = try player.rushImprovement(in: player.improvements.count - 1)
@@ -342,12 +332,11 @@ final class ImprovementTests : XCTestCase {
         var player = Player(emailAddress: "example@example.com", name: "testUser")
         player = try player.removeImprovementInSlot(0)
         let improvement = Improvement.getImprovementByName(.AI_TAG)!
-        player = unlockTechnologiesForImprovement(player: player, improvement: improvement)
         player = player.extraIncome(amount: improvement.cost * Double(player.improvementSlotsCount + 1))
         
-        
         for _ in 0 ..< player.improvementSlotsCount {
-            player = try player.startBuildImprovement(improvement, startDate: Date())
+            player = try player.startBuildImprovement(improvement, startDate: Date(), options: [.ignoreUniqueness, .ignoreSpecializationSlotCount, .ignoreTechPrereqs])
+            player = playerCompleteImprovement(player: player, improvement: improvement)
         }
         
         XCTAssertThrowsError(try player.startBuildImprovement(improvement, startDate: Date()))
@@ -356,8 +345,7 @@ final class ImprovementTests : XCTestCase {
     func testSellImprovement() throws {
         var player = Player(emailAddress: "example@example.com", name: "testUser")
         let improvement = Improvement.getImprovementByName(.AI_TAG)!
-        player = unlockTechnologiesForImprovement(player: player, improvement: improvement)
-        player = try player.startBuildImprovement(improvement, startDate: Date())
+        player = try player.startBuildImprovement(improvement, startDate: Date(), options: [.ignoreUniqueness, .ignoreSpecializationSlotCount, .ignoreTechPrereqs])
         player = playerCompleteImprovement(player: player, improvement: improvement)
         XCTAssert(player.completedImprovements.contains(improvement))
         let cashBeforeSale = player.cash
@@ -410,6 +398,25 @@ final class ImprovementTests : XCTestCase {
         XCTAssertGreaterThan(updatedPlayer.improvements[index].percentageCompleted, player.improvements[index].percentageCompleted)
     }
     
+    func testCannotBuildMoreThanMaximumNumberOfSpecializations() throws {
+        let player = Player(emailAddress: "example@example.com", name: "testUser")
+        XCTAssertEqual(player.maximumNumberOfSpecializations, 0, "slots")
+        
+        XCTAssertThrowsError(try player.startBuildImprovement(Improvement.getImprovementByName(.Retail_TAG)!, startDate: Date(), options: [.ignoreTechPrereqs])) { error in
+            print("Cought expected error: \(error)")
+        }
+    }
+    
+    func testCannotBuildMoreThanOneUniqueImprovement() throws {
+        var player = Player(emailAddress: "example@example.com", name: "testUser")
+        
+        player = try player.startBuildImprovement(Improvement.getImprovementByName(.Retail_TAG)!, startDate: Date(), options: [.ignoreTechPrereqs, .ignoreSpecializationSlotCount])
+        
+        XCTAssertThrowsError(try player.startBuildImprovement(Improvement.getImprovementByName(.Retail_TAG)!, startDate: Date(), options: [.ignoreTechPrereqs, .ignoreSpecializationSlotCount])) { error in
+            print("Cought expected error: \(error)")
+        }
+    }
+    
     static let allTests = [
         ("testStartBuildImprovement", testStartBuildImprovement),
         ("testGetImprovementByName", testGetImprovementByName),
@@ -432,6 +439,8 @@ final class ImprovementTests : XCTestCase {
         ("testTriggerImprovementLowersActionPoints", testTriggerImprovementLowersActionPoints),
         ("testPlayerWithoutActionPointsCantTrigger", testPlayerWithoutActionPointsCantTrigger),
         ("testTriggerImprovementAddsBuildPoints", testTriggerImprovementAddsBuildPoints),
+        ("testCannotBuildMoreThanMaximumNumberOfSpecializations", testCannotBuildMoreThanMaximumNumberOfSpecializations),
+        ("testCannotBuildMoreThanOneUniqueImprovement", testCannotBuildMoreThanOneUniqueImprovement),
     ]
 
 }
