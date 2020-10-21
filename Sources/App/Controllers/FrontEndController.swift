@@ -59,6 +59,12 @@ struct CreateSimulation: LifecycleHandler {
 
 func createFrontEndRoutes(_ app: Application) {
     
+    let session = app.routes.grouped([
+        SessionsMiddleware(session: app.sessions.driver),
+        UserSessionAuthenticator(),
+        UserCredentialsAuthenticator(),
+    ])
+    
     app.get("create", "player") { req -> EventLoopFuture<View> in
         return req.view.render("createPlayer", ["startingImprovements": Improvement.startImprovements])
         }
@@ -72,13 +78,20 @@ func createFrontEndRoutes(_ app: Application) {
         let emailAddress: String = try req.content.get(at: "emailAddress")
         let name: String = try req.content.get(at: "name")
         let shortNameForm: Int = try req.content.get(at: "startingImprovement")
+        let password: String = try req.content.get(at: "password")
+        let passwordRepeat: String = try req.content.get(at: "passwordRepeat")
+        
+        guard password == passwordRepeat else {
+            throw Abort(.badRequest, reason: "Passwords don't match.")
+        }
+        
         guard let startingImprovement = Improvement.ShortName.init(rawValue: shortNameForm) else {
             throw Abort(.badRequest, reason: "Invalid starting improvement shortname \(shortNameForm).")
         }
         
         var context = CreateCharacterContext()
         do {
-            let result = try app.simulation.createPlayer(emailAddress: emailAddress, name: name, startImprovementShortName: startingImprovement)
+            let result = try app.simulation.createPlayer(emailAddress: emailAddress, name: name, password: password, startImprovementShortName: startingImprovement)
             app.simulation = result.updatedSimulation
             
             context.email = emailAddress
@@ -98,48 +111,41 @@ func createFrontEndRoutes(_ app: Application) {
         }
     }
         
-    app.post("login") { req -> Response in
-        let idString: String = (try? req.content.get(at: "playerid")) ?? ""
-        
-        guard UUID(idString) != nil else {
-            print("\(idString) is not a valid user id")
-            return req.redirect(to: "/")
+    session.post("login") { req -> Response in
+        guard let user = req.auth.get(Player.self) else {
+            throw Abort(.unauthorized)
         }
         
-        req.session.data["playerID"] = idString
+        req.session.authenticate(user)
+        
         if app.simulation.state == .admin {
             return req.redirect(to: "/admin")
         } else {
             return req.redirect(to: "/main")
         }
-        
     }
         
-    app.get("main") { req in
+    session.get("main") { req -> EventLoopFuture<View> in
         return try mainPage(req: req, page: "main")
     }
         
-    app.get("mission") { req in
+    session.get("mission") { req in
         return try mainPage(req: req, page: "mission")
     }
         
-    app.get("technology") { req in
+    session.get("technology") { req in
         return try mainPage(req: req, page: "technology")
     }
         
-    app.get("improvements") { req in
+    session.get("improvements") { req in
         return try mainPage(req: req, page: "improvements")
     }
         
     func mainPage(req: Request, page: String) throws -> EventLoopFuture<View> {
-        guard let id = getPlayerIDFromSession(on: req) else {
+        guard let player = try? getPlayerFromSession(on: req, in: app.simulation) else {
             return req.view.render("index", ["state": app.simulation.state])
         }
-        
-        /*if simulationIsUpdating {
-            self.infoMessages[id] = "Simulation is updating. Thanks for your patience!"
-        }*/
-        
+                
         if app.simulation.simulationShouldUpdate(currentDate: Date()) {
             let updatedSimulation = app.simulation.updateSimulation(currentDate: Date())
             assert(app.simulation.id == updatedSimulation.id)
@@ -167,10 +173,10 @@ func createFrontEndRoutes(_ app: Application) {
             }
         }
         
-        return try getMainViewForPlayer(with: id, simulation: app.simulation, on: req, page: page)
+        return try getMainViewForPlayer(player, simulation: app.simulation, on: req, page: page)
     }
         
-    app.get("edit", "mission") { req -> EventLoopFuture<View> in
+    session.get("edit", "mission") { req -> EventLoopFuture<View> in
         let player = try getPlayerFromSession(on: req, in: app.simulation)
         
         guard let supportedMission = app.simulation.getSupportedMissionForPlayer(player) else {
@@ -180,7 +186,7 @@ func createFrontEndRoutes(_ app: Application) {
         return req.view.render("editMission", ["missionName": supportedMission.missionName])
     }
         
-    app.post("edit", "mission") { req -> Response in
+    session.post("edit", "mission") { req -> Response in
         let newName: String = try req.content.get(at: "missionName")
         
         let player = try getPlayerFromSession(on: req, in: app.simulation)
@@ -195,13 +201,13 @@ func createFrontEndRoutes(_ app: Application) {
         return req.redirect(to: "/mission")
     }
         
-    app.get("create", "mission") { req -> Response in
+    session.get("create", "mission") { req -> Response in
         let player = try getPlayerFromSession(on: req, in: app.simulation)
         app.simulation = try app.simulation.createMission(for: player)
         return req.redirect(to: "/mission")
     }
         
-    app.get("support", "mission") { req -> EventLoopFuture<View> in
+    session.get("support", "mission") { req -> EventLoopFuture<View> in
         _ = try getPlayerFromSession(on: req, in: app.simulation)
         
         let unfinishedMissions = app.simulation.missions.filter { mission in mission.missionComplete == false }
@@ -214,7 +220,7 @@ func createFrontEndRoutes(_ app: Application) {
         return req.view.render("missions", ["missions": mcs])
     }
         
-    app.get("support", "mission", ":id") { req -> Response in
+    session.get("support", "mission", ":id") { req -> Response in
         guard let supportedMissionID = UUID(req.parameters.get("id") ?? "") else {
             throw Abort(.badRequest, reason: "\(req.parameters.get("id") ?? "-") is not a valid GUID.")
         }
@@ -237,7 +243,7 @@ func createFrontEndRoutes(_ app: Application) {
         return req.redirect(to: "/mission")
     }
         
-    app.get("donate", "to", ":receivingPlayerEmail") { req -> EventLoopFuture<View> in
+    session.get("donate", "to", ":receivingPlayerEmail") { req -> EventLoopFuture<View> in
         struct DonateContext: Content {
             let player: Player
             let receivingPlayerName: String
@@ -255,7 +261,7 @@ func createFrontEndRoutes(_ app: Application) {
         return req.view.render("donate", context)
     }
         
-    app.get("donate", "to", ":receivingPlayerEmail", "cash", ":donateString") { req -> Response in
+    session.get("donate", "to", ":receivingPlayerEmail", "cash", ":donateString") { req -> Response in
         let donatingPlayer = try getPlayerFromSession(on: req, in: app.simulation)
         
         let receivingPlayerEmail = req.parameters.get("receivingPlayerEmail") ?? ""
@@ -302,7 +308,7 @@ func createFrontEndRoutes(_ app: Application) {
         }
     }
         
-    app.get("donate", "to", ":receivingPlayerEmail", "tech", ":tpString") { req -> Response in
+    session.get("donate", "to", ":receivingPlayerEmail", "tech", ":tpString") { req -> Response in
         let donatingPlayer = try getPlayerFromSession(on: req, in: app.simulation)
         let receivingPlayerEmail: String = req.parameters.get("receivingPlayerEmail") ?? ""
         guard let techPoints = Int(req.parameters.get("tpString") ?? "") else {
@@ -332,7 +338,7 @@ func createFrontEndRoutes(_ app: Application) {
         }
     }
         
-    app.get("build", "component", ":shortNameString") { req -> Response in
+    session.get("build", "component", ":shortNameString") { req -> Response in
         let player = try getPlayerFromSession(on: req, in: app.simulation)
         let shortNameString = req.parameters.get("shortNameString") ?? ""
         
@@ -360,7 +366,7 @@ func createFrontEndRoutes(_ app: Application) {
         return req.redirect(to: "/mission")
     }
         
-    app.get("advance", "stage") { req -> Response in
+    session.get("advance", "stage") { req -> Response in
         let player = try getPlayerFromSession(on: req, in: app.simulation)
         guard let mission = app.simulation.getSupportedMissionForPlayer(player) else {
             throw Abort(.badRequest, reason: "No mission for player")
@@ -371,7 +377,7 @@ func createFrontEndRoutes(_ app: Application) {
         return req.redirect(to: "/mission")
     }
         
-    app.get("build", "improvements") { req -> EventLoopFuture<View> in
+    session.get("build", "improvements") { req -> EventLoopFuture<View> in
         struct ImprovementInfo: Codable {
             let improvement: Improvement
             let canBuild: Bool
@@ -392,7 +398,7 @@ func createFrontEndRoutes(_ app: Application) {
         return req.view.render("improvements", context)
     }
         
-    app.get("build", "improvements", ":number") { req -> Response in
+    session.get("build", "improvements", ":number") { req -> Response in
         guard let number = Int(req.parameters.get("number") ?? "") else {
             throw Abort (.badRequest, reason: "\(req.parameters.get("number") ?? "") is not a valid Integer.")
         }
@@ -435,7 +441,7 @@ func createFrontEndRoutes(_ app: Application) {
         }
     }
         
-    app.get("rush", "improvements", ":number") { req -> Response in
+    session.get("rush", "improvements", ":number") { req -> Response in
         guard let number =  Int(req.parameters.get("number") ?? "") else {
             throw Abort (.badRequest, reason: "\(req.parameters.get("number") ?? "") is not a valid Integer.")
         }
@@ -470,7 +476,7 @@ func createFrontEndRoutes(_ app: Application) {
         }
     }
         
-    app.get("sell", "improvement", ":number") { req -> Response in
+    session.get("sell", "improvement", ":number") { req -> Response in
         guard let number = Int(req.parameters.get("number") ?? "") else {
             throw Abort (.badRequest, reason: "\(req.parameters.get("number") ?? "") is not a valid Integer.")
         }
@@ -503,25 +509,10 @@ func createFrontEndRoutes(_ app: Application) {
         }
     }
     
-    app.get("trigger", "improvements", ":number") { req -> Response in
+    session.get("trigger", "improvements", ":number") { req -> Response in
         guard let number =  Int(req.parameters.get("number") ?? "") else {
             throw Abort (.badRequest, reason: "\(req.parameters.get("number") ?? "") is not a valid Integer.")
         }
-        
-        /*guard let shortName = Improvement.ShortName(rawValue: number) else {
-            return req.redirect(to: "/main")
-        }
-        
-        guard let improvement = Improvement.getImprovementByName(shortName) else {
-            return req.redirect(to: "/main")
-        }
-        
-        
-        
-        guard let index = player.improvements.firstIndex(where: { $0.shortName == shortName }) else {
-            app.errorMessages[player.id] = "Player does not have \(improvement.name)."
-            return req.redirect(to: "/main")
-        }*/
         
         let player = try getPlayerFromSession(on: req, in: app.simulation)
         
@@ -548,7 +539,7 @@ func createFrontEndRoutes(_ app: Application) {
         }
     }
         
-    app.get("mission", "supportingPlayers") { req -> EventLoopFuture<View> in
+    session.get("mission", "supportingPlayers") { req -> EventLoopFuture<View> in
         struct SupportingPlayerContext: Content {
             let player: Player
             let supportingPlayers: [Player]
@@ -567,7 +558,7 @@ func createFrontEndRoutes(_ app: Application) {
         return req.view.render("mission_supportingPlayers", context)
     }
         
-    app.get("unlock", "technologies") { req -> EventLoopFuture<View> in
+    session.get("unlock", "technologies") { req -> EventLoopFuture<View> in
         struct UnlockTechnologyContext: Codable {
             let player: Player
             let possibleTechnologies: [Technology]
@@ -581,7 +572,7 @@ func createFrontEndRoutes(_ app: Application) {
         return req.view.render("technologies", context)
     }
         
-    app.get("unlock", "technologies", ":number") { req -> Response in
+    session.get("unlock", "technologies", ":number") { req -> Response in
         guard let number = Int(req.parameters.get("number") ?? "") else {
             throw Abort (.badRequest, reason: "\(req.parameters.get("number") ?? "") is not a valid Integer.")
         }
@@ -618,7 +609,7 @@ func createFrontEndRoutes(_ app: Application) {
         }
     }
         
-    app.get("admin") { req -> EventLoopFuture<View> in
+    session.get("admin") { req -> EventLoopFuture<View> in
         struct FileInfo: Content {
             let fileName: String
             let creationDate: String
@@ -656,7 +647,7 @@ func createFrontEndRoutes(_ app: Application) {
         return req.view.render("admin/admin", context)
     }
         
-    app.get("admin", "leaveAdminMode") { req -> Response in
+    session.get("admin", "leaveAdminMode") { req -> Response in
         let player = try getPlayerFromSession(on: req, in: app.simulation)
         guard player.isAdmin else {
             throw Abort(.unauthorized, reason: "Player \(player.name) is not an admin.")
@@ -670,7 +661,7 @@ func createFrontEndRoutes(_ app: Application) {
         return req.redirect(to: "/admin")
     }
         
-    app.get("admin", "save") { req -> EventLoopFuture<Response> in
+    session.get("admin", "save") { req -> EventLoopFuture<Response> in
         let player = try getPlayerFromSession(on: req, in: app.simulation)
         guard player.isAdmin else {
             throw Abort(.unauthorized, reason: "Player \(player.name) is not an admin.")
@@ -693,18 +684,9 @@ func createFrontEndRoutes(_ app: Application) {
             app.infoMessages[player.id] = "Save succesfull. (\(result.eTag ?? "unknown"))"
             return req.redirect(to: "/admin")
         }
-        
-        
-        //let promise = req.eventLoop.makePromise(of: Response.self)
-        //promise.succeed(req.redirect(to: "/admin"))
-        //return promise.futureResult
-        /*return try Storage.upload(bytes: data, fileName: "simulation", fileExtension: "json", folder: "data", on: req).map(to: Response.self) { result in
-            self.infoMessages[player.id] = "Save successfull"
-            return req.redirect(to: "/admin")
-        }*/
     }
         
-    app.get("admin", "enterAdminMode") { req -> Response in
+    session.get("admin", "enterAdminMode") { req -> Response in
         let player = try getPlayerFromSession(on: req, in: app.simulation)
         guard player.isAdmin else {
             throw Abort(.unauthorized, reason: "Player \(player.name) is not an admin.")
@@ -719,7 +701,7 @@ func createFrontEndRoutes(_ app: Application) {
         return req.redirect(to: "/admin")
     }
         
-    app.get("admin", "bless", ":userName") { req -> Response in
+    session.get("admin", "bless", ":userName") { req -> Response in
         let player = try getPlayerFromSession(on: req, in: app.simulation)
         guard player.isAdmin else {
             throw Abort(.unauthorized, reason: "Player \(player.name) is not an admin.")
@@ -738,7 +720,7 @@ func createFrontEndRoutes(_ app: Application) {
         return req.redirect(to: "/admin")
     }
     
-    app.get("admin", "unbless", ":userName") { req -> Response in
+    session.get("admin", "unbless", ":userName") { req -> Response in
         let player = try getPlayerFromSession(on: req, in: app.simulation)
         guard player.isAdmin else {
             throw Abort(.unauthorized, reason: "Player \(player.name) is not an admin.")
@@ -757,7 +739,7 @@ func createFrontEndRoutes(_ app: Application) {
         return req.redirect(to: "/admin")
     }
         
-    app.get("admin", "load") { req -> EventLoopFuture<Response> in
+    session.get("admin", "load") { req -> EventLoopFuture<Response> in
         let player = try getPlayerFromSession(on: req, in: app.simulation)
         guard player.isAdmin else {
             throw Abort(.unauthorized, reason: "Player \(player.name) is not an admin.")
@@ -850,16 +832,12 @@ func createFrontEndRoutes(_ app: Application) {
         }
         
         for i in 0 ..< 1_000 {
-            let result = try app.simulation.createPlayer(emailAddress: "dummyUser\(i)\(Int.random(in: 0...1_000_000))@example.com", name: "dummyUser\(i)\(Int.random(in: 0...1_000_000))")
+            let result = try app.simulation.createPlayer(emailAddress: "dummyUser\(i)\(Int.random(in: 0...1_000_000))@example.com", name: "dummyUser\(i)\(Int.random(in: 0...1_000_000))", password: "foo")
             app.simulation = result.updatedSimulation
         }
         return app.simulation.players
     }
-        
-        /*router.get("debug", "getFileIndex") { req in
-            return try Storage.get(path: "/local/data/", on: req)
-        }*/
-        
+                
     app.get() { req in
         return req.view.render("index", ["state": app.simulation.state])
     }
@@ -879,15 +857,12 @@ func createFrontEndRoutes(_ app: Application) {
             return("Error while backup up: \(error).")
         }
     }
-            
+    
     func getPlayerIDFromSession(on req: Request) -> UUID? {
-        if req.hasSession, let playerID = req.session.data["playerID"] {
-            return UUID(playerID)
-        }
-        return nil
+        (try? getPlayerFromSession(on: req, in: app.simulation))?.id
     }
     
-    func getMainViewForPlayer(with id: UUID, simulation: Simulation, on req: Request, page: String = "main") throws -> EventLoopFuture<View> {
+    func getMainViewForPlayer(_ player: Player, simulation: Simulation, on req: Request, page: String = "main") throws -> EventLoopFuture<View> {
         struct ImprovementContext: Codable {
             let slot: Int
             let improvement: Improvement
@@ -920,10 +895,7 @@ func createFrontEndRoutes(_ app: Application) {
             let improvementCount: Int
         }
         
-        guard let player = app.simulation.players.first(where: {somePlayer in somePlayer.id == id}) else {
-            print("Could not find user with id: \(id)")
-            return req.view.render("index")
-        }
+        let id = player.id
         
         var errorMessages = app.errorMessages
         let errorMessage = errorMessages[id] ?? nil
@@ -968,15 +940,10 @@ func createFrontEndRoutes(_ app: Application) {
     }
     
     func getPlayerFromSession(on req: Request, in simulation: Simulation) throws -> Player {
-        guard let id = getPlayerIDFromSession(on: req) else {
+        guard let user = req.auth.get(Player.self) else {
             throw Abort(.unauthorized)
         }
-        
-        guard let player = simulation.players.first(where: {player in player.id == id }) else {
-            throw Abort(.unauthorized)
-        }
-        
-        return player
+        return user
     }
     
     func sendWelcomeEmail(to player: Player, on container: Request) {

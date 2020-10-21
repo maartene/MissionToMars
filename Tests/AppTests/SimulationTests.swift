@@ -52,7 +52,7 @@ final class SimulationTests : XCTestCase {
         let gameDate = Date().addingTimeInterval(24*60*60*365)
         
         var simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date(), createDefaultAdminPlayer: true)
-        simulation = try simulation.createPlayer(emailAddress: "example@example.com", name: "testUser").updatedSimulation
+        simulation = try simulation.createPlayer(emailAddress: "example@example.com", name: "testUser", password: "").updatedSimulation
         let update = simulation.updateSimulation(currentDate: Date().addingTimeInterval(UPDATE_INTERVAL_IN_MINUTES * 60 * 4))
         
         XCTAssertGreaterThan(update.players[0].cash, simulation.players[0].cash, " cash")
@@ -62,7 +62,7 @@ final class SimulationTests : XCTestCase {
     func testUpdateMission() throws {
         let gameDate = Date().addingTimeInterval(Double(SECONDS_IN_YEAR))
         var simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date(), createDefaultAdminPlayer: true)
-        let playerCreateResult = try simulation.createPlayer(emailAddress: "test@test.com", name: "test")
+        let playerCreateResult = try simulation.createPlayer(emailAddress: "test@test.com", name: "test", password: "")
         var player = playerCreateResult.newPlayer
         
         simulation = playerCreateResult.updatedSimulation
@@ -87,7 +87,7 @@ final class SimulationTests : XCTestCase {
     func testUpdateAdvancesPlayerImprovementBuildProgress() throws {
         let gameDate = Date().addingTimeInterval(Double(SECONDS_IN_YEAR))
         var simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date(), createDefaultAdminPlayer: true)
-        let createPlayerResult = try simulation.createPlayer(emailAddress: "example@example.com", name: "testUser")
+        let createPlayerResult = try simulation.createPlayer(emailAddress: "example@example.com", name: "testUser", password: "")
         simulation = createPlayerResult.updatedSimulation
         var player = createPlayerResult.newPlayer
         let improvement = Improvement.getImprovementByName(.Faculty)!
@@ -112,7 +112,7 @@ final class SimulationTests : XCTestCase {
         
         let improvement = Improvement.getImprovementByName(.PrefabFurniture)!
         
-        let createPlayerResult = try simulation.createPlayer(emailAddress: "example@example.com", name: "testUser")
+        let createPlayerResult = try simulation.createPlayer(emailAddress: "example@example.com", name: "testUser", password: "")
         simulation = createPlayerResult.updatedSimulation
         var player = createPlayerResult.newPlayer
         
@@ -129,7 +129,7 @@ final class SimulationTests : XCTestCase {
     func testPlayerInvestsInComponent() throws {
         let gameDate = Date().addingTimeInterval(Double(SECONDS_IN_YEAR))
         var simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date(), createDefaultAdminPlayer: true)
-        let playerCreateResult = try simulation.createPlayer(emailAddress: "test@test.com", name: "test")
+        let playerCreateResult = try simulation.createPlayer(emailAddress: "test@test.com", name: "test", password: "")
         var player = playerCreateResult.newPlayer
         simulation = playerCreateResult.updatedSimulation
         
@@ -153,11 +153,11 @@ final class SimulationTests : XCTestCase {
         
         var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date(), createDefaultAdminPlayer: true)
         
-        let playerCreateResult1 = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1")
+        let playerCreateResult1 = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1", password: "")
         var player1 = playerCreateResult1.newPlayer
         simulation = playerCreateResult1.updatedSimulation
         
-        let playerCreateResult2 = try simulation.createPlayer(emailAddress: "test2@test.com", name: "test2")
+        let playerCreateResult2 = try simulation.createPlayer(emailAddress: "test2@test.com", name: "test2", password: "")
         var player2 = playerCreateResult2.newPlayer
         simulation = playerCreateResult2.updatedSimulation
         
@@ -176,11 +176,11 @@ final class SimulationTests : XCTestCase {
     func testDonateTechToPlayerInSameMission() throws {
         var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date(), createDefaultAdminPlayer: true)
         
-        let playerCreateResult1 = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1")
+        let playerCreateResult1 = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1", password: "")
         var player1 = playerCreateResult1.newPlayer
         simulation = playerCreateResult1.updatedSimulation
         
-        let playerCreateResult2 = try simulation.createPlayer(emailAddress: "test2@test.com", name: "test2")
+        let playerCreateResult2 = try simulation.createPlayer(emailAddress: "test2@test.com", name: "test2", password: "")
         var player2 = playerCreateResult2.newPlayer
         simulation = playerCreateResult2.updatedSimulation
         
@@ -198,7 +198,7 @@ final class SimulationTests : XCTestCase {
     func testCreateMission() throws {
         var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date(), createDefaultAdminPlayer: true)
         
-        let playerCreateResult = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1")
+        let playerCreateResult = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1", password: "")
         let player = playerCreateResult.newPlayer
         simulation = playerCreateResult.updatedSimulation
         XCTAssertEqual(simulation.missions.count, 0, "missions")
@@ -211,7 +211,7 @@ final class SimulationTests : XCTestCase {
     func testReplacePlayer() throws {
         var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date(), createDefaultAdminPlayer: true)
         
-        let playerCreateResult = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1")
+        let playerCreateResult = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1", password: "")
         let player = playerCreateResult.newPlayer
         simulation = playerCreateResult.updatedSimulation
         
@@ -230,7 +230,7 @@ final class SimulationTests : XCTestCase {
     func testReplaceMission() throws {
         var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date(), createDefaultAdminPlayer: true)
         
-        let playerCreateResult = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1")
+        let playerCreateResult = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1", password: "")
         let player = playerCreateResult.newPlayer
         simulation = playerCreateResult.updatedSimulation
         
@@ -252,7 +252,7 @@ final class SimulationTests : XCTestCase {
     func testGetSupportedMissionForPlayer() throws {
         var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date(), createDefaultAdminPlayer: true)
         
-        let playerCreateResult = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1")
+        let playerCreateResult = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1", password: "")
         var player = playerCreateResult.newPlayer
         simulation = playerCreateResult.updatedSimulation
         
@@ -268,7 +268,7 @@ final class SimulationTests : XCTestCase {
         var simulation = Simulation(tickCount: 0, gameDate: Date(), nextUpdateDate: Date(), createDefaultAdminPlayer: true)
         XCTAssertEqual(simulation.players.count, 1, "players")
         
-        let playerCreateResult = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1")
+        let playerCreateResult = try simulation.createPlayer(emailAddress: "test1@test.com", name: "test1", password: "")
         simulation = playerCreateResult.updatedSimulation
         XCTAssertEqual(simulation.players.count, 2, "players")
         XCTAssertEqual(simulation.players[1].id, playerCreateResult.newPlayer.id)

@@ -81,7 +81,7 @@ public struct Simulation: Content {
         return currentDate >= self.nextUpdateDate
     }
     
-    public func createPlayer(emailAddress: String, name: String, startImprovementShortName: Improvement.ShortName = Improvement.ShortName.TechConsultancy) throws -> (newPlayer: Player, updatedSimulation: Simulation) {
+    public func createPlayer(emailAddress: String, name: String, password: String, startImprovementShortName: Improvement.ShortName = Improvement.ShortName.TechConsultancy) throws -> (newPlayer: Player, updatedSimulation: Simulation) {
         guard players.contains(where: { player in player.name == name || player.emailAddress == emailAddress }) == false else {
             throw SimulationError.userAlreadyExists
         }
@@ -90,7 +90,7 @@ public struct Simulation: Content {
             throw SimulationError.usernameFailedValidation
         }
         
-        let newPlayer = Player(emailAddress: emailAddress, name: name, startImprovementShortName: startImprovementShortName)
+        let newPlayer = Player(emailAddress: emailAddress, name: name, password: password, startImprovementShortName: startImprovementShortName)
         var updatedSimulation = self
         updatedSimulation.players.append(newPlayer)
         return (newPlayer, updatedSimulation)
@@ -232,11 +232,12 @@ public struct Simulation: Content {
     private mutating func createAdminPlayer() {
         let adminEmail = Environment.get("ADMIN_EMAIL") ?? "maarten@mission2mars.space"
         let adminUserName = Environment.get("ADMIN_USERNAME") ?? "maarten"
+        let adminPassword = Environment.get("ADMIN_PASSWORD") ?? "welkom"
         
         let dataDir = Environment.get("DATA_DIR") ?? ""
         
         do {
-            var adminPlayer = try createPlayer(emailAddress: adminEmail, name: adminUserName).newPlayer
+            var adminPlayer = try createPlayer(emailAddress: adminEmail, name: adminUserName, password: adminPassword).newPlayer
             adminPlayer = adminPlayer.bless()
             players.append(adminPlayer)
             _ = try save(path: dataDir)

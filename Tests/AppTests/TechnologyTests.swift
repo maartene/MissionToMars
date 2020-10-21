@@ -20,12 +20,12 @@ class TechnologyTests: XCTestCase {
     }
 
     func testPlayerStartsWithTechnology() {
-        let player = Player(emailAddress: "example@example.com", name: "testUser")
+        let player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
         XCTAssert(player.unlockedTechnologyNames.contains(.LiIonBattery))
     }
     
     func testPlayerHasPrerequisiteTechnologies() {
-        let player = Player(emailAddress: "example@example.com", name: "testUser")
+        let player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
         
         let unlockableTechs = Technology.unlockableTechnologiesForPlayer(player)
         let unlockableTechNames = unlockableTechs.map { tech in return tech.shortName }
