@@ -72,6 +72,7 @@ func createFrontEndRoutes(_ app: Application) {
     app.post("create", "player") { req -> EventLoopFuture<View> in
         struct CreateCharacterContext: Codable {
             var errorMessage = "noError"
+            var name = ""
             var email = ""
             var uuid = "unknown"
         }
@@ -95,6 +96,7 @@ func createFrontEndRoutes(_ app: Application) {
             app.simulation = result.updatedSimulation
             
             context.email = emailAddress
+            context.name = name
             context.uuid = String(result.newPlayer.id)
             
             sendWelcomeEmail(to: result.newPlayer, on: req)

@@ -15,13 +15,23 @@
       </div>
       <div class="form-group">
           <label for="name">Password</label>
-          <input type="password" class="form-control" id="text" name="password" required minlength="3"/>
-          <small id="passwordHelp" class="form-text text-muted">Required, minimum of three characters.</small>
+          <input type="password" class="form-control" id="password" name="password" required minlength="8"/>
+          <small id="passwordHelp" class="form-text text-muted">Required, minimum of eight characters, a lowercase letter, an uppercase letter, a number.</small>
       </div>
       <div class="form-group">
           <label for="name">Repeat password</label>
-          <input type="password" class="form-control" id="text" name="passwordRepeat" required minlength="3"/>
+          <input type="password" class="form-control" id="passwordRepeat" name="passwordRepeat" required minlength="3"/>
       </div>
+      <div id="message" class="card border-secondary mb-3" style="max-width: 20rem;">
+        <div class="card-body">
+          <h4 class="card-title">Password requirements:</h3>
+          <p id="match" class="card-text text-warning">Passwords match</p>
+          <p id="letter" class="card-text text-warning">A <b>lowercase</b> letter</p>
+          <p id="capital" class="card-text text-warning">A <b>capital (uppercase)</b> letter</p>
+          <p id="number" class="card-text text-warning">A <b>number</b></p>
+          <p id="length" class="card-text text-warning">Minimum <b>8 characters</b></p>
+        </div>
+    </div>
       <fieldset class="form-group">
         <legend>How will you start?</legend>
         #for(improvement in startingImprovements):
@@ -40,8 +50,9 @@
         #endfor
       </fieldset>
       <a href="/" type="cancel" class="btn btn-secondary">Cancel</a>
-      <button type="submit" class="btn btn-success">Save</button>
+      <button type="submit" class="btn btn-success disabled" id="saveButton">Save</button>
     </form>
   </div>
+  <script src="/js/validatePassword.js"></script>
   #endexport
 #endextend
