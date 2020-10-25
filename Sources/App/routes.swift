@@ -7,4 +7,5 @@ public func routes(_ app: Application) throws {
     //try router.register(collection: FrontEndController())
     
     createFrontEndRoutes(app)
+    createPasswordResetRoutes(app)
 }

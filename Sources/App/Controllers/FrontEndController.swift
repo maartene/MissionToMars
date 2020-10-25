@@ -955,9 +955,13 @@ func createFrontEndRoutes(_ app: Application) {
         mailJetConfig.sendMessage(to: player.emailAddress, toName: player.name, subject: "Your login id", message: """
             Welcome \(player.name) to Mission2Mars
             
-            Your login id is: \(player.id)
-            Please keep this code secret, as there is no other authentication method at this time!
+            Your username is: \(player.name)
+            Your registered email address is: \(player.emailAddress)
             
+            Note: if you lose your password, you need both your registered email address and username to request a new password.
+
+            If you don't recognize signing up to Mission2Mars, please let us know by replying to this e-mail. Otherwise,
+
             Have fun!
             
             - the Mission2Mars team
@@ -965,8 +969,11 @@ func createFrontEndRoutes(_ app: Application) {
             """, htmlMessage: """
             <h1>Welcome \(player.name) to Mission2Mars</h1>
             
-            <h3>Your login id is: <b>\(player.id)</b></h3>
-            <p>Please keep this code secret, as there is no other authentication method at this time!</p>
+            <h3>Your username is: <b>\(player.name)</b></h3>
+            <h3>Your registered email address is: \(player.emailAddress)</h3>
+            <p>Note: if you lose your password, you need both your registered email address and username to request a new password.</p>
+            <p>&nbsp;</p>
+            <p>If you don't recognize signing up to Mission2Mars, please let us know by replying to this e-mail. Otherwise,</p>
             <p>&nbsp;</p>
             <p>Have fun!</p>
             <p>&nbsp;</p>

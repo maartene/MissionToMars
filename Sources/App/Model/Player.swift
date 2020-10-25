@@ -173,6 +173,10 @@ public struct Player: Content {
         self.unlockedTechnologyNames = [Technology.ShortName.LiIonBattery]
     }
     
+    public mutating func setPassword(_ password: String) {
+        self.hashedPassword = (try? Bcrypt.hash(password)) ?? ""
+    }
+    
     // MARK: Update
     public func updatePlayer() -> Player {
         var updatedPlayer = self

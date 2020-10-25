@@ -24,7 +24,7 @@
       </div>
       <div id="message" class="card border-secondary mb-3" style="max-width: 20rem;">
         <div class="card-body">
-          <h4 class="card-title">Password requirements:</h3>
+          <h4 class="card-title">Password requirements:</h4>
           <p id="match" class="card-text text-warning">Passwords match</p>
           <p id="letter" class="card-text text-warning">A <b>lowercase</b> letter</p>
           <p id="capital" class="card-text text-warning">A <b>capital (uppercase)</b> letter</p>
