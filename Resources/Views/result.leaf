@@ -1,0 +1,19 @@
+#extend("master"):
+    #export("body"):
+    #if(successMessage):
+        <div class="text-success">
+            #(successMessage)
+        </div>
+    #endif
+    #if(infoMessage):
+        <div class="text-success">
+            #(infoMessage)
+        </div>
+    #endif
+    #if(errorMessage):
+        <div class="text-warning">
+            #(errorMessage)
+        </div>
+    #endif
+    #endexport
+#endextend

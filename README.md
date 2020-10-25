@@ -8,7 +8,7 @@ Getting to Mars is hard. Very hard. This game aims to become a "hard-scifi" simu
 * Whether you spend your funds on improving technology, supporting other players, building improvements is up to you.
 
 ## Playable version online
-You can play a playable build of version 0.0.19 on https://www.mission2mars.space 
+You can play a playable build of version 0.1.0 on https://www.mission2mars.space 
 
 ## Features
 ### Whats available
@@ -17,6 +17,7 @@ You can play a playable build of version 0.0.19 on https://www.mission2mars.spac
 * Model is file-backed;
 * There is a simple Leaf based UI: completely server-side rendered, no JS/AJAX whatsoever;
 * Mission stages and components;
+* User management and authentication;
 * Build improvements to get more cash per day, more value from research, improved production and the possibility to build mission parts
 * Stub for income;
 * Email integration using [MailJet](https://www.mailjet.com)
@@ -28,7 +29,6 @@ You can play a playable build of version 0.0.19 on https://www.mission2mars.spac
 * Technology (tech tree) for stages 2-5 (including extra improvements);
 * More interesting interaction with other players (especially when you want to support somebody else's mission);
 * Tuning;
-* User management and authentication (for now, using the randomly generated UUID for a Player will be enough);
 * Backup/restore in case something goes wrong with the database/server.
 
 ### What won't be here

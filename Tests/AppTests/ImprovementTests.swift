@@ -59,7 +59,7 @@ final class ImprovementTests : XCTestCase {
         
         let completedImprovement = try completeImprovement(improvement)
         
-        let player = Player(emailAddress: "example@example.com", name: "testUser")
+        let player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
         
         let updatedPlayer = completedImprovement.applyEffectForOwner(player: player)
         
@@ -95,7 +95,7 @@ final class ImprovementTests : XCTestCase {
     }*/
     
     func testUpdateOfPlayerImprovesBuildProgress() throws {
-        var player = Player(emailAddress: "example@example.com", name: "testUser")
+        var player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
         let improvement = Improvement.getImprovementByName(.BioTech_TAG)!
         player.debug_setCash(improvement.cost)
         
@@ -113,7 +113,7 @@ final class ImprovementTests : XCTestCase {
     }
     
     func testUpdateOfPlayerTriggersImprovementEffect() throws {
-        var player = Player(emailAddress: "example@example.com", name: "testUser")
+        var player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
         player = try player.removeImprovementInSlot(0)
         
         XCTAssertEqual(player.cash, player.updatePlayer().cash, "cash")
@@ -131,14 +131,14 @@ final class ImprovementTests : XCTestCase {
      }
     
     func testPlayerCannotBuildImprovementWithoutPrerequisiteTech() throws {
-        let player = Player(emailAddress: "example@example.com", name: "testUser")
+        let player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
         let improvement = Improvement.getImprovementByName(.DroneDeliveryService)!
         
         XCTAssertThrowsError(try player.startBuildImprovement(improvement, startDate: Date()), "Player should not be able to build this improvement because player misses prereq technology.")
     }
     
     func testPlayerCanBuildImprovementWithPrerequisiteTech() throws {
-        var player = Player(emailAddress: "example@example.com", name: "testUser")
+        var player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
         player = player.extraTech(amount: 1_000_000)
         
         let improvement = Improvement.getImprovementByName(.BioResearchFacility)!
@@ -164,7 +164,7 @@ final class ImprovementTests : XCTestCase {
     }*/
     
     func testPlayerCanRushImprovement() throws {
-        var player = Player(emailAddress: "example@example.com", name: "testUser")
+        var player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
         let improvement = Improvement.getImprovementByName(.DesignStudio)!
         player = player.extraIncome(amount: improvement.cost * 2)
         
@@ -186,7 +186,7 @@ final class ImprovementTests : XCTestCase {
     }
     
     func testPlayerCannotRushUnrushableImprovement() throws {
-        var player = Player(emailAddress: "example@example.com", name: "testUser")
+        var player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
         let improvement = Improvement.getImprovementByName(.PrefabFurniture)!
         player = player.extraIncome(amount: improvement.cost * 2)
         
@@ -202,7 +202,7 @@ final class ImprovementTests : XCTestCase {
     }
     
     func testPlayerCannotRushWithInsufficientFunds() throws {
-        var player = Player(emailAddress: "example@example.com", name: "testUser")
+        var player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
         let improvement = Improvement.getImprovementByName(.PrefabFurniture)!
         player = player.extraIncome(amount: improvement.cost)
         
@@ -223,12 +223,12 @@ final class ImprovementTests : XCTestCase {
         let improvement2 = Improvement.getImprovementByName(.AI_TAG)!
         let ikea = Improvement.getImprovementByName(.PrefabFurniture)!
         
-        var player1 = Player(emailAddress: "example@example.com", name: "testUser")
+        var player1 = Player(emailAddress: "example@example.com", name: "testUser", password: "")
         player1 = player1.extraIncome(amount: improvement1.cost)
         player1 = try player1.startBuildImprovement(improvement1, startDate: Date(), options: [.ignoreUniqueness, .ignoreSpecializationSlotCount, .ignoreTechPrereqs])
         XCTAssertEqual(player1.currentlyBuildingImprovement?.percentageCompleted ?? 1.0, 0.0, "%")
         
-        var player2 = Player(emailAddress: "example2@example.com", name: "testUser2")
+        var player2 = Player(emailAddress: "example2@example.com", name: "testUser2", password: "")
         player2 = player2.extraIncome(amount: improvement2.cost + ikea.cost)
         player2 = try player2.startBuildImprovement(ikea, startDate: Date(), options: [.ignoreTechPrereqs])
         player2 = playerCompleteImprovement(player: player2, improvement: ikea)
@@ -243,7 +243,7 @@ final class ImprovementTests : XCTestCase {
     }
     
     func testBuildingCanShortenBuildTimeForComponent() throws {
-        var player = Player(emailAddress: "testuser@user.com", name: "testuser")
+        var player = Player(emailAddress: "testuser@user.com", name: "testuser", password: "")
         player.id = UUID()
         var mission = Mission(owningPlayerID: player.id)
         mission.id = UUID()
@@ -282,7 +282,7 @@ final class ImprovementTests : XCTestCase {
     
     // test static effect
     func testBuildingCanIncreaseBuiltTimeFactor() throws {
-        let player = Player(emailAddress: "example@example.com", name: "testUser")
+        let player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
         //XCTAssertEqual(player.buildTimeFactor, 1.0)
         
         // Build Ikea store
@@ -295,7 +295,7 @@ final class ImprovementTests : XCTestCase {
     }
     
     func testRushingImprovementDoesNotRemoveExistingImprovement() throws {
-        var player = Player(emailAddress: "example@example.com", name: "testUser")
+        var player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
         
         let improvement = Improvement.getImprovementByName(.AI_TAG)!
         player = player.extraIncome(amount: improvement.cost * 4)
@@ -315,7 +315,7 @@ final class ImprovementTests : XCTestCase {
     }
     
     func testRushSlot() throws {
-        var player = Player(emailAddress: "example@example.com", name: "testUser")
+        var player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
                
         let improvement = Improvement.getImprovementByName(.AI_TAG)!
         player = player.extraIncome(amount: improvement.cost * 4)
@@ -329,7 +329,7 @@ final class ImprovementTests : XCTestCase {
     }
     
     func testCannotBuildMoreImprovementsThanNumberOfSlots() throws {
-        var player = Player(emailAddress: "example@example.com", name: "testUser")
+        var player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
         player = try player.removeImprovementInSlot(0)
         let improvement = Improvement.getImprovementByName(.AI_TAG)!
         player = player.extraIncome(amount: improvement.cost * Double(player.improvementSlotsCount + 1))
@@ -343,7 +343,7 @@ final class ImprovementTests : XCTestCase {
     }
     
     func testSellImprovement() throws {
-        var player = Player(emailAddress: "example@example.com", name: "testUser")
+        var player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
         let improvement = Improvement.getImprovementByName(.AI_TAG)!
         player = try player.startBuildImprovement(improvement, startDate: Date(), options: [.ignoreUniqueness, .ignoreSpecializationSlotCount, .ignoreTechPrereqs])
         player = playerCompleteImprovement(player: player, improvement: improvement)
@@ -356,7 +356,7 @@ final class ImprovementTests : XCTestCase {
     }
     
     func testTriggerImprovementLowersActionPoints() throws {
-        let player = Player(emailAddress: "example@example.com", name: "testUser")
+        let player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
         XCTAssertGreaterThan(player.improvements.count, 0, "Player should have at least one improvement.")
         XCTAssertGreaterThan(player.actionPoints, 0, "Player should have at least one action point.")
         
@@ -365,7 +365,7 @@ final class ImprovementTests : XCTestCase {
     }
     
     func testTriggerImprovementChangesPlayer() throws {
-        let player = Player(emailAddress: "example@example.com", name: "testUser")
+        let player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
         XCTAssertGreaterThan(player.improvements.count, 0, "Player should have at least one improvement.")
         XCTAssertGreaterThan(player.actionPoints, 0, "Player should have at least one action point.")
         
@@ -374,7 +374,7 @@ final class ImprovementTests : XCTestCase {
     }
     
     func testPlayerWithoutActionPointsCantTrigger() throws {
-        var player = Player(emailAddress: "example@example.com", name: "testUser")
+        var player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
         XCTAssertGreaterThan(player.improvements.count, 0, "Player should have at least one improvement.")
         player.debug_setActionPoints(0)
         
@@ -383,7 +383,7 @@ final class ImprovementTests : XCTestCase {
     }
     
     func testTriggerImprovementAddsBuildPoints() throws {
-        var player = Player(emailAddress: "example@example.com", name: "testUser")
+        var player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
         player = try player.startBuildImprovement(Improvement.getImprovementByName(.DesignStudio)!, startDate: Date())
         XCTAssertGreaterThan(player.improvements.count, 1, "Player should have at least two improvement.")
         XCTAssertGreaterThan(player.actionPoints, 0, "Player should have at least one action point.")
@@ -399,7 +399,7 @@ final class ImprovementTests : XCTestCase {
     }
     
     func testCannotBuildMoreThanMaximumNumberOfSpecializations() throws {
-        let player = Player(emailAddress: "example@example.com", name: "testUser")
+        let player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
         XCTAssertEqual(player.maximumNumberOfSpecializations, 0, "slots")
         
         XCTAssertThrowsError(try player.startBuildImprovement(Improvement.getImprovementByName(.Retail_TAG)!, startDate: Date(), options: [.ignoreTechPrereqs])) { error in
@@ -408,7 +408,7 @@ final class ImprovementTests : XCTestCase {
     }
     
     func testCannotBuildMoreThanOneUniqueImprovement() throws {
-        var player = Player(emailAddress: "example@example.com", name: "testUser")
+        var player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
         
         player = try player.startBuildImprovement(Improvement.getImprovementByName(.Retail_TAG)!, startDate: Date(), options: [.ignoreTechPrereqs, .ignoreSpecializationSlotCount])
         

@@ -39,7 +39,7 @@ class StageTests: XCTestCase {
         XCTAssertEqual(0, stage.completedComponents.count, "No components should be completed yet.")
         XCTAssertEqual(stage.currentlyBuildingComponents.count, 0, "No component should be building.")
         
-        let changedStage = try stage.startBuildingComponent(stage.components.randomElement()!, buildDate: Date(), by: Player(emailAddress: "", name: ""))
+        let changedStage = try stage.startBuildingComponent(stage.components.randomElement()!, buildDate: Date(), by: Player(emailAddress: "", name: "", password: ""))
         
         XCTAssertGreaterThan(changedStage.currentlyBuildingComponents.count, 0, "A component should be building.")
         
@@ -52,7 +52,7 @@ class StageTests: XCTestCase {
         XCTAssertEqual(0, stage.currentlyBuildingComponents.count, "No component should be building.")
         
         let componentToBuild = stage.components.randomElement()!
-        var player = Player(emailAddress: "", name: "")
+        var player = Player(emailAddress: "", name: "", password: "")
         player.id = UUID()
         let changedStage = try stage.startBuildingComponent(componentToBuild, buildDate: Date(), by: player)
         XCTAssertEqual(1, changedStage.currentlyBuildingComponents.count, "One component should be building.")

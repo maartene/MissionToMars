@@ -35,6 +35,7 @@ public struct Player: Content {
     public var id = UUID()
     
     public let emailAddress: String
+    public private(set) var hashedPassword = ""
     public let name: String
     public private(set) var isAdmin: Bool = false
     public var ownsMissionID: UUID?
@@ -157,11 +158,12 @@ public struct Player: Content {
     
     
     // MARK: Init
-    public init(emailAddress: String, name: String, startImprovementShortName: Improvement.ShortName = .TechConsultancy) {
+    public init(emailAddress: String, name: String, password: String, startImprovementShortName: Improvement.ShortName = .TechConsultancy) {
         self.emailAddress = emailAddress
         self.name = name
         self.improvements = []
-        
+        self.hashedPassword = (try? Bcrypt.hash(password)) ?? ""
+
         let startImprovement = Improvement.getImprovementByName(startImprovementShortName)!
         if let completedStartImprovement = try? startImprovement.startBuild(startDate: Date()).updateImprovement(buildPoints: Double(startImprovement.buildTime)) {
             assert(completedStartImprovement.updatedImprovement.isCompleted, "Your starting tech consultancy firm should be complete.")
@@ -169,6 +171,10 @@ public struct Player: Content {
         }
         
         self.unlockedTechnologyNames = [Technology.ShortName.LiIonBattery]
+    }
+    
+    public mutating func setPassword(_ password: String) {
+        self.hashedPassword = (try? Bcrypt.hash(password)) ?? ""
     }
     
     // MARK: Update

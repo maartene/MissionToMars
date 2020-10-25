@@ -20,7 +20,7 @@ class EffectsTests: XCTestCase {
     }
 
     func testExtraSlotTests() throws {
-        var player = Player(emailAddress: "example@example.org", name: "exampleUser")
+        var player = Player(emailAddress: "example@example.org", name: "exampleUser", password: "")
         
         let technology = Technology.getTechnologyByName(.PackageOptimization)!
         
@@ -32,7 +32,7 @@ class EffectsTests: XCTestCase {
     }
     
     func testExtraMaxActions() throws {
-        var player = Player(emailAddress: "example@example.org", name: "exampleUser")
+        var player = Player(emailAddress: "example@example.org", name: "exampleUser", password: "")
         var updatedPlayer = player
         
         var playerCount = 0

@@ -1,9 +1,8 @@
 #extend("master"):
     #export("body"):
         #if(uuid != "unknown"):
-            <h2>Welcome!</h2>
-            <h3>Please remember your unique code: <span class="text-primary">#(uuid)</span></h3>
-            <p>An email was sent to your email address <span class="text-success">#(email)</span> with this information.</p>
+            <h2>Welcome #(name)!</h2>
+            <h3>Your player is created. You can now use your e-mailaddress (#(email)) and password to log in.</h3>
             <p><a href="/" class="btn btn-success">Login</a></p>
         #endif
 
