@@ -43,11 +43,11 @@ extension Application {
 }
 
 func createPasswordResetRoutes(_ app: Application) {
-    let session = app.routes.grouped([
+    /*let session = app.routes.grouped([
         SessionsMiddleware(session: app.sessions.driver),
         UserSessionAuthenticator(),
         UserCredentialsAuthenticator(),
-    ])
+    ])*/
     
     app.get("reset") { req -> EventLoopFuture<View> in
         return req.view.render("passwordResetRequest")

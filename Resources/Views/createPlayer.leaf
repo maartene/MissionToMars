@@ -37,7 +37,7 @@
         #for(improvement in startingImprovements):
           <div class="form-check">
             <label class="form-check-label">
-              <input type="radio" class="form-check-input" name="startingImprovement" id="startingImprovement" value="#(improvement.shortName)" #if(improvement.shortName == 0) {checked}>
+              <input type="radio" class="form-check-input" name="startingImprovement" id="startingImprovement" value="#(improvement.shortName)" #if(improvement.shortName == 0): checked #endif>
               <div class="row">
                 <div class="col-md-auto">&nbsp;&nbsp;&nbsp;<img src="/images/Improvements/#(improvement.shortName)-w.png" alt="#(improvement.name)" width="24"/></div>
                 <div class="col-md">

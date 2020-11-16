@@ -43,8 +43,6 @@ extension Application {
         get { self.storage[Simulation.self]! }
         set { self.storage[Simulation.self] = newValue }
     }
-    
-    
 }
 
 extension Simulation: StorageKey {
@@ -147,12 +145,12 @@ func createFrontEndRoutes(_ app: Application) {
         guard let player = try? getPlayerFromSession(on: req, in: app.simulation) else {
             return req.view.render("index", ["state": app.simulation.state])
         }
-                
+        
         if app.simulation.simulationShouldUpdate(currentDate: Date()) {
             let updatedSimulation = app.simulation.updateSimulation(currentDate: Date())
             assert(app.simulation.id == updatedSimulation.id)
             app.simulation = updatedSimulation
-    
+
             // save result (in seperate thread)
             let copy = app.simulation
             let dataDir = Environment.get("DATA_DIR") ?? ""

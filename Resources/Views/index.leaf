@@ -61,7 +61,7 @@
                 </ul>
             </p>
             <p>
-                Current version: <span class="text-danger">0.1.0</span>
+                Current version: <span class="text-danger">0.1.1</span>
             </p>
         </div>
     #endexport
