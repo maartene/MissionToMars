@@ -130,6 +130,17 @@ public struct Simulation: Content {
         return changedSimulation
     }
     
+    public func deletePlayer(_ playerToDelete: Player) throws -> Simulation {
+        guard let playerIndex = players.firstIndex(where: { player in player.id == playerToDelete.id }) else {
+            throw SimulationError.userDoesNotExist
+        }
+        
+        var changedSimulation = self
+        changedSimulation.players.remove(at: playerIndex)
+        //print(changedSimulation)
+        return changedSimulation
+    }
+    
     public func createMission(for player: Player) throws -> Simulation {
         guard player.ownsMissionID == nil else {
             throw Player.PlayerError.playerAlreadySupportsMission

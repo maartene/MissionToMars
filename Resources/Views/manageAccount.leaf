@@ -1,0 +1,56 @@
+#extend("master"):
+  #export("body"):
+    <h2>Manage account</h2>
+    #if(errorMessage):
+            <div class="alert alert-dismissible alert-warning">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <p class="mb-0">#(errorMessage)</p>
+            </div>
+        #endif
+        #if(infoMessage):
+            <div class="alert alert-dismissible alert-success">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                #(infoMessage)
+            </div>
+        #endif
+    <h3>Change password</h3>
+    <form action="/account/changePassword" method="POST">
+        <!--<div class="form-group">
+            <label for="currentPassword">Current password</label>
+            <input type="password" class="form-control" id="currentPassword" name="currentPassword" minlength="8"/>
+        </div>-->
+        <div class="form-group">
+            <label for="password">New password</label>
+            <input type="password" class="form-control" id="password" name="password"  minlength="8"/>
+        </div>
+        <div class="form-group">
+            <label for="passwordRepeat">Repeat password</label>
+            <input type="password" class="form-control" id="passwordRepeat" name="passwordRepeat"  minlength="8"/>
+            <small id="passwordHelp" class="form-text text-muted">Required, minimum of eight characters, a lowercase letter, an uppercase letter, a number.</small>
+        </div>
+        <div id="message" class="card border-secondary mb-3" style="max-width: 20rem;">
+            <div class="card-body">
+              <h4 class="card-title">Password requirements:</h4>
+              <p id="match" class="card-text text-warning">Passwords match</p>
+              <p id="letter" class="card-text text-warning">A <b>lowercase</b> letter</p>
+              <p id="capital" class="card-text text-warning">A <b>capital (uppercase)</b> letter</p>
+              <p id="number" class="card-text text-warning">A <b>number</b></p>
+              <p id="length" class="card-text text-warning">Minimum <b>8 characters</b></p>
+            </div>
+        </div>
+        <a href="/account/manage" type="cancel" class="btn btn-secondary">Cancel</a>
+        <button type="submit" class="btn btn-success" id="saveButton">Change</button>
+    </form>
+        <p>Forgot your password? <a href="/reset">Request a new password</a>.
+    <h3>Delete account</h3>
+    <p>Note: you can only do this if you don't own a mission.</p>
+    <input type="hidden" id= "usernameValidation" value="#(player.name)"/>
+    <div class="form-group">
+        <label for="usernameInput">Username:</label>
+        <input type="text" class="form-control" id="usernameInput" name="usernameInput"/>
+    </div>
+    <a href="/account/delete/#(player.id)" class="btn btn-lg btn-danger disabled" id="deleteButton">Delete</a>
+    <script src="/js/validatePassword.js"></script>
+    <script src="/js/validateUsername.js"></script>
+    #endexport
+#endextend

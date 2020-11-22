@@ -8,4 +8,5 @@ public func routes(_ app: Application) throws {
     
     createFrontEndRoutes(app)
     createPasswordResetRoutes(app)
+    createManageAccountRoutes(app)
 }

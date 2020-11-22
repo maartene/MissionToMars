@@ -102,7 +102,7 @@ The UI is Leaf based. The most important Leaf view is `main.leaf` (called from `
 
 ## Debug features
 The game provides some debug features:
-* There a routes specifically intented for debug functionality. These need to be deleted for production work (or otherwise disabled);
+* There are routes specifically intented for debug functionality. These need to be deleted for production work (or otherwise disabled);
 * The main debug solution is lowering the time between ticks (i.e. to less than a second) to get through the game quicker;
 * Off course, the regular xcode debug features can be used.
 
