@@ -24,7 +24,7 @@ func createManageAccountRoutes(_ app: Application) {
             let errorMessage: String?
         }
         
-        guard let player = try? getPlayerFromSession(on: req, in: app.simulation) else {
+        guard let player = try? getPlayerFromSession(on: req) else {
             return req.view.render("index", ["state": app.simulation.state])
         }
         
@@ -34,9 +34,7 @@ func createManageAccountRoutes(_ app: Application) {
     }
     
     session.post("account", "changePassword") { req -> Response in
-        let newPassword: String = try req.content.get(at: "password")
-        
-        let player = try getPlayerFromSession(on: req, in: app.simulation)
+        let player = try getPlayerFromSession(on: req)
         
         var newPasswordPlayer = player
         let password: String = try req.content.get(at: "password")
@@ -139,7 +137,7 @@ func createManageAccountRoutes(_ app: Application) {
     
     
     
-    func getPlayerFromSession(on req: Request, in simulation: Simulation) throws -> Player {
+    func getPlayerFromSession(on req: Request) throws -> Player {
         guard let user = req.auth.get(Player.self) else {
             throw Abort(.unauthorized)
         }

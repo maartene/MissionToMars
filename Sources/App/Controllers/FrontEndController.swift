@@ -10,53 +10,7 @@ import Vapor
 import Leaf
 import S3
 
-extension Application {
-    struct ErrorMessages: StorageKey {
-        typealias Value = [UUID: String?]
-    }
-    
-    struct InfoMessages: StorageKey {
-        typealias Value = [UUID: String?]
-    }
-    
-    var errorMessages: [UUID: String?] {
-        get { guard let messages = self.storage[ErrorMessages.self] else {
-                self.storage[InfoMessages.self] = [UUID: String?]()
-                return [:]
-            }
-            return messages
-        }
-        set { self.storage[ErrorMessages.self] = newValue }
-    }
-    
-    var infoMessages: [UUID: String?] {
-        get { guard let messages = self.storage[InfoMessages.self] else {
-                self.storage[InfoMessages.self] = [UUID: String?]()
-                return [:]
-            }
-            return messages
-        }
-        set { self.storage[InfoMessages.self] = newValue }
-    }
-    
-    var simulation: Simulation {
-        get { self.storage[Simulation.self]! }
-        set { self.storage[Simulation.self] = newValue }
-    }
-}
-
-extension Simulation: StorageKey {
-    public typealias Value = Simulation
-}
-
-struct CreateSimulation: LifecycleHandler {
-    func willBoot(_ application: Application) throws {
-        application.simulation = Simulation(tickCount: 0, gameDate: Date().addingTimeInterval(TimeInterval(SECONDS_IN_YEAR)), nextUpdateDate: Date(), createDefaultAdminPlayer: true)
-    }
-}
-
 func createFrontEndRoutes(_ app: Application) {
-    
     let session = app.routes.grouped([
         SessionsMiddleware(session: app.sessions.driver),
         UserSessionAuthenticator(),
@@ -111,17 +65,30 @@ func createFrontEndRoutes(_ app: Application) {
         }
     }
         
-    session.post("login") { req -> Response in
-        guard let user = req.auth.get(Player.self) else {
-            throw Abort(.unauthorized)
+    app.post("login") { req -> EventLoopFuture<View> in
+        let emailAddress: String = try req.content.get(at: "emailAddress")
+        let password: String = try req.content.get(at: "password")
+        
+        guard let user = app.simulation.players.first(where: { player in player.emailAddress == emailAddress }) else {
+            app.logger.warning("Attempt to login for unknown user with email address \(emailAddress).")
+            return req.view.render("index", ["errorMessage": "Invalid email address/password combination."])
         }
         
-        req.session.authenticate(user)
-        
-        if app.simulation.state == .admin {
-            return req.redirect(to: "/admin")
+        if try Bcrypt.verify(password, created: user.hashedPassword) {
+            req.auth.login(user)
+            app.logger.notice("Successfull login for user \(user.name)")
+            req.session.authenticate(user)
+            
+            if app.simulation.state == .admin {
+                return try adminPage(on: req)
+            } else {
+                return try mainPage(req: req, page: "main")
+            }
+            
+            
         } else {
-            return req.redirect(to: "/main")
+            app.logger.warning("Password mismatch for user \(user.name)")
+            return req.view.render("index", ["errorMessage": "Invalid email address/password combination."])
         }
     }
         
@@ -610,6 +577,10 @@ func createFrontEndRoutes(_ app: Application) {
     }
         
     session.get("admin") { req -> EventLoopFuture<View> in
+        return try adminPage(on: req)
+    }
+    
+    func adminPage(on req: Request) throws -> EventLoopFuture<View> {
         struct FileInfo: Content {
             let fileName: String
             let creationDate: String

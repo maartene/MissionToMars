@@ -1,7 +1,4 @@
 ### To do:
-* Manage account:
-    * Change password
-    * Delete account
 * Update simulation using a "background job" (removed background processing when upgrading to Vapor 4)
 
 ### Done:
@@ -15,3 +12,4 @@
     * Login using e-mailaddress and password
     * Create user with password
     * Form validation (i.e. password requirements)
+    * Change password, delete account

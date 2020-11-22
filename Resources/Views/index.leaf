@@ -7,6 +7,12 @@
                 Players can try logging in again in a couple of minutes.</p>
                 </div>
         #endif
+        #if(errorMessage):
+            <div class="alert alert-dismissible alert-warning">
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+                <p class="mb-0">#(errorMessage)</p>
+            </div>
+        #endif
         <div class="row m-3">
             <div class="col-lg"></div>
             <div class="col">

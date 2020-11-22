@@ -33,3 +33,10 @@ public func configure(_ app: Application) throws {
     app.middleware.use(ErrorMiddleware.default(environment: app.environment))
     app.middleware.use(app.sessions.middleware)
 }
+
+
+/*struct CreateSimulation: LifecycleHandler {
+    func willBoot(_ application: Application) throws {
+        application.simulation = Simulation(tickCount: 0, gameDate: Date().addingTimeInterval(TimeInterval(SECONDS_IN_YEAR)), nextUpdateDate: Date(), createDefaultAdminPlayer: true)
+    }
+}*/

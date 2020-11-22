@@ -37,7 +37,7 @@
       #for(p in players):
         <tr>
           <td>#(p.name)</td>
-          <td>#(p.emailAddress)</td>
+          <td>#(p.email)</td>
           <td>#if(p.isAdmin): <span class="badge badge-sm badge-info">Admin</span> #endif &nbsp;</td>
           <td>#if(p.isAdmin == false):
             <a href="/admin/bless/#(p.name)" class="btn btn-sm btn-info">Bless</a>
