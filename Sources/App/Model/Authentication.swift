@@ -59,3 +59,12 @@ struct UserCredentialsAuthenticator: CredentialsAuthenticator {
         
     }
 }
+
+extension Request {
+    func getPlayerFromSession() throws -> Player {
+        guard let user = self.auth.get(Player.self) else {
+            throw Abort(.unauthorized)
+        }
+        return user
+    }
+}
