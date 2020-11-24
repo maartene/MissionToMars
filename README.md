@@ -81,6 +81,7 @@ THIS MEANS THAT GAME STATE IS ONLY PERSISTED EVERY SO OFTEN AS THE GAME UPDATES.
 
 ### Environment variables
 M2M uses the following environment variables:
+* MOTD (string): display any announcements on the front page (i.e. scheduled maintenance);
 * DATA_DIR (string): local folder to store the simulation.json as well as backup files
 * ADMIN_EMAIL (string): email address to use for the default admin player
 * ADMIN_USER (string): username for the default admin player

@@ -629,8 +629,16 @@ func createFrontEndRoutes(_ app: Application) {
         return app.simulation.players
     }
                 
-    app.get() { req in
-        return req.view.render("index", ["state": app.simulation.state])
+    app.get() { req -> EventLoopFuture<View> in
+        struct IndexContext: Content {
+            let state: Simulation.SimulationState
+            let motd: String?
+            let isIndexPage = true
+        }
+        
+        let motd = Environment.get("MOTD")
+        let context = IndexContext(state: app.simulation.state, motd: motd)
+        return req.view.render("index", context)
     }
         
     app.get("debug", "dataDump") { req -> String in
