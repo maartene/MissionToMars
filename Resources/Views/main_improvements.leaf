@@ -40,7 +40,13 @@
                         </div>#decimal(improvementContext.improvement.percentageCompleted)% done.
                             #endif
                         </td>
-                        <td><span class="text-info">#improvementEffects(improvementContext.improvement.shortName)</span></td>
+                        <td>
+                            #for(abilityContext in improvementContext.abilities):
+                                <a href="/trigger/improvement/#(improvementContext.slot)/ability/#(abilityContext.abilityNumber)" class="btn btn-sm btn-primary #if(abilityContext.canTrigger == false): disabled #endif" data-toggle="tooltip" data-placement="top" 
+                                title="#(abilityContext.abilityEffectText)"
+                                >Trigger</a>
+                            #endfor                        
+                        </td>
                         <td>#for(tag in improvementContext.improvement.tags): <span class="badge badge-success">#(tag)</span> #endfor</td>
                         <td>#if(improvementContext.improvement.percentageCompleted < 100): 
                                 #if(improvementContext.improvement.rushable): <a class="btn btn-sm btn-warning #if(improvementContext.improvement.cost > player.cash): disabled #endif" href="/rush/improvements/#(improvementContext.slot)">Rush</a> #endif

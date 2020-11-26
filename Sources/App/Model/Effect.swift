@@ -7,7 +7,15 @@
 
 import Foundation
 
-public enum Effect: Codable, CustomStringConvertible {
+/*protocol Effect: CustomStringConvertible, Codable {
+    
+}
+
+public enum PassiveEffects: Effect {
+    
+}*/
+
+public enum Effect: Codable, CustomStringConvertible, Equatable {
     
     enum EffectError: Error {
         case decodingUnknownEffectType

@@ -8,32 +8,6 @@ var saveButton = document.getElementById("saveButton")
 
 var previousFocus = ""
 
-//document.getElementById("message").style.display = "none";
-
-// When the user clicks on the password field, show the message box
-/*myInput.onfocus = function() {
-  document.getElementById("message").style.display = "block";
-  previousFocus = "password";
-}
-
-// When the user clicks outside of the password field, hide the message box
-myInput.onblur = function() {
-    if (previousFocus == "password") {
-        document.getElementById("message").style.display = "none";
-    }
-}
-
-repeat.onfocus = function() {
-    document.getElementById("message").style.display = "block";
-    previousFocus = "repeat";
-}
-
-repeat.onblur = function() {
-    if (previousFocus == "repeat") {
-        document.getElementById("message").style.display = "none";
-    }
-}*/
-
 myInput.onkeyup = validate
 repeat.onkeyup = validate
 

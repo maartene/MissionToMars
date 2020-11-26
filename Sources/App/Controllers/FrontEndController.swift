@@ -505,6 +505,38 @@ func createFrontEndRoutes(_ app: Application) {
             return req.redirect(to: "/main")
         }
     }
+    
+    session.get("trigger", "improvement", ":slotNumber", "ability", ":abilityNumber") { req -> Response in
+        let player = try req.getPlayerFromSession()
+        
+        guard let slot = Int(req.parameters.get("slotNumber") ?? "") else {
+            throw Abort (.badRequest, reason: "\(req.parameters.get("slotNumber") ?? "") is not a valid Integer.")
+        }
+        
+        guard let abilityNumber = Int(req.parameters.get("abilityNumber") ?? "") else {
+            throw Abort(.badRequest, reason: "\(req.parameters.get("abilityNumber") ?? "") is not a valid Integer.")
+        }
+        
+        let improvement = player.improvements[slot]
+        let ability = improvement.activatedAbilities[abilityNumber]
+        
+        do {
+            let triggeringPlayer = try player.triggerAbility(abilityNumber, improvementSlot: slot)
+            app.simulation = try app.simulation.replacePlayer(triggeringPlayer)
+            
+            app.infoMessages[triggeringPlayer.id] = "Succesfully triggered \(ability) on \(improvement.name)."
+            return req.redirect(to: "/improvements")
+        } catch {
+            switch error {
+            case ActivatedAbility.ActivatedAbilityErrors.cannotActivate:
+                app.errorMessages[player.id] = "Could not activate ability \(ability) on \(improvement.name)."
+            default:
+                app.errorMessages[player.id] = error.localizedDescription
+            }
+            return req.redirect(to: "/improvements")
+        }
+        
+    }
         
     session.get("mission", "supportingPlayers") { req -> EventLoopFuture<View> in
         struct SupportingPlayerContext: Content {
@@ -662,9 +694,17 @@ func createFrontEndRoutes(_ app: Application) {
     }
     
     func getMainViewForPlayer(_ player: Player, simulation: Simulation, on req: Request, page: String = "main") throws -> EventLoopFuture<View> {
+        struct AbilityContext: Codable {
+            let abilityNumber: Int
+            let ability: ActivatedAbility
+            let abilityEffectText: String
+            let canTrigger: Bool
+        }
+        
         struct ImprovementContext: Codable {
             let slot: Int
             let improvement: Improvement
+            let abilities: [AbilityContext]
         }
         
         struct MainContext: Codable {
@@ -708,7 +748,13 @@ func createFrontEndRoutes(_ app: Application) {
  
         var improvements = [ImprovementContext]()
         for i in 0 ..< player.improvements.count {
-            improvements.append(ImprovementContext(slot: i, improvement: player.improvements[i]))
+            let improvement = player.improvements[i]
+            var abilities = [AbilityContext]()
+            for j in 0 ..< improvement.activatedAbilities.count {
+                abilities.append(AbilityContext(abilityNumber: j, ability: improvement.activatedAbilities[j], abilityEffectText: improvement.activatedAbilities[j].description, canTrigger: improvement.activatedAbilities[j].canTrigger))
+            }
+            
+            improvements.append(ImprovementContext(slot: i, improvement: player.improvements[i], abilities: abilities))
         }
         
         if let mission = app.simulation.getSupportedMissionForPlayer(player) {

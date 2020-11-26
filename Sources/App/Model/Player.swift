@@ -348,6 +348,7 @@ public struct Player: Content {
         return changedPlayer
     }
     
+    @available(*, deprecated, message: "This function has been replaced with 'triggerAbility(_: Int).")
     public func triggerImprovement(_ index: Int) throws -> Player {
         guard (0 ..< improvements.count).contains(index) else {
             throw PlayerError.missingImprovement
@@ -374,6 +375,31 @@ public struct Player: Content {
             updatedPlayer.improvements[index] = updatedImprovement.updatedImprovement
             return updatedPlayer
         }
+    }
+    
+    public func triggerAbility(_ abilityIndex: Int, improvementSlot: Int) throws -> Player {
+        guard (0 ..< improvements.count).contains(improvementSlot) else {
+            throw PlayerError.missingImprovement
+        }
+                
+        let improvement = improvements[improvementSlot]
+        
+        guard improvement.isCompleted else {
+            throw Improvement.ImprovementError.improvementIncomplete
+        }
+        
+        guard (0 ..< improvement.activatedAbilities.count).contains(abilityIndex) else {
+            throw Improvement.ImprovementError.improvementDoesNotHaveAbility
+        }
+        
+        let ability = improvement.activatedAbilities[abilityIndex]
+        
+        let triggerResult = try ability.trigger(self)
+        
+        var changedPlayer = triggerResult.updatedPlayer
+        changedPlayer.improvements[improvementSlot].activatedAbilities[abilityIndex] = triggerResult.updatedAbility
+        
+        return changedPlayer
     }
     
     func replaceImprovementInSlot(_ slot: Int, with improvement: Improvement) throws -> Player {

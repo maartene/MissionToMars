@@ -32,6 +32,7 @@ public struct Improvement: Codable, Equatable, Effector {
         case improvementIncomplete
         case improvementCannotBeTriggered
         case improvementIsUnique
+        case improvementDoesNotHaveAbility
     }
     
     public enum ShortName: Int, CaseIterable, Codable {
@@ -63,9 +64,11 @@ public struct Improvement: Codable, Equatable, Effector {
     
     public static let allImprovements = [
         // Start improvements
-        Improvement(shortName: .TechConsultancy, name: "Technology Consultancy firm", description: "This firm provides a great versetile start if you don't want to commit to money making or researching new technologies. Good fit if you want to go solo, but in the long run specializing might be more attractive.", cost: 0, buildTime: 365 / 6, updateEffects: [.extraIncomeFlat(amount: 6500), .extraTechFlat(amount: 2)], tags: [.AI, .SpaceTravel]),
-        Improvement(shortName: .Faculty, name: "Faculty of Applied Sciences", description: "You start with a faculty on a prestigious University and assure yourself of a steady supply of extra technology points and a little income.", cost: 0, buildTime: 365 / 12, updateEffects: [.extraTechFlat(amount: 15), .extraIncomeFlat(amount: 1000)], tags: [.Biotech, .AI, .SpaceTravel]),
-        Improvement(shortName: .InvestmentBank, name: "Investment Bank", description: "If you want to make it rain (become very VERY rich), starting an investment bank is a great start. The bank provides extra income as well as ROI on your outstanding balance. However, it doesn't generate any technology. You will need to find other ways if you want to advance the tech tree.", cost: 0, buildTime: 365 / 12, updateEffects: [.extraIncomeFlat(amount: 15_000), .interestOnCash(percentage: 0.5)], tags: [.Finance]),
+        Improvement(shortName: .TechConsultancy, name: "Technology Consultancy firm", description: "This firm provides a great versetile start if you don't want to commit to money making or researching new technologies. Good fit if you want to go solo, but in the long run specializing might be more attractive.", cost: 0, buildTime: 365 / 6, activatedAbilities: [ActivatedAbility(effects: [.extraIncomeFlat(amount: 6500), .extraTechFlat(amount: 2)], cooldown: 60)], tags: [.AI, .SpaceTravel]),
+        Improvement(shortName: .Faculty, name: "Faculty of Applied Sciences", description: "You start with a faculty on a prestigious University and assure yourself of a steady supply of extra technology points and a little income.", cost: 0, buildTime: 365 / 12, activatedAbilities: [ActivatedAbility(effects: [.extraTechFlat(amount: 15), .extraIncomeFlat(amount: 1000)], cooldown: 60)], tags: [.Biotech, .AI, .SpaceTravel]),
+        Improvement(shortName: .InvestmentBank, name: "Investment Bank", description: "If you want to make it rain (become very VERY rich), starting an investment bank is a great start. The bank provides extra income as well as ROI on your outstanding balance. However, it doesn't generate any technology. You will need to find other ways if you want to advance the tech tree.", cost: 0, buildTime: 365 / 12, activatedAbilities: [ActivatedAbility(effects: [.extraIncomeFlat(amount: 15_000)], cooldown: 60), ActivatedAbility(effects: [.interestOnCash(percentage: 0.5)], cooldown: 60*60*24)], tags: [.Finance]),
+        
+        /*
         
         // Economy improvements
         Improvement(shortName: .BatteryOutlet, name: "Batteries'r'Us", description: "Create an outlet selling your new battery tech in all units of all shapes and sizes. And make a little profit as you go.", cost: 500_000, buildTime: 365 / 12, requiredTechnologyShortnames: [.LiIonBattery_HY], updateEffects: [.extraIncomeFlat(amount: 5000)],tags: [.Retail]),
@@ -102,6 +105,8 @@ public struct Improvement: Codable, Equatable, Effector {
         Improvement(shortName: .AdvertisingCampaign, name: "Advertising Campaign", description: "Tripples income for the next 30 days. (you get your cash after 30 days)", cost: 2_000_000, buildTime: 30, rushable: false, updateEffects: [.extraIncomeDailyIncome(times: 60), .oneShot(shortName: .AdvertisingCampaign)]),
         Improvement(shortName: .BuyPatentPortfolio, name: "Buy Patent Portfolio", description: "A quick, but expensive way to get some extra research points (+\(Int(150000.0 / CASH_TO_TECH_CONVERSION_RATE))).", cost: 150_000, buildTime: 7, allowsParrallelBuild: false, rushable: false, updateEffects: [.extraTechFlat(amount: 150000.0 / CASH_TO_TECH_CONVERSION_RATE), .oneShot(shortName: .BuyPatentPortfolio)]),
         */
+ 
+        */
     ]
     
     public static var buildableImprovements: [Improvement] {
@@ -130,9 +135,10 @@ public struct Improvement: Codable, Equatable, Effector {
     public let rushable: Bool
     public let triggerable: Bool
     public let updateEffects: [Effect]
+    public var activatedAbilities: [ActivatedAbility]
     public let tags: [Tag]
     
-    init(shortName: ShortName, name: String, description: String, cost: Double, buildTime: Int, requiredTechnologyShortnames: [Technology.ShortName] = [], rushable: Bool = true, triggerable: Bool = true, updateEffects: [Effect] = [], tags: [Tag] = []) {
+    init(shortName: ShortName, name: String, description: String, cost: Double, buildTime: Int, requiredTechnologyShortnames: [Technology.ShortName] = [], rushable: Bool = true, triggerable: Bool = true, updateEffects: [Effect] = [], activatedAbilities: [ActivatedAbility] = [], tags: [Tag] = []) {
         self.shortName = shortName
         self.name = name
         self.description = description
@@ -142,6 +148,7 @@ public struct Improvement: Codable, Equatable, Effector {
         self.rushable = rushable
         self.triggerable = triggerable
         self.updateEffects = updateEffects
+        self.activatedAbilities = activatedAbilities
         self.tags = tags
     }
     

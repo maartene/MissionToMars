@@ -417,6 +417,21 @@ final class ImprovementTests : XCTestCase {
         }
     }
     
+    func testTriggerAbility() throws {
+        let player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
+        
+        let originalCash = player.cash
+        
+        let updatedPlayer = try player.triggerAbility(0, improvementSlot: 0)
+        XCTAssertGreaterThan(updatedPlayer.cash, originalCash)
+        
+        let secondTriggerPlayer = try updatedPlayer.triggerAbility(0, improvementSlot: 0)
+        
+        XCTAssertEqual(updatedPlayer.cash, secondTriggerPlayer.cash)
+
+        
+    }
+    
     static let allTests = [
         ("testStartBuildImprovement", testStartBuildImprovement),
         ("testGetImprovementByName", testGetImprovementByName),
@@ -441,6 +456,7 @@ final class ImprovementTests : XCTestCase {
         ("testTriggerImprovementAddsBuildPoints", testTriggerImprovementAddsBuildPoints),
         ("testCannotBuildMoreThanMaximumNumberOfSpecializations", testCannotBuildMoreThanMaximumNumberOfSpecializations),
         ("testCannotBuildMoreThanOneUniqueImprovement", testCannotBuildMoreThanOneUniqueImprovement),
+        ("testTriggerAbility", testTriggerAbility)
     ]
 
 }

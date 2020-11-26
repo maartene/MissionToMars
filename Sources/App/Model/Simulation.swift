@@ -39,7 +39,7 @@ public struct Simulation: Content {
         self.tickCount = tickCount
         self.gameDate = gameDate
         self.nextUpdateDate = nextUpdateDate
-        self.state = .admin
+        self.state = .running
         
         if createDefaultAdminPlayer {
             createAdminPlayer()
