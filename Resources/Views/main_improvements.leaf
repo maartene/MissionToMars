@@ -5,7 +5,7 @@
                 <h4>Improvements</h4>
                 <p class="text-secondary">Improvements have various beneficial effects on your company.</p>
                 <p>
-                    <div class="btn btn-outline-primary">Action Points: #(player.actionPoints)/#(maxActionPoints)</div>
+                    <!--<div class="btn btn-outline-primary">Action Points: #(player.actionPoints)/#(maxActionPoints)</div>-->
                     <div class="btn btn-outline-secondary">Cash: $#cash(player.cash) (+#cash(cashPerDay) / day)</div>
                     <div class="btn btn-outline-info">Improvement slots: #(improvementCount) / #(improvementSlots)</div>
                     <div class="btn btn-outline-danger">Specilizations: #(specilizationCount) / #(specializationSlots)</div>
@@ -22,9 +22,9 @@
                     <tr>
                         <th scope="col"></th>
                         <th scope="col">Description</th>
-                        <th scope="col">Effects</th>
-                        <th scope="col">Tags</th>
                         <th scope="col">Actions</th>
+                        <th scope="col">Passive benefits</th>
+                        <th scope="col">Tags</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -44,17 +44,20 @@
                             #for(abilityContext in improvementContext.abilities):
                                 <a href="/trigger/improvement/#(improvementContext.slot)/ability/#(abilityContext.abilityNumber)" class="btn btn-sm btn-primary #if(abilityContext.canTrigger == false): disabled #endif" data-toggle="tooltip" data-placement="top" 
                                 title="#(abilityContext.abilityEffectText)"
-                                >Trigger</a>
+                                >#(abilityContext.ability.name)</a>
                             #endfor                        
                         </td>
+                        <td>
+                            #improvementEffects(improvementContext.improvement.shortName)
+                        </td>
                         <td>#for(tag in improvementContext.improvement.tags): <span class="badge badge-success">#(tag)</span> #endfor</td>
-                        <td>#if(improvementContext.improvement.percentageCompleted < 100): 
+                        <!--<td>#if(improvementContext.improvement.percentageCompleted < 100): 
                                 #if(improvementContext.improvement.rushable): <a class="btn btn-sm btn-warning #if(improvementContext.improvement.cost > player.cash): disabled #endif" href="/rush/improvements/#(improvementContext.slot)">Rush</a> #endif
                             #else:
                                 <a class="btn btn-sm btn-danger mt-1" href="/sell/improvement/#(improvementContext.improvement.shortName)">Sell</a>
                             #endif
                             <a class="btn btn-sm btn-primary mt-1 #if(player.actionPoints <= 0 || improvementContext.improvement.triggerable == false): disabled #endif" href="/trigger/improvements/#(improvementContext.slot)">Trigger (1 AP)</a>
-                        </td>
+                        </td>-->
                     </tr>
                 #endfor
                 </tbody>

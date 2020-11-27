@@ -476,7 +476,7 @@ func createFrontEndRoutes(_ app: Application) {
         }
     }
     
-    session.get("trigger", "improvements", ":number") { req -> Response in
+    /*session.get("trigger", "improvements", ":number") { req -> Response in
         guard let number =  Int(req.parameters.get("number") ?? "") else {
             throw Abort (.badRequest, reason: "\(req.parameters.get("number") ?? "") is not a valid Integer.")
         }
@@ -504,7 +504,7 @@ func createFrontEndRoutes(_ app: Application) {
             }
             return req.redirect(to: "/main")
         }
-    }
+    }*/
     
     session.get("trigger", "improvement", ":slotNumber", "ability", ":abilityNumber") { req -> Response in
         let player = try req.getPlayerFromSession()

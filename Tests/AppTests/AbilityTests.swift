@@ -14,7 +14,7 @@ import XCTest
 final class AbilityTests : XCTestCase {
     
     func testCooldown() throws {
-        let ability = ActivatedAbility(effects: [.extraActionPointsFlat(amount: 19)], cooldown: 60, lastActivation: nil)
+        let ability = ActivatedAbility(name: "testAbility", effects: [.extraIncomeFlat(amount: 19)], cooldown: 60, lastActivation: nil)
         
         XCTAssertTrue(ability.canTrigger)
         

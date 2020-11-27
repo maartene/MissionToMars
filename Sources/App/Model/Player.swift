@@ -48,7 +48,7 @@ public struct Player: Content {
     public private(set) var technologyPoints: Double = 75
     public private(set) var buildPoints: Double = 0
     public private(set) var componentBuildPoints: Double = 0
-    public private(set) var actionPoints: Int = 10
+    // public private(set) var actionPoints: Int = 10
     
     public private(set) var improvements: [Improvement]
     
@@ -114,7 +114,7 @@ public struct Player: Content {
     }
 
     public var improvementSlotsCount: Int {
-        var count = 5
+        var count = 1
         
         unlockedTechnologies.forEach { tech in
             tech.updateEffects.forEach{ effect in
@@ -122,7 +122,18 @@ public struct Player: Content {
                 case .extraImprovementSlots(let amount):
                     count += amount
                 default:
-                    break;
+                    break
+                }
+            }
+        }
+        
+        completedImprovements.forEach { improvement in
+            improvement.updateEffects.forEach { effect in
+                switch effect {
+                case .extraImprovementSlots(let amount):
+                    count += amount
+                default:
+                    break
                 }
             }
         }
@@ -183,7 +194,7 @@ public struct Player: Content {
         updatedPlayer.componentBuildPoints = 1
         
         updatedPlayer.buildPoints = 1
-        updatedPlayer.actionPoints = min(maxActionPoints, updatedPlayer.actionPoints + 1)
+        // updatedPlayer.actionPoints = min(maxActionPoints, updatedPlayer.actionPoints + 1)
         
         for improvement in updatedPlayer.improvements {
             updatedPlayer = improvement.applyEffectForOwner(player: updatedPlayer)
@@ -231,11 +242,11 @@ public struct Player: Content {
         return changedPlayer
     }
     
-    func extraActionPoints(amount: Int) -> Player {
+    /*func extraActionPoints(amount: Int) -> Player {
         var changedPlayer = self
         changedPlayer.actionPoints += amount
         return changedPlayer
-    }
+    }*/
     
     // MARK: Player-to-player interaction
     func donate(cash amount: Double, to player: Player) throws -> (donatingPlayer: Player, receivingPlayer: Player) {
@@ -348,6 +359,7 @@ public struct Player: Content {
         return changedPlayer
     }
     
+    /*
     @available(*, deprecated, message: "This function has been replaced with 'triggerAbility(_: Int).")
     public func triggerImprovement(_ index: Int) throws -> Player {
         guard (0 ..< improvements.count).contains(index) else {
@@ -376,6 +388,7 @@ public struct Player: Content {
             return updatedPlayer
         }
     }
+ */
     
     public func triggerAbility(_ abilityIndex: Int, improvementSlot: Int) throws -> Player {
         guard (0 ..< improvements.count).contains(improvementSlot) else {
@@ -522,9 +535,9 @@ public struct Player: Content {
         self.technologyPoints = amount
     }
     
-    mutating func debug_setActionPoints(_ amount: Int) {
+    /*mutating func debug_setActionPoints(_ amount: Int) {
         self.actionPoints = amount
-    }
+    }*/
     
     public func bless() -> Player {
         var blessedPlayer = self

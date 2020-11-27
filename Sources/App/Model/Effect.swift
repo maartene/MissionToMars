@@ -38,9 +38,9 @@ public enum Effect: Codable, CustomStringConvertible, Equatable {
     case tagEffectDoubler(tag: Tag)
     case extraBuildPointsFlat(amount: Double)
     case extraComponentBuildPointsFlat(amount: Double)
-    case extraActionPointsFlat(amount: Int)
+    //case extraActionPointsFlat(amount: Int)
     case extraImprovementSlots(amount: Int)
-    case extraMaxActionPoints(amount: Int)
+    //case extraMaxActionPoints(amount: Int)
     case extraSpeciliazationSlots(amount: Int)
     
     public init(from decoder: Decoder) throws {
@@ -80,18 +80,18 @@ public enum Effect: Codable, CustomStringConvertible, Equatable {
         case "extraComponentBuildPointsFlat":
             let amount = try values.decode(Double.self, forKey: .value)
             self = .extraComponentBuildPointsFlat(amount: amount)
-        case "extraActionPointsFlat":
+        /*case "extraActionPointsFlat":
             let amount = try values.decode(Int.self, forKey: .value)
-            self = .extraActionPointsFlat(amount: amount)
+            self = .extraActionPointsFlat(amount: amount)*/
         case "extraImprovementSlots":
             let amount = try values.decode(Int.self, forKey: .value)
             self = .extraImprovementSlots(amount: amount)
         case "extraSpeciliazationSlots":
             let amount = try values.decode(Int.self, forKey: .value)
             self = .extraSpeciliazationSlots(amount: amount)
-        case "extraMaxActionPoints":
+        /*case "extraMaxActionPoints":
             let amount = try values.decode(Int.self, forKey: .value)
-            self = .extraMaxActionPoints(amount: amount)
+            self = .extraMaxActionPoints(amount: amount)*/
         default:
             throw EffectError.decodingUnknownEffectType
         }
@@ -134,18 +134,18 @@ public enum Effect: Codable, CustomStringConvertible, Equatable {
         case .extraComponentBuildPointsFlat(let amount):
             try container.encode("extraComponentBuildPointsFlat", forKey: .effectType)
             try container.encode(amount, forKey: .value)
-        case .extraActionPointsFlat(let amount):
+        /*case .extraActionPointsFlat(let amount):
             try container.encode("extraActionPointsFlat", forKey: .effectType)
-            try container.encode(amount, forKey: .value)
+            try container.encode(amount, forKey: .value)*/
         case .extraImprovementSlots(let amount):
             try container.encode("extraImprovementSlots", forKey: .effectType)
             try container.encode(amount, forKey: .value)
         case .extraSpeciliazationSlots(let amount):
             try container.encode("extraSpeciliazationSlots", forKey: .effectType)
             try container.encode(amount, forKey: .value)
-        case .extraMaxActionPoints(let amount):
+        /*case .extraMaxActionPoints(let amount):
             try container.encode("extraMaxActionPoints", forKey: .effectType)
-            try container.encode(amount, forKey: .value)
+            try container.encode(amount, forKey: .value)*/
         }
     }
     
@@ -172,8 +172,8 @@ public enum Effect: Codable, CustomStringConvertible, Equatable {
             return player.extraBuildPoints(amount: amount)
         case .extraComponentBuildPointsFlat(let amount):
             return player.extraComponentBuildPoints(amount: amount)
-        case .extraActionPointsFlat(let amount):
-            return player.extraActionPoints(amount: amount)
+        /*case .extraActionPointsFlat(let amount):
+            return player.extraActionPoints(amount: amount)*/
         default:
             return player
         }
@@ -193,14 +193,14 @@ public enum Effect: Codable, CustomStringConvertible, Equatable {
             return "Build improvements \(amount * 100.0)% faster"
         case .extraComponentBuildPointsFlat(let amount):
             return "Build components \(amount * 100.0)% faster"
-        case .extraActionPointsFlat(let amount):
-            return "+\(amount) Actions Points per day"
+        /*case .extraActionPointsFlat(let amount):
+            return "+\(amount) Actions Points per day"*/
         case .extraImprovementSlots(let amount):
             return "+\(amount) extra improvement slot\(amount > 1 ? "s" : "")."
         case .extraSpeciliazationSlots(let amount):
             return "+\(amount) extra specilization slot\(amount > 1 ? "s" : "")."
-        case .extraMaxActionPoints(let amount):
-            return "+\(amount) to maximum action point\(amount > 1 ? "s" : "")."
+        /*case .extraMaxActionPoints(let amount):
+            return "+\(amount) to maximum action point\(amount > 1 ? "s" : "")."*/
         default:
             return "Effect \(self). Add a description for a more descriptive message."
         }

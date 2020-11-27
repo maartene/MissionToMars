@@ -355,7 +355,7 @@ final class ImprovementTests : XCTestCase {
         
     }
     
-    func testTriggerImprovementLowersActionPoints() throws {
+    /*func testTriggerImprovementLowersActionPoints() throws {
         let player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
         XCTAssertGreaterThan(player.improvements.count, 0, "Player should have at least one improvement.")
         XCTAssertGreaterThan(player.actionPoints, 0, "Player should have at least one action point.")
@@ -396,7 +396,7 @@ final class ImprovementTests : XCTestCase {
         
         let updatedPlayer = try player.triggerImprovement(index)
         XCTAssertGreaterThan(updatedPlayer.improvements[index].percentageCompleted, player.improvements[index].percentageCompleted)
-    }
+    }*/
     
     func testCannotBuildMoreThanMaximumNumberOfSpecializations() throws {
         let player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
@@ -451,9 +451,9 @@ final class ImprovementTests : XCTestCase {
         ("testRushingImprovementDoesNotRemoveExistingImprovement", testRushingImprovementDoesNotRemoveExistingImprovement),
         ("testCannotBuildMoreImprovementsThanNumberOfSlots", testCannotBuildMoreImprovementsThanNumberOfSlots),
         ("testSellImprovement", testSellImprovement),
-        ("testTriggerImprovementLowersActionPoints", testTriggerImprovementLowersActionPoints),
-        ("testPlayerWithoutActionPointsCantTrigger", testPlayerWithoutActionPointsCantTrigger),
-        ("testTriggerImprovementAddsBuildPoints", testTriggerImprovementAddsBuildPoints),
+        //("testTriggerImprovementLowersActionPoints", testTriggerImprovementLowersActionPoints),
+        //("testPlayerWithoutActionPointsCantTrigger", testPlayerWithoutActionPointsCantTrigger),
+        //("testTriggerImprovementAddsBuildPoints", testTriggerImprovementAddsBuildPoints),
         ("testCannotBuildMoreThanMaximumNumberOfSpecializations", testCannotBuildMoreThanMaximumNumberOfSpecializations),
         ("testCannotBuildMoreThanOneUniqueImprovement", testCannotBuildMoreThanOneUniqueImprovement),
         ("testTriggerAbility", testTriggerAbility)

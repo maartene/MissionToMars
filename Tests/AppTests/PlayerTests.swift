@@ -80,7 +80,7 @@ final class PlayerTests : XCTestCase {
         XCTAssertThrowsError(try player.donate(techPoints: player.technologyPoints - 1.0, to: player))
     }
     
-    func testUpdateIncreasesActionPoints() throws {
+    /*func testUpdateIncreasesActionPoints() throws {
         var player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
         player.debug_setActionPoints(0)
         XCTAssertLessThan(player.actionPoints, MAXIMUM_PLAYER_ACTION_POINTS)
@@ -98,7 +98,7 @@ final class PlayerTests : XCTestCase {
         let updatedPlayer = player.updatePlayer()
         
         XCTAssertEqual(updatedPlayer.actionPoints, player.actionPoints)
-    }
+    }*/
     
     static let allTests = [
         ("testUpdatePlayer", testUpdatePlayer),
@@ -108,7 +108,7 @@ final class PlayerTests : XCTestCase {
         ("testCannotDonateMoreTechThanAvailable", testCannotDonateMoreTechThanAvailable),
         ("testUpdatePlayerWithoutImprovementsShouldNotChangePlayer", testUpdatePlayerWithoutImprovementsShouldNotChangePlayer),
         ("testPlayerCannotDonateToSelf", testPlayerCannotDonateToSelf),
-        ("testUpdateIncreasesActionPoints", testUpdateIncreasesActionPoints),
-        ("testUpdateDoesNotIncreaseActionPointsWhenAtMaximum", testUpdateDoesNotIncreaseActionPointsWhenAtMaximum),
+        //("testUpdateIncreasesActionPoints", testUpdateIncreasesActionPoints),
+        //("testUpdateDoesNotIncreaseActionPointsWhenAtMaximum", testUpdateDoesNotIncreaseActionPointsWhenAtMaximum),
     ]
 }
