@@ -11,7 +11,8 @@ import XCTest
 
 final class PlayerTests : XCTestCase {
 
-    func testUpdatePlayer() throws {
+    // This test is no longer valid, because updates don't trigger activated abilities any more.
+    func disable_testUpdatePlayer() throws {
         let player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
         
         let updatedPlayer = player.updatePlayer()
@@ -101,7 +102,7 @@ final class PlayerTests : XCTestCase {
     }*/
     
     static let allTests = [
-        ("testUpdatePlayer", testUpdatePlayer),
+        //("testUpdatePlayer", testUpdatePlayer),
         ("testDonateCashToPlayer", testDonateCashToPlayer),
         ("testDonateTechnologyToPlayer", testDonateTechnologyToPlayer),
         ("testCannotDonateMoreCashThanAvailable", testCannotDonateMoreCashThanAvailable),

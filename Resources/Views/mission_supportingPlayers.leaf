@@ -5,14 +5,14 @@
       <table class="table table-striped">
         <tr>
           <th class="table-dark">Player name</th>
-          <th class="table-dark">E-mail</th>
+          <!--<th class="table-dark">E-mail</th>-->
           <th class="table-dark">Tags</th>
           <th class="table-dark">Actions</th>
         </tr>
         #for(supportingPlayer in supportingPlayers):
           <tr class="table-dark">
             <td>#(supportingPlayer.name)</td>
-            <td>#(supportingPlayer.emailAddress)</td>
+            <!--<td>e-mail hidden</td>-->
             <td>#if(player.id == supportingPlayer.id): <span class="badge badge-success">You</span> #endif #if(supportingPlayer.id == mission.owningPlayerID): <span class="badge badge-danger">Mission owner</span> #endif </td>
             <td>#if(player.id != supportingPlayer.id): <a href="/donate/to/#(supportingPlayer.emailAddress)" class="btn btn-sm btn-primary">Donate to this player</a> #endif</td>
           </tr>

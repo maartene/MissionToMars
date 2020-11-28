@@ -110,7 +110,10 @@ final class SimulationTests : XCTestCase {
         let gameDate = Date().addingTimeInterval(Double(SECONDS_IN_YEAR))
         var simulation = Simulation(tickCount: 0, gameDate: gameDate, nextUpdateDate: Date(), createDefaultAdminPlayer: true)
         
-        let improvement = Improvement.getImprovementByName(.PrefabFurniture)!
+        guard let improvement = Improvement.getImprovementByName(.PrefabFurniture) else {
+            XCTFail("Could not find improvement")
+            return
+        }
         
         let createPlayerResult = try simulation.createPlayer(emailAddress: "example@example.com", name: "testUser", password: "")
         simulation = createPlayerResult.updatedSimulation
