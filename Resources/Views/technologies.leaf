@@ -1,6 +1,7 @@
 #extend("master"):
   #export("body"):
     <h2>Which technology do you wish to research?</h2>
+    <h3>Available tech points: #deczero(player.technologyPoints) points.</h3>
     <div>
       <ul class="list-group">
         #for(tech in possibleTechnologies):

@@ -109,7 +109,7 @@ func createFrontEndRoutes(_ app: Application) {
     }
         
     func mainPage(req: Request, page: String) throws -> EventLoopFuture<View> {
-        guard let player = try? req.getPlayerFromSession() else {
+        guard var player = try? req.getPlayerFromSession() else {
             return req.view.render("index", ["state": app.simulation.state])
         }
         
@@ -118,6 +118,10 @@ func createFrontEndRoutes(_ app: Application) {
             assert(app.simulation.id == updatedSimulation.id)
             app.simulation = updatedSimulation
 
+            if let updatedPlayer = updatedSimulation.players.first(where: { $0.id == player.id }) {
+                player = updatedPlayer
+            }
+            
             // save result (in seperate thread)
             let copy = app.simulation
             let dataDir = Environment.get("DATA_DIR") ?? ""
@@ -699,6 +703,7 @@ func createFrontEndRoutes(_ app: Application) {
             let ability: ActivatedAbility
             let abilityEffectText: String
             let canTrigger: Bool
+            let cooldownDone: Double
         }
         
         struct ImprovementContext: Codable {
@@ -751,7 +756,8 @@ func createFrontEndRoutes(_ app: Application) {
             let improvement = player.improvements[i]
             var abilities = [AbilityContext]()
             for j in 0 ..< improvement.activatedAbilities.count {
-                abilities.append(AbilityContext(abilityNumber: j, ability: improvement.activatedAbilities[j], abilityEffectText: improvement.activatedAbilities[j].description, canTrigger: improvement.activatedAbilities[j].canTrigger))
+                let ability = improvement.activatedAbilities[j]
+                abilities.append(AbilityContext(abilityNumber: j, ability: ability, abilityEffectText: ability.description, canTrigger: ability.canTrigger, cooldownDone: ability.cooldownDone * 100))
             }
             
             improvements.append(ImprovementContext(slot: i, improvement: player.improvements[i], abilities: abilities))

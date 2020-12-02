@@ -53,4 +53,13 @@ public struct ActivatedAbility: Codable {
         
         return result
     }
+    
+    var cooldownDone: Double {
+        if canTrigger {
+            return 1
+        }
+        
+        let distance = abs(Date().timeIntervalSince(lastActivation ?? Date()))
+        return distance / cooldown
+    }
 }

@@ -1,6 +1,7 @@
 #extend("master"):
     #export("body"):
         <h2>Which improvement do you wish to build?</h2>
+        <h3>Available cash: $#cash(player.cash).</h3>
         <div>
             <div class="table-responsive">
                 <table class="table">

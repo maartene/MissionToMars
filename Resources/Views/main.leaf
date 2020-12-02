@@ -15,16 +15,16 @@
         #endif
         <ul class="nav nav-tabs">
             <li class="nav-item">
-                <a class="nav-link #if(page=="main") {active}" href="/main">Overview</a>
+                <a class="nav-link #if(page=="main"): active #endif" href="/main">Overview</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link #if(page=="mission") {active}" href="/mission">Mission</a>
+                <a class="nav-link #if(page=="mission"): active #endif" href="/mission">Mission</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link #if(page=="technology") {active}" href="/technology">Technology</a>
+                <a class="nav-link #if(page=="technology"): active #endif" href="/technology">Technology</a>
             </li>
             <li class="nav-item">
-                <a class="nav-link #if(page=="improvements") {active}" href="/improvements">Improvements</a>
+                <a class="nav-link #if(page=="improvements"): active #endif" href="/improvements">Improvements</a>
             </li>
         </ul>
         
