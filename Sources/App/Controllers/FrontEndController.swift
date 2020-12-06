@@ -135,6 +135,7 @@ func createFrontEndRoutes(_ app: Application) {
                 } else {
                     req.logger.error("S3 access key and secret key not set in environment. Save failed.")
                 }
+                return try getMainViewForPlayer(updatedSimulation.players.first(where: {$0.id == player.id}) ?? player, simulation: app.simulation, on: req, page: page)
             } catch {
                 req.logger.error("Failed to save simulation due to error: \(error).")
             }

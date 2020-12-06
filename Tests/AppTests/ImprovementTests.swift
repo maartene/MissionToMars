@@ -165,10 +165,10 @@ final class ImprovementTests : XCTestCase {
     
     func testPlayerCanRushImprovement() throws {
         var player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
-        let improvement = Improvement.getImprovementByName(.DesignStudio)!
+        let improvement = Improvement.getImprovementByName(.BioResearchFacility)!
         player = player.extraIncome(amount: improvement.cost * 2)
         
-        var buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date())
+        var buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date(), options: [.ignoreTechPrereqs])
         XCTAssertEqual(buildingPlayer.currentlyBuildingImprovement!.percentageCompleted, 0, "% complete")
         
         guard let slot = buildingPlayer.improvements.firstIndex(of: improvement) else {
@@ -179,7 +179,7 @@ final class ImprovementTests : XCTestCase {
         let cashBeforeRush = buildingPlayer.cash
         buildingPlayer = try buildingPlayer.rushImprovement(in: slot)
         
-        XCTAssertEqual(buildingPlayer.improvements.last!.shortName, Improvement.ShortName.DesignStudio)
+        XCTAssertEqual(buildingPlayer.improvements.last!.shortName, Improvement.ShortName.BioResearchFacility)
         XCTAssertGreaterThanOrEqual(buildingPlayer.improvements.last!.percentageCompleted, 100.0, "% complete")
         XCTAssertLessThan(buildingPlayer.cash, cashBeforeRush, "cash")
         
@@ -384,7 +384,7 @@ final class ImprovementTests : XCTestCase {
     
     func testTriggerImprovementAddsBuildPoints() throws {
         var player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
-        player = try player.startBuildImprovement(Improvement.getImprovementByName(.DesignStudio)!, startDate: Date())
+        player = try player.startBuildImprovement(Improvement.getImprovementByName(.BioResearchFacility)!, startDate: Date(), options: [.ignoreTechPrereqs])
         XCTAssertGreaterThan(player.improvements.count, 1, "Player should have at least two improvement.")
         XCTAssertGreaterThan(player.actionPoints, 0, "Player should have at least one action point.")
         XCTAssertLessThan(player.completedImprovements.count, player.improvements.count, "Player should have at least one unfinished improvement")

@@ -1,6 +1,7 @@
 #extend("master"):
     #export("body"):
         <h2>Which improvement do you wish to build?</h2>
+        <p>Cash: $#cash(player.cash)</p>
         <div>
             <div class="table-responsive">
                 <table class="table">
@@ -13,20 +14,26 @@
                         <th scope="col">Actions</th>
                     </tr>
                 </thead>
-                <tbody>
-                #for(improvementInfo in possibleImprovements):
-                    <tr>
-                        <td><img src="/images/Improvements/#(improvementInfo.improvement.shortName)-w.png"/></td>
-                        <td><b>#(improvementInfo.improvement.name)</b> #(improvementInfo.improvement.description)<br/>
-                            <span class="text-primary">Cost: $#cash(improvementInfo.improvement.cost) - Build time: #deczero(improvementInfo.improvement.buildTime / buildPointsPerTick) days</span>
-                        </td>
-                        <td><span class="text-info">#improvementEffects(improvementInfo.improvement.shortName)</span></td>
-                        <td>#for(tag in improvementInfo.improvement.tags): <span class="badge badge-success">#(tag)</span> #endfor</td>
-                        <td><a href="/build/improvements/#(improvementInfo.improvement.shortName)" class="btn btn-sm btn-primary #if(improvementInfo.canBuild == false): disabled #endif">Build</a>
-                        </td>
-                    </tr>
-                #endfor
-                </tbody>
+                #if(count(possibleImprovements) > 0):
+                    <tbody>
+                    #for(improvementInfo in possibleImprovements):
+                        <tr>
+                            <td><img src="/images/Improvements/#(improvementInfo.improvement.shortName)-w.png"/></td>
+                            <td><b>#(improvementInfo.improvement.name)</b> #(improvementInfo.improvement.description)<br/>
+                                <span class="text-primary">Cost: $#cash(improvementInfo.improvement.cost) - Build time: #deczero(improvementInfo.improvement.buildTime / buildPointsPerTick) days</span>
+                            </td>
+                            <td><span class="text-info">#improvementEffects(improvementInfo.improvement.shortName)</span></td>
+                            <td>#for(tag in improvementInfo.improvement.tags): <span class="badge badge-success">#(tag)</span> #endfor</td>
+                            <td><a href="/build/improvements/#(improvementInfo.improvement.shortName)" class="btn btn-sm btn-primary #if(improvementInfo.canBuild == false): disabled #endif">Build</a>
+                            </td>
+                        </tr>
+                    #endfor
+                    </tbody>
+                #else:
+                <tr>
+                <td colspan="4">Nothing to build. Perhaps you should invest in some <a href="/technology">technology</a> to unlock more improvements?</td>
+                </tr>
+                #endif
                 </table>
             </div>
         <p class="pt-2"><a href="/improvements" class="btn btn-secondary">Back</a></p>

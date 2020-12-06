@@ -398,6 +398,16 @@ public struct Player: Content {
         return changedPlayer
     }
     
+    func removeImprovement(_ shortName: Improvement.ShortName) throws -> Player {
+        guard let index = improvements.firstIndex(where: {$0.shortName == shortName }) else {
+            throw PlayerError.missingImprovement
+        }
+        
+        var changedPlayer = self
+        changedPlayer.improvements.remove(at: index)
+        return changedPlayer
+    }
+    
     public func sellImprovement(_ improvement: Improvement) throws -> Player {
         guard completedImprovements.contains(improvement) else {
             throw Improvement.ImprovementError.improvementIncomplete

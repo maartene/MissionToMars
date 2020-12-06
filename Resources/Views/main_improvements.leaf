@@ -5,7 +5,7 @@
                 <h4>Improvements</h4>
                 <p class="text-secondary">Improvements have various beneficial effects on your company.</p>
                 <p>
-                    <div class="btn btn-outline-primary">Action Points: #(player.actionPoints)/#(maxActionPoints)</div>
+                    <!--<div class="btn btn-outline-primary">Action Points: #(player.actionPoints)/#(maxActionPoints)</div>-->
                     <div class="btn btn-outline-secondary">Cash: $#cash(player.cash) (+#cash(cashPerDay) / day)</div>
                     <div class="btn btn-outline-info">Improvement slots: #(improvementCount) / #(improvementSlots)</div>
                     <div class="btn btn-outline-danger">Specilizations: #(specilizationCount) / #(specializationSlots)</div>
@@ -47,7 +47,7 @@
                             #else:
                                 <a class="btn btn-sm btn-danger mt-1" href="/sell/improvement/#(improvementContext.improvement.shortName)">Sell</a>
                             #endif
-                            <a class="btn btn-sm btn-primary mt-1 #if(player.actionPoints <= 0 || improvementContext.improvement.triggerable == false): disabled #endif" href="/trigger/improvements/#(improvementContext.slot)">Trigger (1 AP)</a>
+                            <!--<a class="btn btn-sm btn-primary mt-1 #if(player.actionPoints <= 0 || improvementContext.improvement.triggerable == false): disabled #endif" href="/trigger/improvements/#(improvementContext.slot)">Trigger (1 AP)</a>-->
                         </td>
                     </tr>
                 #endfor

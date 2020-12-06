@@ -24,7 +24,7 @@ public enum Effect: Codable, CustomStringConvertible {
     //case extraTechPercentage(percentage: Double)
     case lowerProductionTimePercentage(percentage: Double)
     case extraIncomeDailyIncome(times: Double)
-    //case oneShot(shortName: Improvement.ShortName)
+    case oneShot(shortName: Improvement.ShortName)
     case shortenComponentBuildTime(percentage: Double)
     case componentBuildDiscount(percentage: Double)
     case tagEffectDoubler(tag: Tag)
@@ -54,9 +54,9 @@ public enum Effect: Codable, CustomStringConvertible {
         case "extraIncomeDailyIncome":
             let times = try values.decode(Double.self, forKey: .value)
             self = .extraIncomeDailyIncome(times: times)
-        /*case "oneShot":
+        case "oneShot":
             let shortName = try values.decode(Improvement.ShortName.self, forKey: .value)
-            self = .oneShot(shortName: shortName)*/
+            self = .oneShot(shortName: shortName)
         case "shortenComponentBuildTime":
             let percentage = try values.decode(Double.self, forKey: .value)
             self = .shortenComponentBuildTime(percentage: percentage)
@@ -108,9 +108,9 @@ public enum Effect: Codable, CustomStringConvertible {
         case .extraIncomeDailyIncome(let times):
             try container.encode("extraIncomeDailyIncome", forKey: .effectType)
             try container.encode(times, forKey: .value)
-        /*case .oneShot(let shortName):
+        case .oneShot(let shortName):
             try container.encode("oneShot", forKey: .effectType)
-            try container.encode(shortName, forKey: .value)*/
+            try container.encode(shortName, forKey: .value)
         case .shortenComponentBuildTime(let percentage):
             try container.encode("shortenComponentBuildTime", forKey: .effectType)
             try container.encode(percentage, forKey: .value)
@@ -151,8 +151,8 @@ public enum Effect: Codable, CustomStringConvertible {
             return player.extraIncome(amount: player.cash * (percentage / 100.0))
         case .extraIncomeDailyIncome(let times):
             return player.extraIncome(amount: player.cashPerTick * times)
-        /*case .oneShot(let shortName):
-            return player.removeImprovement(shortName)*/
+        case .oneShot(let shortName):
+            return (try? player.removeImprovement(shortName)) ?? player
         case .tagEffectDoubler(let tag):
             let improvements = player.completedImprovements.filter {$0.tags.contains(tag)}
             var changedPlayer = player
@@ -193,6 +193,10 @@ public enum Effect: Codable, CustomStringConvertible {
             return "+\(amount) extra specilization slot\(amount > 1 ? "s" : "")."
         case .extraMaxActionPoints(let amount):
             return "+\(amount) to maximum action point\(amount > 1 ? "s" : "")."
+        case .extraIncomeDailyIncome(let times):
+            return "+\(times)x your daily cash income."
+        case .oneShot(let shortName):
+            return "One shot."
         default:
             return "Effect \(self). Add a description for a more descriptive message."
         }
