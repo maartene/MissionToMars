@@ -637,7 +637,7 @@ func createFrontEndRoutes(_ app: Application) {
             let isIndexPage = true
         }
         
-        let motd = Environment.get("MOTD")
+        let motd = app.motd
         let context = IndexContext(state: app.simulation.state, motd: motd)
         return req.view.render("index", context)
     }

@@ -76,6 +76,20 @@ func createAdminRoutes(_ app: Application) {
         app.simulation.state = .admin
         return req.redirect(to: "/admin")
     }
+    
+    session.post("admin", "set", "motd") { req -> Response in
+        let player = try req.getPlayerFromSession()
+        
+        guard player.isAdmin else {
+            throw Abort(.unauthorized, reason: "Player \(player.name) is not an admin.")
+        }
+        
+        let message: String = try req.content.get(at: "motd")
+        
+        app.motd = message
+        
+        return req.redirect(to: "/admin")
+    }
         
     session.get("admin", "bless", ":userName") { req -> Response in
         let player = try req.getPlayerFromSession()
@@ -183,6 +197,7 @@ func adminPage(on req: Request, with simulation: Simulation, in app: Application
         let errorMessage: String?
         let state: Simulation.SimulationState
         let players: [PlayerInfo]
+        let motd: String
     }
     
     let player = try req.getPlayerFromSession()
@@ -196,6 +211,6 @@ func adminPage(on req: Request, with simulation: Simulation, in app: Application
     
     let context = AdminContext(player: player,
                                //backupFiles: sortedFiles,
-                               infoMessage: app.infoMessages[player.id] ?? nil, errorMessage: app.errorMessages[player.id] ?? nil, state: app.simulation.state, players: players)
+                               infoMessage: app.infoMessages[player.id] ?? nil, errorMessage: app.errorMessages[player.id] ?? nil, state: app.simulation.state, players: players, motd: app.motd)
     return req.view.render("admin/admin", context)
 }

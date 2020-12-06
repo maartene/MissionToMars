@@ -223,4 +223,16 @@ public struct Improvement: Codable, Equatable, Effector {
         return rushedImprovement
     }
     
+    
+    public var hasOneShotEffect: Bool {
+        for effect in updateEffects {
+            switch effect {
+            case .oneShot(_):
+                return true
+            default:
+                break;
+            }
+        }
+        return false
+    }
 }

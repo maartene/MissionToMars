@@ -41,6 +41,15 @@ extension Application {
         get { self.storage[Simulation.self]! }
         set { self.storage[Simulation.self] = newValue }
     }
+    
+    struct MOTD: StorageKey {
+        typealias Value = String
+    }
+    
+    var motd: String {
+        get { return self.storage[MOTD.self] ?? "" }
+        set { self.storage[MOTD.self] = newValue }
+    }
 }
 
 extension Simulation: StorageKey {

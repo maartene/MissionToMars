@@ -77,24 +77,24 @@ public struct Player: Content {
     }
     
     public var cashPerTick: Double {
-        let updatedPlayer = self.updatePlayer()
+        let updatedPlayer = self.updatePlayer(ignoreOneShots: true)
         return updatedPlayer.cash - cash
     }
     
     public var buildPointsPerTick: Double {
         var updatedPlayer = self
         updatedPlayer.improvements.removeAll(where: { improvement in improvement.percentageCompleted < 100})
-        updatedPlayer = updatedPlayer.updatePlayer()
+        updatedPlayer = updatedPlayer.updatePlayer(ignoreOneShots: true)
         return updatedPlayer.buildPoints
     }
     
     public var componentBuildPointsPerTick: Double {
-        let updatedPlayer = self.updatePlayer()
+        let updatedPlayer = self.updatePlayer(ignoreOneShots: true)
         return updatedPlayer.componentBuildPoints
     }
     
     public var techPerTick: Double {
-        let updatedPlayer = self.updatePlayer()
+        let updatedPlayer = self.updatePlayer(ignoreOneShots: true)
         return updatedPlayer.technologyPoints - technologyPoints
         
         /*let allEffects = completedImprovements.map { improvement in
@@ -178,14 +178,16 @@ public struct Player: Content {
     }
     
     // MARK: Update
-    public func updatePlayer() -> Player {
+    public func updatePlayer(ignoreOneShots: Bool = false) -> Player {
         var updatedPlayer = self
         updatedPlayer.componentBuildPoints = 1
         
         updatedPlayer.buildPoints = 1
         updatedPlayer.actionPoints = min(maxActionPoints, updatedPlayer.actionPoints + 1)
         
-        for improvement in updatedPlayer.improvements {
+        for improvement in updatedPlayer.completedImprovements.filter({ improvement in
+            ignoreOneShots == false || improvement.hasOneShotEffect == false
+        }) {
             updatedPlayer = improvement.applyEffectForOwner(player: updatedPlayer)
         }
         //print("Player build points before: \(updatedPlayer.componentBuildPoints)")

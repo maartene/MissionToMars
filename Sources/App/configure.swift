@@ -14,6 +14,13 @@ public func configure(_ app: Application) throws {
     // Configure LEAF
     app.views.use(.leaf)
 
+    if (Environment.get("ENVIRONMENT") ?? "").uppercased() == "PRODUCTION" {
+        app.environment = .production
+    } else {
+        app.environment = .development
+    }
+    app.logger.notice("Running in environment: \(app.environment)")
+    
     // Configure custom tags
     app.leaf.tags[CashTag.name] = CashTag()
     app.leaf.tags[TechnologyUnlocksImprovementsTag.name] = TechnologyUnlocksImprovementsTag()

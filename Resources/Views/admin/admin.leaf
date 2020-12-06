@@ -23,6 +23,16 @@
       <p><a href="/admin/enterAdminMode" class="btn btn-primary btn-lg">Enter Admin Mode</a></p>
     #endif
 
+    <h3>Message of the day</h3>
+    <form action="/admin/set/motd" method="POST">
+      <div class="form-group">
+          <label for="motd">Email address</label>
+          <input type="text" class="form-control" id="motd" name="motd" value="#(motd)"/>
+      </div>
+      <a href="/admin" type="cancel" class="btn btn-secondary">Cancel</a>
+      <button type="submit" class="btn btn-success" id="saveButton">Save</button>
+    </form>
+
     <h3>User Management</h3>
     <div class="table-responsive">
       <table class="table">
