@@ -23,7 +23,7 @@ public enum Effect: Codable, CustomStringConvertible {
     case interestOnCash(percentage: Double)
     //case extraTechPercentage(percentage: Double)
     case lowerProductionTimePercentage(percentage: Double)
-    case extraIncomeDailyIncome(times: Double)
+    case extraIncomeDailyIncome(times: Double) // this effect has a risk of recursion. Only use for one-shots!
     case oneShot(shortName: Improvement.ShortName)
     case shortenComponentBuildTime(percentage: Double)
     case componentBuildDiscount(percentage: Double)
@@ -195,8 +195,8 @@ public enum Effect: Codable, CustomStringConvertible {
             return "+\(amount) to maximum action point\(amount > 1 ? "s" : "")."
         case .extraIncomeDailyIncome(let times):
             return "+\(times)x your daily cash income."
-        case .oneShot(let shortName):
-            return "One shot."
+        case .oneShot(let _):
+            return "One shot, removed after use."
         default:
             return "Effect \(self). Add a description for a more descriptive message."
         }

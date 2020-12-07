@@ -29,7 +29,10 @@
         </ul>
         
         <div class="container p-3 mt-3">
+            <input type="hidden" id="countdownValue" value="#(secondsUntilNextUpdate)" />
+            <p>Next simulation update in: <span id="countdown">###s</span> (automatically reloads page)</p>
             #import("main_content")
         </div>
+        <script src="/js/countdown.js"></script>
     #endexport
 #endextend

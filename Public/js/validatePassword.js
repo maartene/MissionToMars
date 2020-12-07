@@ -39,17 +39,17 @@ repeat.onkeyup = validate
 
 // When the user starts to type something inside the password field
 function validate() {
-    // Validate match
-    var result = true;
+  // Validate match
+  var result = true;
 
-    if(myInput.value == repeat.value) {
-        match.classList.remove("text-warning");
-        match.classList.add("text-success");
-    } else {
-        match.classList.remove("text-success");
-        match.classList.add("text-warning");
-        result = false;
-    }
+  if(myInput.value == repeat.value) {
+      match.classList.remove("text-warning");
+      match.classList.add("text-success");
+  } else {
+      match.classList.remove("text-success");
+      match.classList.add("text-warning");
+      result = false;
+  }
 
   // Validate lowercase letters
   var lowerCaseLetters = /[a-z]/g;
@@ -60,7 +60,7 @@ function validate() {
     letter.classList.remove("text-success");
     letter.classList.add("text-warning");
     result = false;
-}
+  }
 
   // Validate capital letters
   var upperCaseLetters = /[A-Z]/g;
@@ -94,9 +94,9 @@ function validate() {
     result = false;
   }
 
-    if (result == false) {
-        saveButton.classList.add("disabled");
-    } else {
-        saveButton.classList.remove("disabled");
-    }
+  if (result == false) {
+      saveButton.classList.add("disabled");
+  } else {
+      saveButton.classList.remove("disabled");
+  }
 }
