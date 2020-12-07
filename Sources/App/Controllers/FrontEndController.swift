@@ -708,7 +708,7 @@ func createFrontEndRoutes(_ app: Application) {
         infoMessages.removeValue(forKey: id)
         app.infoMessages = infoMessages
  
-        let secondsUntilNextUpdate = abs(app.simulation.nextUpdateDate.distance(to: Date()))
+        let secondsUntilNextUpdate = abs(app.simulation.nextUpdateDate.timeIntervalSince(Date()))
         
         var improvements = [ImprovementContext]()
         for i in 0 ..< player.improvements.count {

@@ -195,7 +195,7 @@ public enum Effect: Codable, CustomStringConvertible {
             return "+\(amount) to maximum action point\(amount > 1 ? "s" : "")."
         case .extraIncomeDailyIncome(let times):
             return "+\(times)x your daily cash income."
-        case .oneShot(let shortName):
+        case .oneShot(let _):
             return "One shot, removed after use."
         default:
             return "Effect \(self). Add a description for a more descriptive message."
