@@ -31,7 +31,7 @@ class EffectsTests: XCTestCase {
         
     }
     
-    func testExtraMaxActions() throws {
+    /*func testExtraMaxActions() throws {
         var player = Player(emailAddress: "example@example.org", name: "exampleUser", password: "")
         var updatedPlayer = player
         
@@ -51,10 +51,10 @@ class EffectsTests: XCTestCase {
         
         XCTAssertGreaterThan(updatedPlayer.maxActionPoints, player.maxActionPoints)
         XCTAssertGreaterThan(updatedPlayer.actionPoints, player.actionPoints)
-    }
+    }*/
     
     static let allTests = [
         ("testExtraSlotTests", testExtraSlotTests),
-        ("testExtraMaxActions", testExtraMaxActions),
+       // ("testExtraMaxActions", testExtraMaxActions),
     ]
 }

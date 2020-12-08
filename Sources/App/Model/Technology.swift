@@ -29,7 +29,7 @@ public struct Technology: Equatable, Codable, Effector {
         case AutonomousDriving = 14
         case AgileLeadership = 15
         case AdvancedSignalModulation = 16
-        case ScaledAgileLeadership = 17
+        //case ScaledAgileLeadership = 17
         case Specilization_1 = 18
         case Specilization_2 = 19
     }
@@ -53,7 +53,7 @@ public struct Technology: Equatable, Codable, Effector {
         Technology(shortName: .PackageOptimization, name: "Optimized Packing", description: "Packing might sound simple, but packing with as high as possible densite while keeping packages small, standard size and manageble in weight in a very complex puzzle to solve.", cost: 200, updateEffects: [.extraImprovementSlots(amount: 1)], prerequisites: []),
         Technology(shortName: .AgileLeadership, name: "Agile Leadership", description: "Changing the leadership culture of your company offers makes it more efficient in the long run.", cost: 300, updateEffects: [], prerequisites: []),
         Technology(shortName: .AdvancedSignalModulation, name: "Advanced Signal Modulation", description: "Better signal modulation techniques increase bandwidth over extremely large distances.", cost: 300, updateEffects: [], prerequisites: [.RecoverableAI]),
-        Technology(shortName: .ScaledAgileLeadership, name: "Scaled Agile Leadership", description: "Scaling your agile practives to enterprise level increases the maximum output your enterprises can create.", cost: 600, updateEffects: [.extraMaxActionPoints(amount: TECH_EXTRA_MAXIMUM_PLAYER_ACTION_POINTS)], prerequisites: [.AgileLeadership]),
+        //Technology(shortName: .ScaledAgileLeadership, name: "Scaled Agile Leadership", description: "Scaling your agile practives to enterprise level increases the maximum output your enterprises can create.", cost: 600, updateEffects: [.extraMaxActionPoints(amount: TECH_EXTRA_MAXIMUM_PLAYER_ACTION_POINTS)], prerequisites: [.AgileLeadership]),
         Technology(shortName: .Specilization_1, name: "Specilization 1", description: "By speciliazing in a specific industry, you can increase the yields from improvements.", cost: 500, updateEffects: [.extraSpeciliazationSlots(amount: 1)], prerequisites: [.RecoverableAI]),
         Technology(shortName: .Specilization_2, name: "Specilization 2", description: "Allows a diversification into a second specialization.", cost: 5000, updateEffects: [.extraSpeciliazationSlots(amount: 1), .extraImprovementSlots(amount: 1)], prerequisites: [.Specilization_1])
     ]

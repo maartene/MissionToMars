@@ -26,7 +26,7 @@
     <h3>Message of the day</h3>
     <form action="/admin/set/motd" method="POST">
       <div class="form-group">
-          <label for="motd">Email address</label>
+          <label for="motd">Message</label>
           <input type="text" class="form-control" id="motd" name="motd" value="#(motd)"/>
       </div>
       <a href="/admin" type="cancel" class="btn btn-secondary">Cancel</a>
@@ -54,6 +54,8 @@
           #else:
             <a href="/admin/unbless/#(p.name)" class="btn btn-sm btn-info #if(p.name == player.name): disabled #endif">Unbless</a>
           #endif
+          <a href="/admin/give/tech/#(p.name)" class="btn btn-sm btn-info">+1000 Tech</a>
+          <a href="/admin/give/cash/#(p.name)" class="btn btn-sm btn-info">+1M Cash</a>
         </tr>
       #endfor
       </table>

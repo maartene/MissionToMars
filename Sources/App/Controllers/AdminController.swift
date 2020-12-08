@@ -128,6 +128,44 @@ func createAdminRoutes(_ app: Application) {
         app.simulation = try app.simulation.replacePlayer(unblessedPlayer)
         return req.redirect(to: "/admin")
     }
+    
+    session.get("admin", "give", "tech", ":userName") { req -> Response in
+        let player = try req.getPlayerFromSession()
+        guard player.isAdmin else {
+            throw Abort(.unauthorized, reason: "Player \(player.name) is not an admin.")
+        }
+        
+        guard let playerToReceiveName = req.parameters.get("userName") else {
+            throw Abort(.badRequest, reason: "\(req.parameters.get("userName") ?? "unknown") is not a valid string value.")
+        }
+        
+        guard let playerToReceive = app.simulation.players.first(where: {$0.name == playerToReceiveName }) else {
+            throw Abort(.notFound, reason: "Could not find player with name \(playerToReceiveName).")
+        }
+        
+        let giftedPlayer = playerToReceive.extraTech(amount: 1000)
+        app.simulation = try app.simulation.replacePlayer(giftedPlayer)
+        return req.redirect(to: "/admin")
+    }
+    
+    session.get("admin", "give", "cash", ":userName") { req -> Response in
+        let player = try req.getPlayerFromSession()
+        guard player.isAdmin else {
+            throw Abort(.unauthorized, reason: "Player \(player.name) is not an admin.")
+        }
+        
+        guard let playerToReceiveName = req.parameters.get("userName") else {
+            throw Abort(.badRequest, reason: "\(req.parameters.get("userName") ?? "unknown") is not a valid string value.")
+        }
+        
+        guard let playerToReceive = app.simulation.players.first(where: {$0.name == playerToReceiveName }) else {
+            throw Abort(.notFound, reason: "Could not find player with name \(playerToReceiveName).")
+        }
+        
+        let giftedPlayer = playerToReceive.extraIncome(amount: 1_000_000)
+        app.simulation = try app.simulation.replacePlayer(giftedPlayer)
+        return req.redirect(to: "/admin")
+    }
         
     session.get("admin", "load") { req -> EventLoopFuture<Response> in
         let player = try req.getPlayerFromSession()
