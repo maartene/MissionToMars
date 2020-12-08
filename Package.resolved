@@ -24,17 +24,8 @@
         "repositoryURL": "https://github.com/swift-aws/aws-sdk-swift.git",
         "state": {
           "branch": null,
-          "revision": "a398333c32986c75139c8e31a95ac92cfd38234e",
-          "version": "4.8.0"
-        }
-      },
-      {
-        "package": "AWSSDKSwiftCore",
-        "repositoryURL": "https://github.com/swift-aws/aws-sdk-swift-core.git",
-        "state": {
-          "branch": null,
-          "revision": "1ba4529f0c356aadd08684447fbc672b010a89f0",
-          "version": "4.7.0"
+          "revision": "b402b8a434ca39f24d189289ab93fbee96664502",
+          "version": "4.9.0"
         }
       },
       {
@@ -89,6 +80,15 @@
           "branch": null,
           "revision": "4cf052b78aebaf1b23f2264ce04d57b4b6eb5254",
           "version": "4.2.0"
+        }
+      },
+      {
+        "package": "AWSSDKSwiftCore",
+        "repositoryURL": "https://github.com/soto-project/soto-core.git",
+        "state": {
+          "branch": null,
+          "revision": "856a7df0c15763de4f9f3e3d7baea4a8aa009d22",
+          "version": "4.7.2"
         }
       },
       {
