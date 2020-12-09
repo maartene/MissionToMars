@@ -20,30 +20,12 @@
         }
       },
       {
-        "package": "AWSSDKSwift",
-        "repositoryURL": "https://github.com/swift-aws/aws-sdk-swift.git",
-        "state": {
-          "branch": null,
-          "revision": "b402b8a434ca39f24d189289ab93fbee96664502",
-          "version": "4.9.0"
-        }
-      },
-      {
         "package": "console-kit",
         "repositoryURL": "https://github.com/vapor/console-kit.git",
         "state": {
           "branch": null,
           "revision": "7cf8185ad62d50ae9777ce78bcfde8f5c9f900e2",
           "version": "4.2.1"
-        }
-      },
-      {
-        "package": "HypertextApplicationLanguage",
-        "repositoryURL": "https://github.com/swift-aws/HypertextApplicationLanguage.git",
-        "state": {
-          "branch": null,
-          "revision": "aa2c9141d491682f17b2310aed17b9adfc006256",
-          "version": "1.1.1"
         }
       },
       {
@@ -65,15 +47,6 @@
         }
       },
       {
-        "package": "INIParser",
-        "repositoryURL": "https://github.com/swift-aws/Perfect-INIParser.git",
-        "state": {
-          "branch": null,
-          "revision": "42de0efc7a01105e19b80d533d3d282a98277f6c",
-          "version": "3.0.3"
-        }
-      },
-      {
         "package": "routing-kit",
         "repositoryURL": "https://github.com/vapor/routing-kit.git",
         "state": {
@@ -83,12 +56,21 @@
         }
       },
       {
-        "package": "AWSSDKSwiftCore",
+        "package": "soto",
+        "repositoryURL": "https://github.com/soto-project/soto.git",
+        "state": {
+          "branch": null,
+          "revision": "512845f7383a171597cf79ffa614b63bad4adda4",
+          "version": "5.0.0"
+        }
+      },
+      {
+        "package": "soto-core",
         "repositoryURL": "https://github.com/soto-project/soto-core.git",
         "state": {
           "branch": null,
-          "revision": "856a7df0c15763de4f9f3e3d7baea4a8aa009d22",
-          "version": "4.7.2"
+          "revision": "b24d8687c85b1c678d02077f430ec36b7bcf066a",
+          "version": "5.0.0"
         }
       },
       {

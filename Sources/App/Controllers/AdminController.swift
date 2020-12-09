@@ -8,7 +8,7 @@
 import Foundation
 import Vapor
 import Leaf
-import S3
+import SotoS3
 
 func createAdminRoutes(_ app: Application) {
     let session = app.routes.grouped([
@@ -42,23 +42,25 @@ func createAdminRoutes(_ app: Application) {
         guard player.isAdmin else {
             throw Abort(.unauthorized, reason: "Player \(player.name) is not an admin.")
         }
-        
+
         let dataDir = Environment.get("DATA_DIR") ?? ""
-        let data = try app.simulation.save(fileName: "\(SIMULATION_FILENAME).json", path: dataDir)
+        let path = try app.simulation.save(path: dataDir)
         let bucket = Environment.get("DO_SPACES_FOLDER") ?? "default"
-        
-        guard let accessKey = Environment.get("DO_SPACES_ACCESS_KEY"), let secretKey = Environment.get("DO_SPACES_SECRET") else {
-            app.errorMessages[player.id] = "S3 access key and secret key not set in environment. Save failed."
-            let promise = req.eventLoop.makePromise(of: Response.self)
-            promise.succeed(req.redirect(to: "/admin"))
-            return promise.futureResult
-        }
-        
-        let s3 = S3(accessKeyId: accessKey, secretAccessKey: secretKey, region: .euwest1, endpoint: "https://m2m.ams3.digitaloceanspaces.com")
-        let uploadRequest = S3.PutObjectRequest(acl: .private, body: data, bucket: bucket, contentLength: Int64(data.count), key: "\(SIMULATION_FILENAME).json")
-        return s3.putObject(uploadRequest).map { result in
-            app.infoMessages[player.id] = "Save succesfull. (\(result.eTag ?? "unknown"))"
-            return req.redirect(to: "/admin")
+                
+        let s3 = S3(client: app.aws.client, region: nil, partition: AWSPartition.awsiso, endpoint: "https://m2m.ams3.digitaloceanspaces.com", timeout: nil, byteBufferAllocator: ByteBufferAllocator(), options: [])
+        //let s3 = S3(client: app.aws.client, accessKeyId: accessKey, secretAccessKey: secretKey, region: .euwest1, endpoint: "https://m2m.ams3.digitaloceanspaces.com")
+
+        let uploadRequest = S3.CreateMultipartUploadRequest(acl: .private, bucket: bucket, key: SIMULATION_FILENAME + ".json")
+           
+        return s3.multipartUpload(uploadRequest,
+                                  partSize: 5*1024*1024,
+                                  filename: path.path,
+                                  on: req.eventLoop,
+                                  progress: { progress in print(progress) }
+                                  ).map { result in
+                                    app.logger.notice("Save result: \(result)")
+                                    app.infoMessages[player.id] = "Succesfully saved: \(result.location ?? "unknown path")"
+                                    return req.redirect(to: "/admin")
         }
     }
         
@@ -177,39 +179,31 @@ func createAdminRoutes(_ app: Application) {
             throw Abort(.badRequest, reason: "Loading of database is only allowed in 'Admin' state.")
         }
         
+        let dataDir = Environment.get("DATA_DIR") ?? ""
         let bucket = Environment.get("DO_SPACES_FOLDER") ?? "default"
-        
-        guard let accessKey = Environment.get("DO_SPACES_ACCESS_KEY"), let secretKey = Environment.get("DO_SPACES_SECRET") else {
-            req.logger.error("S3 access key and secret key not set in environment. Save failed.")
-            let promise = req.eventLoop.makePromise(of: Response.self)
-            promise.succeed(req.redirect(to: "/admin"))
-            return promise.futureResult
-        }
-        
-        let s3 = S3(accessKeyId: accessKey, secretAccessKey: secretKey, region: .euwest1, endpoint: "https://m2m.ams3.digitaloceanspaces.com")
-        let downloadRequest = S3.GetObjectRequest(bucket: bucket, key: "\(SIMULATION_FILENAME).json")
-        return s3.getObject(downloadRequest).map { response in
-            guard let data = response.body else {
-                app.errorMessages[player.id] = "Received empty/no response. Load failed."
-                return req.redirect(to: "/admin")
-            }
-            
-            let decoder = JSONDecoder()
-            do {
-                let loadedSimulation = try decoder.decode(Simulation.self, from: data)
-                guard let adminPlayer = loadedSimulation.players.first(where: {$0.isAdmin}) else {
-                    app.errorMessages[player.id] = "Did not find any admin player in loaded simulation. Load failed."
-                    return req.redirect(to: "/admin")
-                }
-                req.logger.notice("Loaded admin player with username: \(adminPlayer.name), email: \(adminPlayer.emailAddress) and id: \(adminPlayer.id)")
-                app.simulation = loadedSimulation
-                return req.redirect(to: "/")
-            } catch {
                 
-                req.logger.error("Load failed: \(error)")
+        let s3 = S3(client: app.aws.client, region: nil, partition: AWSPartition.awsiso, endpoint: "https://m2m.ams3.digitaloceanspaces.com", timeout: nil, byteBufferAllocator: ByteBufferAllocator(), options: [])
+        //let s3 = S3(client: app.aws.client, accessKeyId: accessKey, secretAccessKey: secretKey, region: .euwest1, endpoint: "https://m2m.ams3.digitaloceanspaces.com")
+
+        let downloadRequest = S3.GetObjectRequest(bucket: bucket, key: SIMULATION_FILENAME + ".json")
+        
+        return s3.multipartDownload(downloadRequest, filename: dataDir + SIMULATION_FILENAME + ".json").map { size in
+            app.logger.notice("Succesfully loaded simulation \(size) bytes.")
+            
+            guard let loadedSimulation =  Simulation.load(path: dataDir) else {
+                app.errorMessages[player.id] = "Error loading simulation"
+                req.logger.error("Error loading simulation")
                 return req.redirect(to: "/admin")
             }
-            
+                
+            guard let adminPlayer = loadedSimulation.players.first(where: {$0.isAdmin}) else {
+                app.errorMessages[player.id] = "Did not find any admin player in loaded simulation. Load failed."
+                return req.redirect(to: "/admin")
+            }
+                
+            app.simulation = loadedSimulation
+            req.logger.notice("Loaded admin player with username: \(adminPlayer.name), email: \(adminPlayer.emailAddress) and id: \(adminPlayer.id)")
+            return req.redirect(to: "/")
         }
     }
 }

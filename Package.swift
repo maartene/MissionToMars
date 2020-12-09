@@ -1,4 +1,4 @@
-// swift-tools-version:5.2
+// swift-tools-version:5.3
 import PackageDescription
 
 let package = Package(
@@ -11,7 +11,7 @@ let package = Package(
         .package(url: "https://github.com/vapor/vapor.git", .upToNextMinor(from: "4.32.0")),
         .package(url: "https://github.com/vapor/leaf.git", from: "4.0.1"),
         //.package(url: "https://github.com/nodes-vapor/storage.git", from: "1.0.0"),
-        .package(name: "AWSSDKSwift", url: "https://github.com/swift-aws/aws-sdk-swift.git", from: "4.0.0"),
+        .package(url: "https://github.com/soto-project/soto.git", from: "5.0.0")
     ],
     targets: [
         //.target(name: "MailJet", dependencies: ["Vapor"]),
@@ -19,10 +19,9 @@ let package = Package(
         .target(name: "App", dependencies: [
             .product(name: "Vapor", package: "vapor"),
             .product(name: "Leaf", package: "leaf"),
-            .product(name: "S3", package: "AWSSDKSwift"),
+            .product(name: "SotoS3", package: "soto"),
         ]),
         .target(name: "Run", dependencies: ["App"]),
         .testTarget(name: "AppTests", dependencies: ["App"]),
     ]
 )
-

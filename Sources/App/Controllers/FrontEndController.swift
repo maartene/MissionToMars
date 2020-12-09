@@ -8,7 +8,7 @@
 import Foundation
 import Vapor
 import Leaf
-import S3
+import SotoS3
 
 func createFrontEndRoutes(_ app: Application) {
     let session = app.routes.grouped([
@@ -122,19 +122,23 @@ func createFrontEndRoutes(_ app: Application) {
             let copy = app.simulation
             let dataDir = Environment.get("DATA_DIR") ?? ""
             do {
-                let data = try copy.save(path: dataDir)
+                let path = try copy.save(path: dataDir)
                 let bucket = Environment.get("DO_SPACES_FOLDER") ?? "default"
         
-                if let accessKey = Environment.get("DO_SPACES_ACCESS_KEY"), let secretKey = Environment.get("DO_SPACES_SECRET") {
-                    
-                    let s3 = S3(accessKeyId: accessKey, secretAccessKey: secretKey, region: .euwest1, endpoint: "https://m2m.ams3.digitaloceanspaces.com")
-                    let uploadRequest = S3.PutObjectRequest(acl: .private, body: data, bucket: bucket, contentLength: Int64(data.count), key: "\(SIMULATION_FILENAME).json")
-                    _ = s3.putObject(uploadRequest).map { result in
-                        req.logger.info("Save successfull - \(result.eTag ?? "unknown")")
-                    }
-                } else {
-                    req.logger.error("S3 access key and secret key not set in environment. Save failed.")
-                }
+                let s3 = S3(client: app.aws.client, region: nil, partition: AWSPartition.awsiso, endpoint: "https://m2m.ams3.digitaloceanspaces.com", timeout: nil, byteBufferAllocator: ByteBufferAllocator(), options: [])
+                //let s3 = S3(client: app.aws.client, accessKeyId: accessKey, secretAccessKey: secretKey, region: .euwest1, endpoint: "https://m2m.ams3.digitaloceanspaces.com")
+
+                let uploadRequest = S3.CreateMultipartUploadRequest(acl: .private, bucket: bucket, bucketKeyEnabled: nil, cacheControl: nil, contentDisposition: nil, contentEncoding: nil, contentLanguage: nil, contentType: nil, expectedBucketOwner: nil, expires: nil, grantFullControl: nil, grantRead: nil, grantReadACP: nil, grantWriteACP: nil, key: SIMULATION_FILENAME + ".json", metadata: nil, objectLockLegalHoldStatus: nil, objectLockMode: nil, objectLockRetainUntilDate: nil, requestPayer: nil, serverSideEncryption: nil, sSECustomerAlgorithm: nil, sSECustomerKey: nil, sSECustomerKeyMD5: nil, sSEKMSEncryptionContext: nil, sSEKMSKeyId: nil, storageClass: nil, tagging: nil, websiteRedirectLocation: nil)
+                   
+                 s3.multipartUpload(uploadRequest,
+                                          partSize: 5*1024*1024,
+                                          filename: path.path,
+                                          on: req.eventLoop,
+                                          progress: { progress in print(progress) }
+                 ).map { result in
+                    app.logger.notice("Save result: \(result)")
+                 }
+            
                 return try getMainViewForPlayer(updatedSimulation.players.first(where: {$0.id == player.id}) ?? player, simulation: app.simulation, on: req, page: page)
             } catch {
                 req.logger.error("Failed to save simulation due to error: \(error).")

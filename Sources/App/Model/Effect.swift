@@ -203,6 +203,7 @@ public enum Effect: Codable, CustomStringConvertible {
     }
 }
 
+/// we use this protocol to be able to call `thingy.effectDescription` to get a string with all updateEffects.
 protocol Effector {
     var updateEffects: [Effect] { get }
 }
