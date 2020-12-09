@@ -128,7 +128,7 @@ func createFrontEndRoutes(_ app: Application) {
                 let s3 = S3(client: app.aws.client, region: nil, partition: AWSPartition.awsiso, endpoint: "https://m2m.ams3.digitaloceanspaces.com", timeout: nil, byteBufferAllocator: ByteBufferAllocator(), options: [])
                 //let s3 = S3(client: app.aws.client, accessKeyId: accessKey, secretAccessKey: secretKey, region: .euwest1, endpoint: "https://m2m.ams3.digitaloceanspaces.com")
 
-                let uploadRequest = S3.CreateMultipartUploadRequest(acl: .private, bucket: bucket, bucketKeyEnabled: nil, cacheControl: nil, contentDisposition: nil, contentEncoding: nil, contentLanguage: nil, contentType: nil, expectedBucketOwner: nil, expires: nil, grantFullControl: nil, grantRead: nil, grantReadACP: nil, grantWriteACP: nil, key: SIMULATION_FILENAME + ".json", metadata: nil, objectLockLegalHoldStatus: nil, objectLockMode: nil, objectLockRetainUntilDate: nil, requestPayer: nil, serverSideEncryption: nil, sSECustomerAlgorithm: nil, sSECustomerKey: nil, sSECustomerKeyMD5: nil, sSEKMSEncryptionContext: nil, sSEKMSKeyId: nil, storageClass: nil, tagging: nil, websiteRedirectLocation: nil)
+                let uploadRequest = S3.CreateMultipartUploadRequest(acl: .private, bucket: bucket, key: SIMULATION_FILENAME + "_\(Date().hashValue)" + ".json")
                    
                  s3.multipartUpload(uploadRequest,
                                           partSize: 5*1024*1024,

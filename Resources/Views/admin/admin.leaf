@@ -16,12 +16,32 @@
     <h3>Administration</h3>
     <p>Simulation State: #if(state == 0): admin mode  #else: running #endif</p>
     #if(state == 0):
-      <p><a href="/admin/load" class="btn btn-warning btn-lg">Load Simulation</a>&nbsp;<a href="/admin/save" class="btn btn-primary btn-lg">Save Simulation</a></p>
+      <!--<p><a href="/admin/load" class="btn btn-warning btn-lg">Load Simulation</a>&nbsp;--><a href="/admin/save" class="btn btn-primary btn-lg">Save Simulation</a></p>
       <p><a href="/admin/leaveAdminMode" class="btn btn-primary btn-lg">Leave Admin Mode</a></p>
     #else:
       <p><a href="/admin/save" class="btn btn-primary btn-lg">Save Simulation</a></p>
       <p><a href="/admin/enterAdminMode" class="btn btn-primary btn-lg">Enter Admin Mode</a></p>
     #endif
+
+    <h3>Files</h3>
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+          <tr>
+            <td>Filename</td>
+            <td>Modified</td>
+            <td>Actions</td>
+          </tr>
+        </thead>
+        #for(file in fileList):
+          <tr>
+            <td>#(file.fileName)</td>
+            <td>#(file.modifiedDate)</td>
+            <td><a href="/admin/load/simulation/#(file.fileName)" class="btn btn-danger">Load</td>
+          </tr>
+        #endfor
+      </table>
+    </div>
 
     <h3>Message of the day</h3>
     <form action="/admin/set/motd" method="POST">
