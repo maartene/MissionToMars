@@ -8,7 +8,7 @@ let package = Package(
     ],
     dependencies: [
         // 💧 A server-side Swift web framework.
-        .package(url: "https://github.com/vapor/vapor.git", .upToNextMinor(from: "4.32.0")),
+        .package(url: "https://github.com/vapor/vapor.git", from: "4.0.0"),
         .package(url: "https://github.com/vapor/leaf.git", from: "4.0.1"),
         //.package(url: "https://github.com/nodes-vapor/storage.git", from: "1.0.0"),
         .package(url: "https://github.com/soto-project/soto.git", from: "5.0.0")
