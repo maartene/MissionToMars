@@ -11,6 +11,9 @@ import Leaf
 import SotoS3
 
 func createFrontEndRoutes(_ app: Application) {
+    let BACKUP_INTERVAL = 12
+    var counter = 0
+    
     let session = app.routes.grouped([
         SessionsMiddleware(session: app.sessions.driver),
         UserSessionAuthenticator(),
@@ -19,7 +22,7 @@ func createFrontEndRoutes(_ app: Application) {
     
     app.get("create", "player") { req -> EventLoopFuture<View> in
         return req.view.render("createPlayer", ["startingImprovements": Improvement.startImprovements])
-        }
+    }
         
     app.post("create", "player") { req -> EventLoopFuture<View> in
         struct CreateCharacterContext: Codable {
@@ -117,31 +120,38 @@ func createFrontEndRoutes(_ app: Application) {
             let updatedSimulation = app.simulation.updateSimulation(currentDate: Date())
             assert(app.simulation.id == updatedSimulation.id)
             app.simulation = updatedSimulation
-
-            // save result (in seperate thread)
-            let copy = app.simulation
-            let dataDir = Environment.get("DATA_DIR") ?? ""
-            do {
-                let path = try copy.save(path: dataDir)
-                let bucket = Environment.get("DO_SPACES_FOLDER") ?? "default"
-        
-                let s3 = S3(client: app.aws.client, region: nil, partition: AWSPartition.awsiso, endpoint: "https://m2m.ams3.digitaloceanspaces.com", timeout: nil, byteBufferAllocator: ByteBufferAllocator(), options: [])
-                //let s3 = S3(client: app.aws.client, accessKeyId: accessKey, secretAccessKey: secretKey, region: .euwest1, endpoint: "https://m2m.ams3.digitaloceanspaces.com")
-
-                let uploadRequest = S3.CreateMultipartUploadRequest(acl: .private, bucket: bucket, key: SIMULATION_FILENAME + "_\(Date().hashValue)" + ".json")
-                   
-                 s3.multipartUpload(uploadRequest,
-                                          partSize: 5*1024*1024,
-                                          filename: path.path,
-                                          on: req.eventLoop,
-                                          progress: { progress in print(progress) }
-                 ).map { result in
-                    app.logger.notice("Save result: \(result)")
-                 }
             
-                return try getMainViewForPlayer(updatedSimulation.players.first(where: {$0.id == player.id}) ?? player, simulation: app.simulation, on: req, page: page)
-            } catch {
-                req.logger.error("Failed to save simulation due to error: \(error).")
+            counter -= 1
+
+            if counter < 0 {
+                app.logger.notice("Start simulation save/backup.")
+                // save result (in seperate thread)
+                let copy = app.simulation
+                let dataDir = Environment.get("DATA_DIR") ?? ""
+                do {
+                    let path = try copy.save(path: dataDir)
+                    let bucket = Environment.get("DO_SPACES_FOLDER") ?? "default"
+            
+                    let s3 = S3(client: app.aws.client, region: nil, partition: AWSPartition.awsiso, endpoint: "https://m2m.ams3.digitaloceanspaces.com", timeout: nil, byteBufferAllocator: ByteBufferAllocator(), options: [])
+                    //let s3 = S3(client: app.aws.client, accessKeyId: accessKey, secretAccessKey: secretKey, region: .euwest1, endpoint: "https://m2m.ams3.digitaloceanspaces.com")
+
+                    let uploadRequest = S3.CreateMultipartUploadRequest(acl: .private, bucket: bucket, key: SIMULATION_FILENAME + "_\(Date().hashValue)" + ".json")
+                       
+                     _ = s3.multipartUpload(uploadRequest,
+                                              partSize: 5*1024*1024,
+                                              filename: path.path,
+                                              on: req.eventLoop,
+                                              progress: { progress in print(progress) }
+                     ).map { result in
+                        app.logger.notice("Save result: \(result)")
+                     }
+                    
+                    counter = BACKUP_INTERVAL
+                    
+                    return try getMainViewForPlayer(updatedSimulation.players.first(where: {$0.id == player.id}) ?? player, simulation: app.simulation, on: req, page: page)
+                } catch {
+                    req.logger.error("Failed to save simulation due to error: \(error).")
+                }
             }
         }
         
@@ -635,7 +645,7 @@ func createFrontEndRoutes(_ app: Application) {
     }
                 
     app.get() { req -> EventLoopFuture<View> in
-        struct IndexContext: Content {
+        struct IndexContext: Encodable {
             let state: Simulation.SimulationState
             let motd: String?
             let isIndexPage = true
@@ -646,7 +656,7 @@ func createFrontEndRoutes(_ app: Application) {
         return req.view.render("index", context)
     }
         
-    app.get("debug", "dataDump") { req -> String in
+    /*app.get("debug", "dataDump") { req -> String in
         guard (Environment.get("DEBUG_MODE") ?? "inactive") == "active" else {
             throw Abort(.notFound)
         }
@@ -657,10 +667,10 @@ func createFrontEndRoutes(_ app: Application) {
             let data = try encoder.encode(app.simulation)
             return String(data: data, encoding: .utf8) ?? "empty"
         } catch {
-            print(error)
+            req.logger.error("Error while backing up: \(error)")
             return("Error while backup up: \(error).")
         }
-    }
+    }*/
     
     func getPlayerIDFromSession(on req: Request) -> UUID? {
         (try? req.getPlayerFromSession())?.id

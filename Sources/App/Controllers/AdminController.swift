@@ -78,7 +78,7 @@ func createAdminRoutes(_ app: Application) {
             throw Abort(.badRequest, reason: "Can only enter admin mode when simulation is not already in admin mode.")
         }
         
-        print("entering admin mode.")
+        req.logger.notice("entering admin mode.")
         app.simulation.state = .admin
         return req.redirect(to: "/admin")
     }
@@ -273,7 +273,7 @@ func adminPage(on req: Request, with simulation: Simulation, in app: Application
                                    //backupFiles: sortedFiles,
                                    infoMessage: app.infoMessages[player.id] ?? nil, errorMessage: app.errorMessages[player.id] ?? nil, state: app.simulation.state, players: players, motd: app.motd, fileList: objects)
         
-        print("List result: \(result)")
+        req.logger.info("File list retrieve complete.")
         return req.view.render("admin/admin", context)
     }
 }

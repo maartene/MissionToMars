@@ -53,7 +53,7 @@ struct UserCredentialsAuthenticator: CredentialsAuthenticator {
                 return request.eventLoop.makeFailedFuture(AuthenticationErrors.passwordDidNotMatch)
             }
         } catch {
-            print("Error during authentication: \(error)")
+            request.logger.error("Error during authentication: \(error)")
             return request.eventLoop.makeFailedFuture(error)
         }
         
