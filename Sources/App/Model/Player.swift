@@ -130,7 +130,7 @@ public struct Player: Content {
     }
     
     public var maxActionPoints: Int {
-        var count = MAXIMUM_PLAYER_ACTION_POINTS
+        let count = MAXIMUM_PLAYER_ACTION_POINTS
         /*if unlockedTechnologyNames.contains(.ScaledAgileLeadership) {
             count += TECH_EXTRA_MAXIMUM_PLAYER_ACTION_POINTS
         }*/

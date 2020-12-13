@@ -56,6 +56,24 @@
         }
       },
       {
+        "package": "soto",
+        "repositoryURL": "https://github.com/soto-project/soto.git",
+        "state": {
+          "branch": null,
+          "revision": "512845f7383a171597cf79ffa614b63bad4adda4",
+          "version": "5.0.0"
+        }
+      },
+      {
+        "package": "soto-core",
+        "repositoryURL": "https://github.com/soto-project/soto-core.git",
+        "state": {
+          "branch": null,
+          "revision": "b24d8687c85b1c678d02077f430ec36b7bcf066a",
+          "version": "5.0.0"
+        }
+      },
+      {
         "package": "swift-backtrace",
         "repositoryURL": "https://github.com/swift-server/swift-backtrace.git",
         "state": {

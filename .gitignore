@@ -76,5 +76,5 @@ fastlane/test_output
 # Misc
 Secrets/
 .swiftpm/xcode/xcshareddata/xcschemes/MissionToMars.xcscheme
-simulation.json
+simulation*.json
 Package.resolved
