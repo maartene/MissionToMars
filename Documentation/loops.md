@@ -11,8 +11,6 @@
 * Gain (extra) tech
 * Gain (extra) cash
 * Help players
-* Invest (spend cash/tech, get more back later)
-* 
 
 ## Short term - (1 to 2 hours)
 
