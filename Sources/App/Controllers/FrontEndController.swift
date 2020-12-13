@@ -248,7 +248,6 @@ func createFrontEndRoutes(_ app: Application) {
             let page: String
             let simulationIsUpdating: Bool
             let improvements: [ImprovementContext]
-            let maxActionPoints: Int
             let improvementSlots: Int
             let specializationSlots: Int
             let specilizationCount: Int
@@ -291,12 +290,12 @@ func createFrontEndRoutes(_ app: Application) {
                 }
             }
             
-            let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponents: mission.currentStage.currentlyBuildingComponents, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage, currentStageComplete: mission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: unlockedComponents, techlockedComponents: techlockedComponents, playerIsBuildingComponent: mission.currentStage.playerIsBuildingComponentInStage(player), cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, componentBuildPointsPerDay: player.componentBuildPointsPerTick,  page: page, simulationIsUpdating: false, improvements: improvements, maxActionPoints: player.maxActionPoints, improvementSlots: player.improvementSlotsCount, specializationSlots: player.maximumNumberOfSpecializations, specilizationCount: player.specilizationCount, improvementCount: player.improvements.count, secondsUntilNextUpdate: Int(secondsUntilNextUpdate))
+            let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponents: mission.currentStage.currentlyBuildingComponents, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage, currentStageComplete: mission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: unlockedComponents, techlockedComponents: techlockedComponents, playerIsBuildingComponent: mission.currentStage.playerIsBuildingComponentInStage(player), cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, componentBuildPointsPerDay: player.componentBuildPointsPerTick,  page: page, simulationIsUpdating: false, improvements: improvements, improvementSlots: player.improvementSlotsCount, specializationSlots: player.maximumNumberOfSpecializations, specilizationCount: player.specilizationCount, improvementCount: player.improvements.count, secondsUntilNextUpdate: Int(secondsUntilNextUpdate))
             
             return req.view.render("main_\(page)", context)
         } else {
             // no mission
-            let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponents: [], simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage,  currentStageComplete: false, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: [], techlockedComponents: [], playerIsBuildingComponent: false, cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, componentBuildPointsPerDay: player.componentBuildPointsPerTick, page: page, simulationIsUpdating: false, improvements: improvements, maxActionPoints: player.maxActionPoints, improvementSlots: player.improvementSlotsCount, specializationSlots: player.maximumNumberOfSpecializations, specilizationCount: player.specilizationCount, improvementCount: player.improvements.count, secondsUntilNextUpdate: Int(secondsUntilNextUpdate))
+            let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponents: [], simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage,  currentStageComplete: false, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: [], techlockedComponents: [], playerIsBuildingComponent: false, cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, componentBuildPointsPerDay: player.componentBuildPointsPerTick, page: page, simulationIsUpdating: false, improvements: improvements, improvementSlots: player.improvementSlotsCount, specializationSlots: player.maximumNumberOfSpecializations, specilizationCount: player.specilizationCount, improvementCount: player.improvements.count, secondsUntilNextUpdate: Int(secondsUntilNextUpdate))
             
             return req.view.render("main_\(page)", context)
         }
@@ -539,9 +538,20 @@ func createFrontEndRoutes(_ app: Application) {
         
         let player = try req.getPlayerFromSession()
         
-        let possibleImprovements = Improvement.unlockedImprovementsForPlayer(player).map { improvement in
-            ImprovementInfo(improvement: improvement, canBuild: player.canBuildImprovement(improvement))
+        let possibleImprovements: [ImprovementInfo]
+        let onlyBuildable: Bool = (try? req.query.get(at: "buildable")) ?? false
+        if onlyBuildable {
+            possibleImprovements = Improvement.unlockedImprovementsForPlayer(player)
+                .filter({ improvement in player.canBuildImprovement(improvement)})
+                .map { improvement in
+                    ImprovementInfo(improvement: improvement, canBuild: true) }
+        } else {
+            possibleImprovements = Improvement.unlockedImprovementsForPlayer(player)
+                .map { improvement in
+                    ImprovementInfo(improvement: improvement, canBuild: player.canBuildImprovement(improvement))
+            }
         }
+        
         let context = ImprovementBuildContext(player: player, buildPointsPerTick: player.buildPointsPerTick, possibleImprovements: possibleImprovements)
         
         return req.view.render("improvements", context)
@@ -775,7 +785,7 @@ func createFrontEndRoutes(_ app: Application) {
         
         let smartPlayers = app.simulation.players.map { player -> Player in
             var changedPlayer = player
-            changedPlayer.debug_setTech(2_000)
+            changedPlayer.debug_setTech(3_000)
             return changedPlayer
         }
         

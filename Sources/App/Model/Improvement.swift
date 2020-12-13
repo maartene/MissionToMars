@@ -59,6 +59,7 @@ public struct Improvement: Codable, Equatable, Effector {
         //case TuningShop = 21
         //case DesignStudio = 22
         //case SecondBranch = 23
+        case HostileTakeover = 24
     }
     
     public static let allImprovements = [
@@ -97,9 +98,10 @@ public struct Improvement: Codable, Equatable, Effector {
         
         // repeatable improvements - for testing purposes, keep these at the end of the array.
         // you should only be able to do this once per stage
-        Improvement(shortName: .CrowdFundingCampaign, name: "Crowd Funding Campaign", description: "A reasonably fast way to get generate some extra income, but it requires your full attention (you can't built any other improvements during the duration of the campaign). When it completes, you receive 10x your current daily income.", cost: 20_000, buildTime: 365 / 12, rushable: false, triggerable: false, updateEffects: [.extraIncomeDailyIncome(times: 10), .oneShot(shortName: .CrowdFundingCampaign)]),
-        Improvement(shortName: .AdvertisingCampaign, name: "Advertising Campaign", description: "Tripples income for the next 30 days. (you get your cash after 30 days)", cost: 2_000_000, buildTime: 30, rushable: false, triggerable: false, updateEffects: [.extraIncomeDailyIncome(times: 60), .oneShot(shortName: .AdvertisingCampaign)]),
-        Improvement(shortName: .BuyPatentPortfolio, name: "Buy Patent Portfolio", description: "A quick, but expensive way to get some extra research points (+\(Int(150000.0 / CASH_TO_TECH_CONVERSION_RATE))).", cost: 150_000, buildTime: 7, rushable: false, triggerable: false, updateEffects: [.extraTechFlat(amount: 150000.0 / CASH_TO_TECH_CONVERSION_RATE), .oneShot(shortName: .BuyPatentPortfolio)]),
+        Improvement(shortName: .CrowdFundingCampaign, name: "Crowd Funding Campaign", description: "A reasonably fast way to get generate some extra income, but it requires your full attention (you can't built any other improvements during the duration of the campaign). When it completes, you receive 10x your current daily income.", cost: 20_000, buildTime: 365 / 12, requiredTechnologyShortnames: [.Economics_1], rushable: false, triggerable: false, updateEffects: [.extraIncomeDailyIncome(times: 10), .oneShot(shortName: .CrowdFundingCampaign)]),
+        Improvement(shortName: .AdvertisingCampaign, name: "Advertising Campaign", description: "Tripples income for the next 30 days. (you get your cash after 30 days)", cost: 2_000_000, buildTime: 30, requiredTechnologyShortnames: [.Economics_2], rushable: false, triggerable: false, updateEffects: [.extraIncomeDailyIncome(times: 60), .oneShot(shortName: .AdvertisingCampaign)]),
+        Improvement(shortName: .BuyPatentPortfolio, name: "Buy Patent Portfolio", description: "A quick, but expensive way to get some extra research points (+\(Int(150000.0 / CASH_TO_TECH_CONVERSION_RATE))).", cost: 150_000, buildTime: 7, requiredTechnologyShortnames: [.Economics_1], rushable: false, triggerable: false, updateEffects: [.extraTechFlat(amount: 150000.0 / CASH_TO_TECH_CONVERSION_RATE), .oneShot(shortName: .BuyPatentPortfolio)]),
+        Improvement(shortName: .HostileTakeover, name: "Hostile Takeover", description: "Get the paperwork in order to buy another company.", cost: 1_000_000, buildTime: 30, requiredTechnologyShortnames: [.Economics_3], rushable: false, updateEffects: [.extraRushes(amount: 1), .oneShot(shortName: .HostileTakeover)]),
     ]
     
     public static var buildableImprovements: [Improvement] {

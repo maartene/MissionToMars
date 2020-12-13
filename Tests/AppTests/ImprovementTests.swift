@@ -176,12 +176,12 @@ final class ImprovementTests : XCTestCase {
             return
         }
         
-        let cashBeforeRush = buildingPlayer.cash
+        let rushesBeforeRush = buildingPlayer.rushes
         buildingPlayer = try buildingPlayer.rushImprovement(in: slot)
         
         XCTAssertEqual(buildingPlayer.improvements.last!.shortName, Improvement.ShortName.BioResearchFacility)
         XCTAssertGreaterThanOrEqual(buildingPlayer.improvements.last!.percentageCompleted, 100.0, "% complete")
-        XCTAssertLessThan(buildingPlayer.cash, cashBeforeRush, "cash")
+        XCTAssertLessThan(buildingPlayer.rushes, rushesBeforeRush, "rushes")
         
     }
     
@@ -201,10 +201,12 @@ final class ImprovementTests : XCTestCase {
         XCTAssertThrowsError(try buildingPlayer.rushImprovement(in: slot))
     }
     
-    func testPlayerCannotRushWithInsufficientFunds() throws {
+    func testPlayerCannotRushWithInsufficientRushes() throws {
         var player = Player(emailAddress: "example@example.com", name: "testUser", password: "")
-        let improvement = Improvement.getImprovementByName(.PrefabFurniture)!
+        let improvement = Improvement.getImprovementByName(.BioResearchFacility)!
         player = player.extraIncome(amount: improvement.cost)
+        
+        player = player.extraRushes(amount: -player.rushes)
         
         let buildingPlayer = try player.startBuildImprovement(improvement, startDate: Date(), options: [.ignoreTechPrereqs])
         XCTAssertEqual(buildingPlayer.currentlyBuildingImprovement!.percentageCompleted, 0, "% complete")
@@ -430,7 +432,7 @@ final class ImprovementTests : XCTestCase {
         //("testPlayerIsBuildingImprovementCannotBuildAnother", testPlayerIsBuildingImprovementCannotBuildAnother),
         ("testPlayerCanRushImprovement", testPlayerCanRushImprovement),
         ("testPlayerCannotRushUnrushableImprovement", testPlayerCannotRushUnrushableImprovement),
-        ("testPlayerCannotRushWithInsufficientFunds", testPlayerCannotRushWithInsufficientFunds),
+        ("testPlayerCannotRushWithInsufficientRushes", testPlayerCannotRushWithInsufficientRushes),
         ("testBuildTimeFactorShortensBuildTime", testBuildTimeFactorShortensBuildTime),
         ("testBuildingCanIncreaseBuiltTimeFactor", testBuildingCanIncreaseBuiltTimeFactor),
         ("testRushingImprovementDoesNotRemoveExistingImprovement", testRushingImprovementDoesNotRemoveExistingImprovement),

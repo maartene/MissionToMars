@@ -32,6 +32,9 @@ public struct Technology: Equatable, Codable, Effector {
         //case ScaledAgileLeadership = 17
         case Specilization_1 = 18
         case Specilization_2 = 19
+        case Economics_1 = 20
+        case Economics_2 = 21
+        case Economics_3 = 22
     }
     
     public static let allTechnologies = [
@@ -55,7 +58,10 @@ public struct Technology: Equatable, Codable, Effector {
         Technology(shortName: .AdvancedSignalModulation, name: "Advanced Signal Modulation", description: "Better signal modulation techniques increase bandwidth over extremely large distances.", cost: 300, updateEffects: [], prerequisites: [.RecoverableAI]),
         //Technology(shortName: .ScaledAgileLeadership, name: "Scaled Agile Leadership", description: "Scaling your agile practives to enterprise level increases the maximum output your enterprises can create.", cost: 600, updateEffects: [.extraMaxActionPoints(amount: TECH_EXTRA_MAXIMUM_PLAYER_ACTION_POINTS)], prerequisites: [.AgileLeadership]),
         Technology(shortName: .Specilization_1, name: "Specilization 1", description: "By speciliazing in a specific industry, you can increase the yields from improvements.", cost: 500, updateEffects: [.extraSpeciliazationSlots(amount: 1)], prerequisites: [.RecoverableAI]),
-        Technology(shortName: .Specilization_2, name: "Specilization 2", description: "Allows a diversification into a second specialization.", cost: 5000, updateEffects: [.extraSpeciliazationSlots(amount: 1), .extraImprovementSlots(amount: 1)], prerequisites: [.Specilization_1])
+        Technology(shortName: .Specilization_2, name: "Specilization 2", description: "Allows a diversification into a second specialization.", cost: 5000, updateEffects: [.extraSpeciliazationSlots(amount: 1), .extraImprovementSlots(amount: 1)], prerequisites: [.Specilization_1]),
+        Technology(shortName: .Economics_1, name: "Economics 1", description: "Allows running repeatable projects for fun and profits.", cost: 150, updateEffects: [], prerequisites: []),
+        Technology(shortName: .Economics_2, name: "Economics 2", description: "Allows better repeatable projects.", cost: 500, updateEffects: [], prerequisites: [.Economics_1]),
+        Technology(shortName: .Economics_3, name: "Economics 3", description: "Allows additional rushes.", cost: 2500, updateEffects: [], prerequisites: [.Economics_2])
     ]
     
     public static func getTechnologyByName(_ shortName: ShortName) -> Technology? {
