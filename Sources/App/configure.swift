@@ -1,5 +1,6 @@
 import Vapor
 import Leaf
+import SotoS3
 
 /// Called before your application initializes.
 ///
@@ -39,6 +40,15 @@ public func configure(_ app: Application) throws {
     app.middleware.use(FileMiddleware(publicDirectory: "Public"))
     app.middleware.use(ErrorMiddleware.default(environment: app.environment))
     app.middleware.use(app.sessions.middleware)
+    
+    if let accessKey = Environment.get("DO_SPACES_ACCESS_KEY"), let secretKey = Environment.get("DO_SPACES_SECRET") {
+        let client = AWSClient(credentialProvider: .static(accessKeyId: accessKey, secretAccessKey: secretKey), httpClientProvider: .shared(app.http.client.shared))
+        
+        app.aws.client = client
+    } else {
+        app.logger.warning("No Digital Ocean Spaces credentials provided. Save/load actions might fail.")
+        app.aws.client = AWSClient(httpClientProvider: .shared(app.http.client.shared))
+    }
 }
 
 

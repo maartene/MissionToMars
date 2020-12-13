@@ -20,30 +20,12 @@
         }
       },
       {
-        "package": "AWSSDKSwift",
-        "repositoryURL": "https://github.com/swift-aws/aws-sdk-swift.git",
-        "state": {
-          "branch": null,
-          "revision": "b402b8a434ca39f24d189289ab93fbee96664502",
-          "version": "4.9.0"
-        }
-      },
-      {
         "package": "console-kit",
         "repositoryURL": "https://github.com/vapor/console-kit.git",
         "state": {
           "branch": null,
-          "revision": "7cf8185ad62d50ae9777ce78bcfde8f5c9f900e2",
-          "version": "4.2.1"
-        }
-      },
-      {
-        "package": "HypertextApplicationLanguage",
-        "repositoryURL": "https://github.com/swift-aws/HypertextApplicationLanguage.git",
-        "state": {
-          "branch": null,
-          "revision": "aa2c9141d491682f17b2310aed17b9adfc006256",
-          "version": "1.1.1"
+          "revision": "f353ebf73014faf89804b76e51ff8171840b59ba",
+          "version": "4.2.3"
         }
       },
       {
@@ -65,15 +47,6 @@
         }
       },
       {
-        "package": "INIParser",
-        "repositoryURL": "https://github.com/swift-aws/Perfect-INIParser.git",
-        "state": {
-          "branch": null,
-          "revision": "42de0efc7a01105e19b80d533d3d282a98277f6c",
-          "version": "3.0.3"
-        }
-      },
-      {
         "package": "routing-kit",
         "repositoryURL": "https://github.com/vapor/routing-kit.git",
         "state": {
@@ -83,12 +56,21 @@
         }
       },
       {
-        "package": "AWSSDKSwiftCore",
+        "package": "soto",
+        "repositoryURL": "https://github.com/soto-project/soto.git",
+        "state": {
+          "branch": null,
+          "revision": "512845f7383a171597cf79ffa614b63bad4adda4",
+          "version": "5.0.0"
+        }
+      },
+      {
+        "package": "soto-core",
         "repositoryURL": "https://github.com/soto-project/soto-core.git",
         "state": {
           "branch": null,
-          "revision": "856a7df0c15763de4f9f3e3d7baea4a8aa009d22",
-          "version": "4.7.2"
+          "revision": "b24d8687c85b1c678d02077f430ec36b7bcf066a",
+          "version": "5.0.0"
         }
       },
       {
@@ -105,8 +87,8 @@
         "repositoryURL": "https://github.com/apple/swift-crypto.git",
         "state": {
           "branch": null,
-          "revision": "9b9d1868601a199334da5d14f4ab2d37d4f8d0c5",
-          "version": "1.0.2"
+          "revision": "9680b7251cd2be22caaed8f1468bd9e8915a62fb",
+          "version": "1.1.2"
         }
       },
       {
@@ -123,8 +105,8 @@
         "repositoryURL": "https://github.com/apple/swift-metrics.git",
         "state": {
           "branch": null,
-          "revision": "708b960b4605abb20bc55d65abf6bad607252200",
-          "version": "2.0.0"
+          "revision": "f5ed78cb26019b2b85b016f8aa5b1a3427c8251a",
+          "version": "2.1.0"
         }
       },
       {
@@ -132,8 +114,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio.git",
         "state": {
           "branch": null,
-          "revision": "5fc24345f92ec4c274121776c215ab0aa1ed4d50",
-          "version": "2.22.0"
+          "revision": "c3e2359c55cd8b47207ab7363b77c9c398a95294",
+          "version": "2.23.0"
         }
       },
       {
@@ -150,8 +132,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio-http2.git",
         "state": {
           "branch": null,
-          "revision": "1e68e51752be0b43c5a0ef35818c1dd24d13e77c",
-          "version": "1.14.1"
+          "revision": "78ddbdfca10f64e4399da37c63372fd8db232152",
+          "version": "1.15.0"
         }
       },
       {
@@ -159,8 +141,8 @@
         "repositoryURL": "https://github.com/apple/swift-nio-ssl.git",
         "state": {
           "branch": null,
-          "revision": "ea1dfd64193bf5af4490635a4a44c4fb43b1e1ae",
-          "version": "2.9.1"
+          "revision": "eb102ad32add8638410e37a69bc815ea11379813",
+          "version": "2.10.0"
         }
       },
       {

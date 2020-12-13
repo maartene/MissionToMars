@@ -195,7 +195,7 @@ public enum Effect: Codable, CustomStringConvertible {
             return "+\(amount) to maximum action point\(amount > 1 ? "s" : "")."
         case .extraIncomeDailyIncome(let times):
             return "+\(times)x your daily cash income."
-        case .oneShot(let _):
+        case .oneShot(_):
             return "One shot, removed after use."
         default:
             return "Effect \(self). Add a description for a more descriptive message."
@@ -203,6 +203,7 @@ public enum Effect: Codable, CustomStringConvertible {
     }
 }
 
+/// we use this protocol to be able to call `thingy.effectDescription` to get a string with all updateEffects.
 protocol Effector {
     var updateEffects: [Effect] { get }
 }

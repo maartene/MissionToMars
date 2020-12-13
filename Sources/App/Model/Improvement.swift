@@ -58,7 +58,7 @@ public struct Improvement: Codable, Equatable, Effector {
         case Retail_TAG = 20
         //case TuningShop = 21
         //case DesignStudio = 22
-        case SecondBranch = 23
+        //case SecondBranch = 23
     }
     
     public static let allImprovements = [
@@ -81,8 +81,8 @@ public struct Improvement: Codable, Equatable, Effector {
         Improvement(shortName: .AIAssistedResearchPlant, name: "AI Assisted Research Plant", description: "Use your advancements in AI for research and generate extra tech points.", cost: 2_000_000, buildTime: 365, requiredTechnologyShortnames: [.RecoverableAI], updateEffects: [.extraTechFlat(amount: 10)], tags: [.AI, .SpaceTravel]),
         
         // Generic improvements
-        /*Improvement(shortName: .DesignStudio, name: "Design Studio (STUB)", description: "(STUB: required to give something to build if you not yet selected a tech.) Not very efficient - unlock technologies to unlock better improvements.", cost: 500_000, buildTime: 365 / 6, updateEffects: [.extraIncomeFlat(amount: 1_000), .extraTechFlat(amount: 1)]),*/
-        Improvement(shortName: .SecondBranch, name: "Second Branch", description: "A second branch for your company brings additional Action Points.", cost: 500_000, buildTime: 365 / 3, requiredTechnologyShortnames: [.AgileLeadership], rushable: false, triggerable: false, updateEffects: [.extraActionPointsFlat(amount: 1)], tags: [.Finance]),
+        //Improvement(shortName: .DesignStudio, name: "Design Studio (STUB)", description: "(STUB: required to give something to build if you not yet selected a tech.) Not very efficient - unlock technologies to unlock better improvements.", cost: 500_000, buildTime: 365 / 6, updateEffects: [.extraIncomeFlat(amount: 1_000), .extraTechFlat(amount: 1)]),
+        //Improvement(shortName: .SecondBranch, name: "Second Branch", description: "A second branch for your company brings additional Action Points.", cost: 500_000, buildTime: 365 / 3, requiredTechnologyShortnames: [.AgileLeadership], rushable: false, triggerable: false, updateEffects: [.extraActionPointsFlat(amount: 1)], tags: [.Finance]),
         
         // Mission improvements
         Improvement(shortName: .OrbitalShipyard, name: "Orbital Shipyard", description: "Although very expensive to construct, it will make building components much easier. Component build time is reduced.", cost: 750_000_000, buildTime: 365, requiredTechnologyShortnames: [.FuelConservation_2, .PackageOptimization], rushable: false, triggerable: false, updateEffects: [.extraComponentBuildPointsFlat(amount: 0.4)], tags: [.Construction, .SpaceTravel]),

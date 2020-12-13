@@ -87,7 +87,7 @@ func createManageAccountRoutes(_ app: Application) {
         }
         
         guard user.id == UUID(uuidString: useridString) else {
-            print("UUID did not match")
+            req.logger.error("UUID did not match")
             app.errorMessages[user.id] = "Error deleting account. Contact support for more help."
             return req.redirect(to: "/account/manage")
         }

@@ -211,7 +211,7 @@ public struct Simulation: Content {
         }
     }
     
-    public func save(fileName: String = SIMULATION_FILENAME + ".json", path: String = "") throws -> Data {
+    public func save(fileName: String = SIMULATION_FILENAME + ".json", path: String = "") throws -> URL {
         let encoder = JSONEncoder()
         encoder.outputFormatting = .prettyPrinted
         
@@ -221,7 +221,7 @@ public struct Simulation: Content {
         let data = try encoder.encode(copy)
         let url = URL(fileURLWithPath: path + fileName)
         try data.write(to: url)
-        return data
+        return url
     }
     
     public static func load(fileName: String = SIMULATION_FILENAME + ".json", path: String = "") -> Simulation? {
