@@ -50,7 +50,7 @@ public struct Player: Content {
     public private(set) var technologyPoints: Double = 75
     public private(set) var buildPoints: Double = 0
     public private(set) var componentBuildPoints: Double = 0
-    public private(set) var actionPoints: Int = 10
+    // public private(set) var actionPoints: Int = 10
     
     public private(set) var improvements: [Improvement]
     
@@ -360,7 +360,7 @@ public struct Player: Content {
         return changedPlayer
     }
     
-    public func triggerImprovement(_ index: Int) throws -> Player {
+    /*public func triggerImprovement(_ index: Int) throws -> Player {
         guard (0 ..< improvements.count).contains(index) else {
             throw PlayerError.missingImprovement
         }
@@ -386,7 +386,7 @@ public struct Player: Content {
             updatedPlayer.improvements[index] = updatedImprovement.updatedImprovement
             return updatedPlayer
         }
-    }
+    }*/
     
     func replaceImprovementInSlot(_ slot: Int, with improvement: Improvement) throws -> Player {
         guard (0 ..< improvements.count).contains(slot) else {
@@ -518,9 +518,9 @@ public struct Player: Content {
         self.technologyPoints = amount
     }
     
-    mutating func debug_setActionPoints(_ amount: Int) {
+    /*mutating func debug_setActionPoints(_ amount: Int) {
         self.actionPoints = amount
-    }
+    }*/
     
     public func bless() -> Player {
         var blessedPlayer = self
