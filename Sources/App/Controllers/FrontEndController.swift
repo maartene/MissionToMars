@@ -20,6 +20,19 @@ func createFrontEndRoutes(_ app: Application) {
         UserCredentialsAuthenticator(),
     ])
     
+    app.get() { req -> EventLoopFuture<View> in
+        struct IndexContext: Encodable {
+            let state: Simulation.SimulationState
+            let motd: String?
+            let isIndexPage = true
+        }
+        
+        let motd = app.motd
+        let context = IndexContext(state: app.simulation.state, motd: motd)
+        return req.view.render("index", context)
+    }
+    
+    // MARK: Create player
     app.get("create", "player") { req -> EventLoopFuture<View> in
         return req.view.render("createPlayer", ["startingImprovements": Improvement.startImprovements])
     }
@@ -67,7 +80,43 @@ func createFrontEndRoutes(_ app: Application) {
             return req.view.render("userCreated", context)
         }
     }
+    
+    func sendWelcomeEmail(to player: Player, on container: Request) {
+        if let publicKey = Environment.get("MAILJET_API_KEY"), let privateKey = Environment.get("MAILJET_SECRET_KEY") {
         
+        let mailJetConfig = MailJetConfig(apiKey: publicKey, secretKey: privateKey, senderName: "Mission2Mars Support", senderEmail: "support@mission2mars.space")
+        mailJetConfig.sendMessage(to: player.emailAddress, toName: player.name, subject: "Your login id", message: """
+            Welcome \(player.name) to Mission2Mars
+            
+            Your username is: \(player.name)
+            Your registered email address is: \(player.emailAddress)
+            
+            Note: if you lose your password, you need both your registered email address and username to request a new password.
+
+            If you don't recognize signing up to Mission2Mars, please let us know by replying to this e-mail. Otherwise,
+
+            Have fun!
+            
+            - the Mission2Mars team
+            Sent from: \(Environment.get("ENVIRONMENT") ?? "local test")
+            """, htmlMessage: """
+            <h1>Welcome \(player.name) to Mission2Mars</h1>
+            
+            <h3>Your username is: <b>\(player.name)</b></h3>
+            <h3>Your registered email address is: \(player.emailAddress)</h3>
+            <p>Note: if you lose your password, you need both your registered email address and username to request a new password.</p>
+            <p>&nbsp;</p>
+            <p>If you don't recognize signing up to Mission2Mars, please let us know by replying to this e-mail. Otherwise,</p>
+            <p>&nbsp;</p>
+            <p>Have fun!</p>
+            <p>&nbsp;</p>
+            <p>- the Mission2Mars team</p>
+            <p>Sent from: \(Environment.get("ENVIRONMENT") ?? "unknown")</p>
+            """, on: container)
+        }
+    }
+    
+    // MARK: Login
     app.post("login") { req -> EventLoopFuture<View> in
         let emailAddress: String = try req.content.get(at: "emailAddress")
         let password: String = try req.content.get(at: "password")
@@ -94,7 +143,19 @@ func createFrontEndRoutes(_ app: Application) {
             return req.view.render("index", ["errorMessage": "Invalid email address/password combination."])
         }
     }
-        
+    
+    func getPlayerIDFromSession(on req: Request) -> UUID? {
+        (try? req.getPlayerFromSession())?.id
+    }
+    
+    func getPlayerFromSession(on req: Request, in simulation: Simulation) throws -> Player {
+        guard let user = req.auth.get(Player.self) else {
+            throw Abort(.unauthorized)
+        }
+        return user
+    }
+    
+    // MARK: Get mail pages (mission, technology, improvements)
     session.get("main") { req -> EventLoopFuture<View> in
         return try mainPage(req: req, page: "main")
     }
@@ -110,7 +171,10 @@ func createFrontEndRoutes(_ app: Application) {
     session.get("improvements") { req in
         return try mainPage(req: req, page: "improvements")
     }
-        
+      
+    /// Retrieves the mail page.
+    /// * Updates simulation when past next update time
+    /// * Saves simulation to cloud storage every `BACKUP_INTERVAL` times
     func mainPage(req: Request, page: String) throws -> EventLoopFuture<View> {
         guard let player = try? req.getPlayerFromSession() else {
             return req.view.render("index", ["state": app.simulation.state])
@@ -157,7 +221,88 @@ func createFrontEndRoutes(_ app: Application) {
         
         return try getMainViewForPlayer(player, simulation: app.simulation, on: req, page: page)
     }
+    
+    func getMainViewForPlayer(_ player: Player, simulation: Simulation, on req: Request, page: String = "main") throws -> EventLoopFuture<View> {
+        struct ImprovementContext: Codable {
+            let slot: Int
+            let improvement: Improvement
+        }
         
+        struct MainContext: Codable {
+            let player: Player
+            let mission: Mission?
+            let currentStage: Stage?
+            let currentBuildingComponents: [Component]
+            let simulation: Simulation
+            let errorMessage: String?
+            let infoMessage: String?
+            let currentStageComplete: Bool
+            let unlockableTechnologogies: [Technology]
+            let unlockedTechnologies: [Technology]
+            let unlockedComponents: [Component]
+            let techlockedComponents: [Component]
+            let playerIsBuildingComponent: Bool
+            let cashPerDay: Double
+            let techPerDay: Double
+            let componentBuildPointsPerDay: Double
+            let page: String
+            let simulationIsUpdating: Bool
+            let improvements: [ImprovementContext]
+            let maxActionPoints: Int
+            let improvementSlots: Int
+            let specializationSlots: Int
+            let specilizationCount: Int
+            let improvementCount: Int
+            let secondsUntilNextUpdate: Int
+        }
+        
+        let id = player.id
+        
+        var errorMessages = app.errorMessages
+        let errorMessage = errorMessages[id] ?? nil
+        errorMessages.removeValue(forKey: id)
+        app.errorMessages = errorMessages
+        
+        var infoMessages = app.infoMessages
+        let infoMessage = app.infoMessages[id] ?? nil
+        infoMessages.removeValue(forKey: id)
+        app.infoMessages = infoMessages
+ 
+        let secondsUntilNextUpdate = abs(app.simulation.nextUpdateDate.timeIntervalSince(Date()))
+        
+        var improvements = [ImprovementContext]()
+        for i in 0 ..< player.improvements.count {
+            improvements.append(ImprovementContext(slot: i, improvement: player.improvements[i]))
+        }
+        
+        if let mission = app.simulation.getSupportedMissionForPlayer(player) {
+            if mission.missionComplete {
+                return req.view.render("win", ["player": player])
+            }
+            
+            var unlockedComponents = [Component]()
+            var techlockedComponents = [Component]()
+            
+            for component in mission.currentStage.components {
+                if component.playerHasPrerequisitesForComponent(player) {
+                    unlockedComponents.append(component)
+                } else {
+                    techlockedComponents.append(component)
+                }
+            }
+            
+            let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponents: mission.currentStage.currentlyBuildingComponents, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage, currentStageComplete: mission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: unlockedComponents, techlockedComponents: techlockedComponents, playerIsBuildingComponent: mission.currentStage.playerIsBuildingComponentInStage(player), cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, componentBuildPointsPerDay: player.componentBuildPointsPerTick,  page: page, simulationIsUpdating: false, improvements: improvements, maxActionPoints: player.maxActionPoints, improvementSlots: player.improvementSlotsCount, specializationSlots: player.maximumNumberOfSpecializations, specilizationCount: player.specilizationCount, improvementCount: player.improvements.count, secondsUntilNextUpdate: Int(secondsUntilNextUpdate))
+            
+            return req.view.render("main_\(page)", context)
+        } else {
+            // no mission
+            let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponents: [], simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage,  currentStageComplete: false, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: [], techlockedComponents: [], playerIsBuildingComponent: false, cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, componentBuildPointsPerDay: player.componentBuildPointsPerTick, page: page, simulationIsUpdating: false, improvements: improvements, maxActionPoints: player.maxActionPoints, improvementSlots: player.improvementSlotsCount, specializationSlots: player.maximumNumberOfSpecializations, specilizationCount: player.specilizationCount, improvementCount: player.improvements.count, secondsUntilNextUpdate: Int(secondsUntilNextUpdate))
+            
+            return req.view.render("main_\(page)", context)
+        }
+    }
+    
+    // MARK: Manage Missions (create, edit, support)
     session.get("edit", "mission") { req -> EventLoopFuture<View> in
         let player = try req.getPlayerFromSession()
         
@@ -224,7 +369,27 @@ func createFrontEndRoutes(_ app: Application) {
         
         return req.redirect(to: "/mission")
     }
+    
+    session.get("mission", "supportingPlayers") { req -> EventLoopFuture<View> in
+        struct SupportingPlayerContext: Content {
+            let player: Player
+            let supportingPlayers: [Player]
+            let mission: Mission
+        }
         
+        let player = try req.getPlayerFromSession()
+        
+        guard let mission = app.simulation.getSupportedMissionForPlayer(player) else {
+            throw Abort(.notFound, reason: "Mission not found for player.")
+        }
+        
+        let supportingPlayers = try app.simulation.supportingPlayersForMission(mission)
+        
+        let context = SupportingPlayerContext(player: player, supportingPlayers: supportingPlayers, mission: mission)
+        return req.view.render("mission_supportingPlayers", context)
+    }
+        
+    // MARK: Donations
     session.get("donate", "to", ":receivingPlayerEmail") { req -> EventLoopFuture<View> in
         struct DonateContext: Content {
             let player: Player
@@ -319,7 +484,8 @@ func createFrontEndRoutes(_ app: Application) {
             }
         }
     }
-        
+    
+    // MARK: Build components
     session.get("build", "component", ":shortNameString") { req -> Response in
         let player = try req.getPlayerFromSession()
         let shortNameString = req.parameters.get("shortNameString") ?? ""
@@ -358,7 +524,8 @@ func createFrontEndRoutes(_ app: Application) {
         app.simulation = try app.simulation.replaceMission(advancedMission)
         return req.redirect(to: "/mission")
     }
-        
+    
+    // MARK: Build Improvements
     session.get("build", "improvements") { req -> EventLoopFuture<View> in
         struct ImprovementInfo: Codable {
             let improvement: Improvement
@@ -423,6 +590,40 @@ func createFrontEndRoutes(_ app: Application) {
         }
     }
         
+    session.get("sell", "improvement", ":number") { req -> Response in
+        guard let number = Int(req.parameters.get("number") ?? "") else {
+            throw Abort (.badRequest, reason: "\(req.parameters.get("number") ?? "") is not a valid Integer.")
+        }
+        
+        guard let shortName = Improvement.ShortName(rawValue: number) else {
+            return req.redirect(to: "/main")
+        }
+        
+        let player = try req.getPlayerFromSession()
+        
+        guard let improvement = Improvement.getImprovementByName(shortName) else {
+            app.errorMessages[player.id] = "No improvement with shortName \(shortName) found."
+            return req.redirect(to: "/main")
+        }
+        
+        do {
+            let sellingPlayer = try player.sellImprovement(improvement)
+            app.simulation = try app.simulation.replacePlayer(sellingPlayer)
+            app.infoMessages[sellingPlayer.id] = "Succesfully sold \(improvement.name)."
+            return req.redirect(to: "/improvements")
+        } catch {
+            switch error {
+            case Improvement.ImprovementError.improvementIncomplete:
+                app.errorMessages[player.id] = "You can only sell completed improvements."
+                return req.redirect(to: "/main")
+            default:
+                app.errorMessages[player.id] = error.localizedDescription
+                return req.redirect(to: "/main")
+            }
+        }
+    }
+    
+    // FIXME: Consider removing rushing or changing mechanic (i.e. BUY)
     session.get("rush", "improvements", ":number") { req -> Response in
         guard let number =  Int(req.parameters.get("number") ?? "") else {
             throw Abort (.badRequest, reason: "\(req.parameters.get("number") ?? "") is not a valid Integer.")
@@ -458,39 +659,7 @@ func createFrontEndRoutes(_ app: Application) {
         }
     }
         
-    session.get("sell", "improvement", ":number") { req -> Response in
-        guard let number = Int(req.parameters.get("number") ?? "") else {
-            throw Abort (.badRequest, reason: "\(req.parameters.get("number") ?? "") is not a valid Integer.")
-        }
-        
-        guard let shortName = Improvement.ShortName(rawValue: number) else {
-            return req.redirect(to: "/main")
-        }
-        
-        let player = try req.getPlayerFromSession()
-        
-        guard let improvement = Improvement.getImprovementByName(shortName) else {
-            app.errorMessages[player.id] = "No improvement with shortName \(shortName) found."
-            return req.redirect(to: "/main")
-        }
-        
-        do {
-            let sellingPlayer = try player.sellImprovement(improvement)
-            app.simulation = try app.simulation.replacePlayer(sellingPlayer)
-            app.infoMessages[sellingPlayer.id] = "Succesfully sold \(improvement.name)."
-            return req.redirect(to: "/improvements")
-        } catch {
-            switch error {
-            case Improvement.ImprovementError.improvementIncomplete:
-                app.errorMessages[player.id] = "You can only sell completed improvements."
-                return req.redirect(to: "/main")
-            default:
-                app.errorMessages[player.id] = error.localizedDescription
-                return req.redirect(to: "/main")
-            }
-        }
-    }
-    
+    /*
     session.get("trigger", "improvements", ":number") { req -> Response in
         guard let number =  Int(req.parameters.get("number") ?? "") else {
             throw Abort (.badRequest, reason: "\(req.parameters.get("number") ?? "") is not a valid Integer.")
@@ -520,26 +689,9 @@ func createFrontEndRoutes(_ app: Application) {
             return req.redirect(to: "/main")
         }
     }
+     */
         
-    session.get("mission", "supportingPlayers") { req -> EventLoopFuture<View> in
-        struct SupportingPlayerContext: Content {
-            let player: Player
-            let supportingPlayers: [Player]
-            let mission: Mission
-        }
-        
-        let player = try req.getPlayerFromSession()
-        
-        guard let mission = app.simulation.getSupportedMissionForPlayer(player) else {
-            throw Abort(.notFound, reason: "Mission not found for player.")
-        }
-        
-        let supportingPlayers = try app.simulation.supportingPlayersForMission(mission)
-        
-        let context = SupportingPlayerContext(player: player, supportingPlayers: supportingPlayers, mission: mission)
-        return req.view.render("mission_supportingPlayers", context)
-    }
-        
+    // MARK: Technology
     session.get("unlock", "technologies") { req -> EventLoopFuture<View> in
         struct UnlockTechnologyContext: Codable {
             let player: Player
@@ -591,6 +743,7 @@ func createFrontEndRoutes(_ app: Application) {
         }
     }
         
+    // MARK: DEBUG
     app.get("debug", "allUsers") { req -> [Player] in
         guard (Environment.get("DEBUG_MODE") ?? "inactive") == "active" else {
             throw Abort(.notFound)
@@ -643,18 +796,6 @@ func createFrontEndRoutes(_ app: Application) {
         }
         return app.simulation.players
     }
-                
-    app.get() { req -> EventLoopFuture<View> in
-        struct IndexContext: Encodable {
-            let state: Simulation.SimulationState
-            let motd: String?
-            let isIndexPage = true
-        }
-        
-        let motd = app.motd
-        let context = IndexContext(state: app.simulation.state, motd: motd)
-        return req.view.render("index", context)
-    }
         
     /*app.get("debug", "dataDump") { req -> String in
         guard (Environment.get("DEBUG_MODE") ?? "inactive") == "active" else {
@@ -671,132 +812,6 @@ func createFrontEndRoutes(_ app: Application) {
             return("Error while backup up: \(error).")
         }
     }*/
-    
-    func getPlayerIDFromSession(on req: Request) -> UUID? {
-        (try? req.getPlayerFromSession())?.id
-    }
-    
-    func getMainViewForPlayer(_ player: Player, simulation: Simulation, on req: Request, page: String = "main") throws -> EventLoopFuture<View> {
-        struct ImprovementContext: Codable {
-            let slot: Int
-            let improvement: Improvement
-        }
-        
-        struct MainContext: Codable {
-            let player: Player
-            let mission: Mission?
-            let currentStage: Stage?
-            let currentBuildingComponents: [Component]
-            let simulation: Simulation
-            let errorMessage: String?
-            let infoMessage: String?
-            let currentStageComplete: Bool
-            let unlockableTechnologogies: [Technology]
-            let unlockedTechnologies: [Technology]
-            let unlockedComponents: [Component]
-            let techlockedComponents: [Component]
-            let playerIsBuildingComponent: Bool
-            let cashPerDay: Double
-            let techPerDay: Double
-            let componentBuildPointsPerDay: Double
-            let page: String
-            let simulationIsUpdating: Bool
-            let improvements: [ImprovementContext]
-            let maxActionPoints: Int
-            let improvementSlots: Int
-            let specializationSlots: Int
-            let specilizationCount: Int
-            let improvementCount: Int
-            let secondsUntilNextUpdate: Int
-        }
-        
-        let id = player.id
-        
-        var errorMessages = app.errorMessages
-        let errorMessage = errorMessages[id] ?? nil
-        errorMessages.removeValue(forKey: id)
-        app.errorMessages = errorMessages
-        
-        var infoMessages = app.infoMessages
-        let infoMessage = app.infoMessages[id] ?? nil
-        infoMessages.removeValue(forKey: id)
-        app.infoMessages = infoMessages
- 
-        let secondsUntilNextUpdate = abs(app.simulation.nextUpdateDate.timeIntervalSince(Date()))
-        
-        var improvements = [ImprovementContext]()
-        for i in 0 ..< player.improvements.count {
-            improvements.append(ImprovementContext(slot: i, improvement: player.improvements[i]))
-        }
-        
-        if let mission = app.simulation.getSupportedMissionForPlayer(player) {
-            if mission.missionComplete {
-                return req.view.render("win", ["player": player])
-            }
-            
-            var unlockedComponents = [Component]()
-            var techlockedComponents = [Component]()
-            
-            for component in mission.currentStage.components {
-                if component.playerHasPrerequisitesForComponent(player) {
-                    unlockedComponents.append(component)
-                } else {
-                    techlockedComponents.append(component)
-                }
-            }
-            
-            let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponents: mission.currentStage.currentlyBuildingComponents, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage, currentStageComplete: mission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: unlockedComponents, techlockedComponents: techlockedComponents, playerIsBuildingComponent: mission.currentStage.playerIsBuildingComponentInStage(player), cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, componentBuildPointsPerDay: player.componentBuildPointsPerTick,  page: page, simulationIsUpdating: false, improvements: improvements, maxActionPoints: player.maxActionPoints, improvementSlots: player.improvementSlotsCount, specializationSlots: player.maximumNumberOfSpecializations, specilizationCount: player.specilizationCount, improvementCount: player.improvements.count, secondsUntilNextUpdate: Int(secondsUntilNextUpdate))
-            
-            return req.view.render("main_\(page)", context)
-        } else {
-            // no mission
-            let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponents: [], simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage,  currentStageComplete: false, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: [], techlockedComponents: [], playerIsBuildingComponent: false, cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, componentBuildPointsPerDay: player.componentBuildPointsPerTick, page: page, simulationIsUpdating: false, improvements: improvements, maxActionPoints: player.maxActionPoints, improvementSlots: player.improvementSlotsCount, specializationSlots: player.maximumNumberOfSpecializations, specilizationCount: player.specilizationCount, improvementCount: player.improvements.count, secondsUntilNextUpdate: Int(secondsUntilNextUpdate))
-            
-            return req.view.render("main_\(page)", context)
-        }
-    }
-    
-    func getPlayerFromSession(on req: Request, in simulation: Simulation) throws -> Player {
-        guard let user = req.auth.get(Player.self) else {
-            throw Abort(.unauthorized)
-        }
-        return user
-    }
-    
-    func sendWelcomeEmail(to player: Player, on container: Request) {
-        if let publicKey = Environment.get("MAILJET_API_KEY"), let privateKey = Environment.get("MAILJET_SECRET_KEY") {
-        
-        let mailJetConfig = MailJetConfig(apiKey: publicKey, secretKey: privateKey, senderName: "Mission2Mars Support", senderEmail: "support@mission2mars.space")
-        mailJetConfig.sendMessage(to: player.emailAddress, toName: player.name, subject: "Your login id", message: """
-            Welcome \(player.name) to Mission2Mars
-            
-            Your username is: \(player.name)
-            Your registered email address is: \(player.emailAddress)
-            
-            Note: if you lose your password, you need both your registered email address and username to request a new password.
-
-            If you don't recognize signing up to Mission2Mars, please let us know by replying to this e-mail. Otherwise,
-
-            Have fun!
-            
-            - the Mission2Mars team
-            Sent from: \(Environment.get("ENVIRONMENT") ?? "local test")
-            """, htmlMessage: """
-            <h1>Welcome \(player.name) to Mission2Mars</h1>
-            
-            <h3>Your username is: <b>\(player.name)</b></h3>
-            <h3>Your registered email address is: \(player.emailAddress)</h3>
-            <p>Note: if you lose your password, you need both your registered email address and username to request a new password.</p>
-            <p>&nbsp;</p>
-            <p>If you don't recognize signing up to Mission2Mars, please let us know by replying to this e-mail. Otherwise,</p>
-            <p>&nbsp;</p>
-            <p>Have fun!</p>
-            <p>&nbsp;</p>
-            <p>- the Mission2Mars team</p>
-            <p>Sent from: \(Environment.get("ENVIRONMENT") ?? "unknown")</p>
-            """, on: container)
-        }
-    }
 }
 
 struct MissionContext: Content {
