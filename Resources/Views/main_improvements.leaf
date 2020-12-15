@@ -9,6 +9,7 @@
                     <div class="btn btn-outline-secondary">Cash: $#cash(player.cash) (+#cash(cashPerDay) / day)</div>
                     <div class="btn btn-outline-info">Improvement slots: #(improvementCount) / #(improvementSlots)</div>
                     <div class="btn btn-outline-danger">Specilizations: #(specilizationCount) / #(specializationSlots)</div>
+                    #if(player.rushes > 0):<div class="btn btn-outline-primary">Rushes: #(player.rushes)</div>#endif
                 </p>
             </div>
             <div class="col-md-1">
@@ -30,7 +31,7 @@
                 <tbody>
                 #for(improvementContext in improvements):
                     <tr>
-                        <td><img src="/images/Improvements/#(improvementContext.improvement.shortName)-w.png"/></td>
+                    <td><img src="/images/Improvements/#(improvementContext.improvement.shortName)-w.png" width="48"/></td>
                         <td><b>#(improvementContext.improvement.name)</b> #(improvementContext.improvement.description)
                             #if(improvementContext.improvement.percentageCompleted < 100):
                                 <br/>

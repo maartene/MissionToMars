@@ -34,6 +34,7 @@ public enum Effect: Codable, CustomStringConvertible {
     case extraImprovementSlots(amount: Int)
     case extraMaxActionPoints(amount: Int)
     case extraSpeciliazationSlots(amount: Int)
+    case extraRushes(amount: Int)
     
     public init(from decoder: Decoder) throws {
         let values = try decoder.container(keyedBy: EffectCodingKeys.self)
@@ -84,6 +85,9 @@ public enum Effect: Codable, CustomStringConvertible {
         case "extraMaxActionPoints":
             let amount = try values.decode(Int.self, forKey: .value)
             self = .extraMaxActionPoints(amount: amount)
+        case "extraRushes":
+            let amount = try values.decode(Int.self, forKey: .value)
+            self = .extraRushes(amount: amount)
         default:
             throw EffectError.decodingUnknownEffectType
         }
@@ -138,6 +142,9 @@ public enum Effect: Codable, CustomStringConvertible {
         case .extraMaxActionPoints(let amount):
             try container.encode("extraMaxActionPoints", forKey: .effectType)
             try container.encode(amount, forKey: .value)
+        case .extraRushes(let amount):
+            try container.encode("extraRushes", forKey: .effectType)
+            try container.encode(amount, forKey: .value)
         }
     }
     
@@ -164,8 +171,10 @@ public enum Effect: Codable, CustomStringConvertible {
             return player.extraBuildPoints(amount: amount)
         case .extraComponentBuildPointsFlat(let amount):
             return player.extraComponentBuildPoints(amount: amount)
-        case .extraActionPointsFlat(let amount):
-            return player.extraActionPoints(amount: amount)
+        //case .extraActionPointsFlat(let amount):
+//            return player.extraActionPoints(amount: amount)
+        case .extraRushes(let amount):
+            return player.extraRushes(amount: amount)
         default:
             return player
         }
@@ -195,6 +204,8 @@ public enum Effect: Codable, CustomStringConvertible {
             return "+\(amount) to maximum action point\(amount > 1 ? "s" : "")."
         case .extraIncomeDailyIncome(let times):
             return "+\(times)x your daily cash income."
+        case .extraRushes(let amount):
+            return "+\(amount) extra rush\(amount > 1 ? "es" : "")."
         case .oneShot(_):
             return "One shot, removed after use."
         default:

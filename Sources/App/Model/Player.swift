@@ -30,6 +30,8 @@ public struct Player: Content {
         
         case missingImprovement
         case insufficientActionPoints
+        
+        case insufficientRushes
     }
     
     public var id = UUID()
@@ -48,9 +50,11 @@ public struct Player: Content {
     public private(set) var technologyPoints: Double = 75
     public private(set) var buildPoints: Double = 0
     public private(set) var componentBuildPoints: Double = 0
-    public private(set) var actionPoints: Int = 10
+    // public private(set) var actionPoints: Int = 10
     
     public private(set) var improvements: [Improvement]
+    
+    public private(set) var rushes = 1
     
     // MARK: Calculated properties
     public var unlockedTechnologies: [Technology] {
@@ -129,13 +133,13 @@ public struct Player: Content {
         return count
     }
     
-    public var maxActionPoints: Int {
+    /*public var maxActionPoints: Int {
         let count = MAXIMUM_PLAYER_ACTION_POINTS
         /*if unlockedTechnologyNames.contains(.ScaledAgileLeadership) {
             count += TECH_EXTRA_MAXIMUM_PLAYER_ACTION_POINTS
         }*/
         return count
-    }
+    }*/
     
     public var maximumNumberOfSpecializations: Int {
         var count = BASE_PLAYER_SPECILIAZATION_SLOTS
@@ -183,7 +187,7 @@ public struct Player: Content {
         updatedPlayer.componentBuildPoints = 1
         
         updatedPlayer.buildPoints = 1
-        updatedPlayer.actionPoints = min(maxActionPoints, updatedPlayer.actionPoints + 1)
+        // updatedPlayer.actionPoints = min(maxActionPoints, updatedPlayer.actionPoints + 1)
         
         for improvement in updatedPlayer.completedImprovements.filter({ improvement in
             ignoreOneShots == false || improvement.hasOneShotEffect == false
@@ -233,9 +237,15 @@ public struct Player: Content {
         return changedPlayer
     }
     
-    func extraActionPoints(amount: Int) -> Player {
+    /*func extraActionPoints(amount: Int) -> Player {
         var changedPlayer = self
         changedPlayer.actionPoints += amount
+        return changedPlayer
+    }*/
+    
+    func extraRushes(amount: Int) -> Player {
+        var changedPlayer = self
+        changedPlayer.rushes += amount
         return changedPlayer
     }
     
@@ -350,7 +360,7 @@ public struct Player: Content {
         return changedPlayer
     }
     
-    public func triggerImprovement(_ index: Int) throws -> Player {
+    /*public func triggerImprovement(_ index: Int) throws -> Player {
         guard (0 ..< improvements.count).contains(index) else {
             throw PlayerError.missingImprovement
         }
@@ -376,7 +386,7 @@ public struct Player: Content {
             updatedPlayer.improvements[index] = updatedImprovement.updatedImprovement
             return updatedPlayer
         }
-    }
+    }*/
     
     func replaceImprovementInSlot(_ slot: Int, with improvement: Improvement) throws -> Player {
         guard (0 ..< improvements.count).contains(slot) else {
@@ -430,8 +440,8 @@ public struct Player: Content {
         
         let improvement = improvements[slot]
         
-        guard cash >= improvement.cost else {
-            throw PlayerError.insufficientFunds
+        guard rushes > 0 else {
+            throw PlayerError.insufficientRushes
         }
         
         guard improvement.isCompleted == false else {
@@ -441,7 +451,7 @@ public struct Player: Content {
         var rushingPlayer = self
         
         let rushedImprovement = try improvement.rush()
-        rushingPlayer.cash -= improvement.cost
+        rushingPlayer.rushes -= 1
         
         return try rushingPlayer.replaceImprovementInSlot(slot, with: rushedImprovement)
     }
@@ -508,9 +518,9 @@ public struct Player: Content {
         self.technologyPoints = amount
     }
     
-    mutating func debug_setActionPoints(_ amount: Int) {
+    /*mutating func debug_setActionPoints(_ amount: Int) {
         self.actionPoints = amount
-    }
+    }*/
     
     public func bless() -> Player {
         var blessedPlayer = self

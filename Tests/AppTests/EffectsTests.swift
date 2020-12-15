@@ -31,6 +31,28 @@ class EffectsTests: XCTestCase {
         
     }
     
+    func testExtraRushTest() throws {
+        var player = Player(emailAddress: "example@example.org", name: "exampleUser", password: "")
+        
+        let improvement = Improvement.getImprovementByName(.HostileTakeover)!
+        player = player.extraIncome(amount: improvement.cost)
+        
+        let rushesBefore = player.rushes
+        
+        player = try player.startBuildImprovement(improvement, startDate: Date(), options: [.ignoreTechPrereqs])
+        
+        for _ in 0 ..< improvement.buildTime + 1{
+            player = player.updatePlayer()
+        }
+        
+        XCTAssertTrue(player.completedImprovements.contains(improvement))
+        
+        player = player.updatePlayer()
+    
+        XCTAssertGreaterThan(player.rushes, rushesBefore, "rushes")
+        XCTAssertFalse(player.completedImprovements.contains(improvement))
+    }
+    
     /*func testExtraMaxActions() throws {
         var player = Player(emailAddress: "example@example.org", name: "exampleUser", password: "")
         var updatedPlayer = player
@@ -56,5 +78,6 @@ class EffectsTests: XCTestCase {
     static let allTests = [
         ("testExtraSlotTests", testExtraSlotTests),
        // ("testExtraMaxActions", testExtraMaxActions),
+        ("testExtraRushTest", testExtraRushTest)
     ]
 }
