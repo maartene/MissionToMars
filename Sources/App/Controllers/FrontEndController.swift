@@ -184,6 +184,7 @@ func createFrontEndRoutes(_ app: Application) {
             let updatedSimulation = app.simulation.updateSimulation(currentDate: Date())
             assert(app.simulation.id == updatedSimulation.id)
             app.simulation = updatedSimulation
+            app.logger.notice("\(Date()) - Updated simulation.")
             
             counter -= 1
 
@@ -207,7 +208,7 @@ func createFrontEndRoutes(_ app: Application) {
                                               on: req.eventLoop,
                                               progress: { progress in print(progress) }
                      ).map { result in
-                        app.logger.notice("Save result: \(result)")
+                        app.logger.notice("\(Date()) - Save result: \(result)")
                      }
                     
                     counter = BACKUP_INTERVAL
