@@ -19,20 +19,20 @@
                         </p></div>
                     </div>
                     <div class="row m-2"><ul class="list-group">
-                        #for(component in unlockedComponents): 
+                        #for(componentContext in unlockedComponents): 
                             <li class="list-group-item">
                                 <div class="row align-items-center">
-                                    <div class="col-md-1"><img src="/images/Components/#(component.shortName)-w.png" alt="#(component.name)"/></div>
+                                    <div class="col-md-1"><img src="/images/Components/#(componentContext.component.shortName)-w.png" alt="#(componentContext.component.name)"/></div>
                                     <div class="col">
-                                        <b>#(component.name)</b> #(component.description)<br/>
-                                        Cost: #cash(component.cost) - Build time: #deczero(component.buildTime / componentBuildPointsPerDay) days.
+                                        <b>#(componentContext.component.name)</b> #(componentContext.component.description)<br/>
+                                        Cost: #cash(componentContext.component.cost) - Build time: #deczero(componentContext.component.buildTime / componentBuildPointsPerDay) days.
                                         <br />
-                                        #if(component.buildStartedOn): Build started on: #date(component.buildStartedOn) 
+                                        #if(componentContext.component.buildStartedOn): Build started on: #date(componentContext.component.buildStartedOn) by #(componentContext.buildingPlayerName)
                                             <div class="progress">
-                                                <div class="progress-bar" role="progressbar" style="width: #decimal(component.percentageCompleted)%" aria-valuenow="#decimal(improvement.percentageCompleted)" aria-valuemin="0" aria-valuemax="100"></div>
+                                                <div class="progress-bar" role="progressbar" style="width: #decimal(componentContext.component.percentageCompleted)%" aria-valuenow="#decimal(componentContext.component.percentageCompleted)" aria-valuemin="0" aria-valuemax="100"></div>
                                             </div>
-                                            #decimal(component.percentageCompleted)% complete.  #else:
-                                            <a href="/build/component/#(component.shortName)" class="btn btn-sm btn-primary #if(component.cost > player.cash): disabled #endif #if(playerIsBuildingComponent): disabled #endif #if(simulationIsUpdating): disabled #endif ">Start build</a>
+                                            #decimal(componentContext.component.percentageCompleted)% complete.  #else:
+                                            <a href="/build/component/#(componentContext.component.shortName)" class="btn btn-sm btn-primary #if(componentContext.component.cost > player.cash): disabled #endif #if(playerIsBuildingComponent): disabled #endif #if(simulationIsUpdating): disabled #endif ">Start build</a>
                                         #endif
                                     </div>
                                 </div>

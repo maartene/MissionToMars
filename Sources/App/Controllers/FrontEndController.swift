@@ -229,18 +229,23 @@ func createFrontEndRoutes(_ app: Application) {
             let improvement: Improvement
         }
         
+        struct ComponentContext: Codable {
+            let component: Component
+            let buildingPlayerName: String
+        }
+        
         struct MainContext: Codable {
             let player: Player
             let mission: Mission?
             let currentStage: Stage?
-            let currentBuildingComponents: [Component]
+            //let currentBuildingComponents: [ComponentContext]
             let simulation: Simulation
             let errorMessage: String?
             let infoMessage: String?
             let currentStageComplete: Bool
             let unlockableTechnologogies: [Technology]
             let unlockedTechnologies: [Technology]
-            let unlockedComponents: [Component]
+            let unlockedComponents: [ComponentContext]
             let techlockedComponents: [Component]
             let playerIsBuildingComponent: Bool
             let cashPerDay: Double
@@ -291,12 +296,60 @@ func createFrontEndRoutes(_ app: Application) {
                 }
             }
             
-            let context = MainContext(player: player, mission: mission, currentStage: mission.currentStage, currentBuildingComponents: mission.currentStage.currentlyBuildingComponents, simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage, currentStageComplete: mission.currentStage.stageComplete, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: unlockedComponents, techlockedComponents: techlockedComponents, playerIsBuildingComponent: mission.currentStage.playerIsBuildingComponentInStage(player), cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, componentBuildPointsPerDay: player.componentBuildPointsPerTick,  page: page, simulationIsUpdating: false, improvements: improvements, improvementSlots: player.improvementSlotsCount, specializationSlots: player.maximumNumberOfSpecializations, specilizationCount: player.specilizationCount, improvementCount: player.improvements.count, secondsUntilNextUpdate: Int(secondsUntilNextUpdate))
+            let unlockedComponentContext = unlockedComponents.map { component -> ComponentContext in
+                let buildingPlayer = simulation.players.first { $0.id == component.builtByPlayerID }
+                return ComponentContext(component: component, buildingPlayerName: buildingPlayer?.name ?? "unknown")
+            }
+            
+            let context = MainContext(player: player,
+                                      mission: mission,
+                                      currentStage: mission.currentStage,
+                                      //currentBuildingComponents: mission.currentStage.currentlyBuildingComponents,
+                                      simulation: simulation,
+                                      errorMessage: errorMessage,
+                                      infoMessage: infoMessage,
+                                      currentStageComplete: mission.currentStage.stageComplete,
+                                      unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player),
+                                      unlockedTechnologies: player.unlockedTechnologies,
+                                      unlockedComponents: unlockedComponentContext,
+                                      techlockedComponents: techlockedComponents,
+                                      playerIsBuildingComponent: mission.currentStage.playerIsBuildingComponentInStage(player),
+                                      cashPerDay: player.cashPerTick,
+                                      techPerDay: player.techPerTick,
+                                      componentBuildPointsPerDay: player.componentBuildPointsPerTick,
+                                      page: page,
+                                      simulationIsUpdating: false,
+                                      improvements: improvements,
+                                      improvementSlots: player.improvementSlotsCount,
+                                      specializationSlots: player.maximumNumberOfSpecializations,
+                                      specilizationCount: player.specilizationCount,
+                                      improvementCount: player.improvements.count,
+                                      secondsUntilNextUpdate:
+                                        Int(secondsUntilNextUpdate))
             
             return req.view.render("main_\(page)", context)
         } else {
             // no mission
-            let context = MainContext(player: player, mission: nil, currentStage: nil, currentBuildingComponents: [], simulation: simulation, errorMessage: errorMessage, infoMessage: infoMessage,  currentStageComplete: false, unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player), unlockedTechnologies: player.unlockedTechnologies, unlockedComponents: [], techlockedComponents: [], playerIsBuildingComponent: false, cashPerDay: player.cashPerTick, techPerDay: player.techPerTick, componentBuildPointsPerDay: player.componentBuildPointsPerTick, page: page, simulationIsUpdating: false, improvements: improvements, improvementSlots: player.improvementSlotsCount, specializationSlots: player.maximumNumberOfSpecializations, specilizationCount: player.specilizationCount, improvementCount: player.improvements.count, secondsUntilNextUpdate: Int(secondsUntilNextUpdate))
+            let context = MainContext(player: player, mission: nil, currentStage: nil, //currentBuildingComponents: [],
+                                      simulation: simulation,
+                                      errorMessage: errorMessage,
+                                      infoMessage: infoMessage,
+                                      currentStageComplete: false,
+                                      unlockableTechnologogies: Technology.unlockableTechnologiesForPlayer(player),
+                                      unlockedTechnologies: player.unlockedTechnologies,
+                                      unlockedComponents: [],
+                                      techlockedComponents: [],
+                                      playerIsBuildingComponent: false,
+                                      cashPerDay: player.cashPerTick,
+                                      techPerDay: player.techPerTick,
+                                      componentBuildPointsPerDay: player.componentBuildPointsPerTick,
+                                      page: page, simulationIsUpdating: false,
+                                      improvements: improvements,
+                                      improvementSlots: player.improvementSlotsCount,
+                                      specializationSlots: player.maximumNumberOfSpecializations,
+                                      specilizationCount: player.specilizationCount,
+                                      improvementCount: player.improvements.count,
+                                      secondsUntilNextUpdate: Int(secondsUntilNextUpdate))
             
             return req.view.render("main_\(page)", context)
         }
