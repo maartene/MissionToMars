@@ -155,7 +155,7 @@ func createFrontEndRoutes(_ app: Application) {
         return user
     }
     
-    // MARK: Get mail pages (mission, technology, improvements)
+    // MARK: Get main pages (mission, technology, improvements)
     session.get("main") { req -> EventLoopFuture<View> in
         return try mainPage(req: req, page: "main")
     }
