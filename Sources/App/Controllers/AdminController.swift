@@ -195,8 +195,10 @@ func createAdminRoutes(_ app: Application) {
 
         let downloadRequest = S3.GetObjectRequest(bucket: bucket, key: fileName)
         
-        return s3.multipartDownload(downloadRequest, filename: dataDir + fileName).map { size in
-            app.logger.notice("Succesfully loaded simulation \(size) bytes.")
+        return s3.multipartDownload(downloadRequest,
+                filename: dataDir + fileName,
+                on: req.eventLoop).map { size in
+            app.logger.notice("Succesfully loaded simulation \(size) bytes.") 
             
             guard let loadedSimulation =  Simulation.load(fileName: fileName, path: dataDir) else {
                 app.errorMessages[player.id] = "Error loading simulation"
@@ -257,7 +259,8 @@ func adminPage(on req: Request, with simulation: Simulation, in app: Application
 
     let listRequest = S3.ListObjectsRequest(bucket: "")
 
-    return s3.listObjects(listRequest).flatMap { result in
+    return s3.listObjects(listRequest, logger: req.logger, on: req.eventLoop) .flatMap { result in
+    //return s3.listObjects(listRequest, on: req)  // .flatMap { result in
         let contents = result.contents ?? []
         let objects = contents.compactMap {$0}
             .filter { fileObject in
@@ -274,6 +277,8 @@ func adminPage(on req: Request, with simulation: Simulation, in app: Application
                                    infoMessage: app.infoMessages[player.id] ?? nil, errorMessage: app.errorMessages[player.id] ?? nil, state: app.simulation.state, players: players, motd: app.motd, fileList: objects)
         
         req.logger.info("File list retrieve complete.")
+        
+        
         return req.view.render("admin/admin", context)
     }
 }
