@@ -78,3 +78,4 @@ Secrets/
 .swiftpm/xcode/xcshareddata/xcschemes/MissionToMars.xcscheme
 simulation*.json
 Package.resolved
+loadedSimulation*.json
