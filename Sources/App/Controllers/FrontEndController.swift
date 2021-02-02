@@ -191,31 +191,14 @@ func createFrontEndRoutes(_ app: Application) {
             if counter < 0 {
                 app.logger.notice("Start simulation save/backup.")
                 // save result (in seperate thread)
-                let copy = app.simulation
-                let dataDir = Environment.get("DATA_DIR") ?? ""
-                do {
-                    let path = try copy.save(path: dataDir)
-                    let bucket = Environment.get("DO_SPACES_FOLDER") ?? "default"
-            
-                    let s3 = S3(client: app.aws.client, region: nil, partition: AWSPartition.awsiso, endpoint: "https://m2m.ams3.digitaloceanspaces.com", timeout: nil, byteBufferAllocator: ByteBufferAllocator(), options: [])
-                    //let s3 = S3(client: app.aws.client, accessKeyId: accessKey, secretAccessKey: secretKey, region: .euwest1, endpoint: "https://m2m.ams3.digitaloceanspaces.com")
-
-                    let uploadRequest = S3.CreateMultipartUploadRequest(acl: .private, bucket: bucket, key: SIMULATION_FILENAME + "_\(Date().hashValue)" + ".json")
-                       
-                     _ = s3.multipartUpload(uploadRequest,
-                                              partSize: 5*1024*1024,
-                                              filename: path.path,
-                                              on: req.eventLoop,
-                                              progress: { progress in print(progress) }
-                     ).map { result in
-                        app.logger.notice("\(Date()) - Save result: \(result)")
-                     }
-                    
-                    counter = BACKUP_INTERVAL
-                    
-                    return try getMainViewForPlayer(updatedSimulation.players.first(where: {$0.id == player.id}) ?? player, simulation: app.simulation, on: req, page: page)
-                } catch {
-                    req.logger.error("Failed to save simulation due to error: \(error).")
+                _ = app.saveSimulationToSpace(on: req).map { result in
+                    if let location = result.location {
+                        req.logger.notice("Succesfully backed up simulation in \(location)")
+                        app.purgeOldFiles(on: req, keepAmount: 10)
+                        counter = BACKUP_INTERVAL
+                    } else {
+                        req.logger.warning("Failed to backup. Trying again with next update.")
+                    }
                 }
             }
         }

@@ -57,39 +57,14 @@ public func configure(_ app: Application) throws {
 struct LoadSimulation: LifecycleHandler {
     // Called before application boots.
     func willBoot(_ app: Application) throws {
-        struct FileInfo: Content {
-            let fileName: String
-            //let creationDate: String
-            let modifiedDate: String
-            let isCurrentSimulation: Bool
-        }
         
-        let bucket = Environment.get("DO_SPACES_FOLDER") ?? "default"
-        
-        let s3 = S3(client: app.aws.client, region: nil, partition: AWSPartition.awsiso, endpoint: "https://m2m.ams3.digitaloceanspaces.com", timeout: nil, byteBufferAllocator: ByteBufferAllocator(), options: [])
-        
-        let listRequest = S3.ListObjectsRequest(bucket: "")
-
-        guard let result = try? s3.listObjects(listRequest).wait() else {
-            app.logger.error("Unable to retrieve simulation list.")
+        guard let fileList = try? app.getFileList(on: nil).wait() else {
+            app.logger.warning("Failed to get filelist.")
             return
         }
-
-        let contents = result.contents ?? []
-        let objects = contents.compactMap {$0}
-            .filter { fileObject in
-                fileObject.key?.hasPrefix(bucket) ?? false
-            }
-            .map { fileObject -> FileInfo in
-                let fileName = fileObject.key?.split(separator: "/").last ?? "unknown"
-                
-                return FileInfo(fileName: String(fileName), modifiedDate: fileObject.lastModified?.description ?? "unknown", isCurrentSimulation: false)
-            }.sorted { $0.modifiedDate > $1.modifiedDate }
-        
-        app.logger.notice("Found \(objects.count) possible files to load as simulation.")
         
         // get the latest simulation
-        guard let simulationFile = objects.first else {
+        guard let simulationFile = fileList.first else {
             app.logger.error("No loadable simulation found.")
             return
         }
@@ -98,30 +73,17 @@ struct LoadSimulation: LifecycleHandler {
         
         app.logger.notice("Attempting to load simulation file: \(simulationFile)")
         
-        let dataDir = Environment.get("DATA_DIR") ?? ""
-        let downloadRequest = S3.GetObjectRequest(bucket: bucket, key: simulationFileName)
-        
-        
-        guard let loadedBytes = try? s3.multipartDownload(downloadRequest,
-                                                     filename: dataDir + "loadedSimulation.json").wait() else {
+        guard let loadResult = try? app.loadSimulationFromSpace(fileName: simulationFileName, on: nil).wait() else {
             app.logger.error("Error loading file \(simulationFileName)")
             return
         }
         
-        app.logger.notice("Succesfully loaded simulation \(loadedBytes) bytes.")
-            
-        guard let loadedSimulation =  Simulation.load(fileName: "loadedSimulation.json", path: dataDir) else {
-            app.logger.error("Error loading simulation")
-            return
+        switch loadResult {
+        case .success(let loadedSimulation):
+            app.simulation = loadedSimulation
+        case .failure(let error):
+            app.logger.error("Error loading simulation \(error.localizedDescription)")
         }
-                
-        guard let adminPlayer = loadedSimulation.players.first(where: {$0.isAdmin}) else {
-            app.logger.error("Did not find any admin player in loaded simulation. Load failed.")
-            return
-        }
-                
-        app.simulation = loadedSimulation
-        app.logger.notice("Loaded admin player with username: \(adminPlayer.name), email: \(adminPlayer.emailAddress) and id: \(adminPlayer.id)")
     }
 }
 
