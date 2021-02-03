@@ -70,6 +70,38 @@ final class CashFormatterTests : XCTestCase {
         XCTAssertEqual(result, "900.90B")
     }
     
+    func testExactly1000000000000() {
+        let result = cashFormatter(1_000_000_000_000)
+        print(result)
+        XCTAssertEqual(result, "1T")
+    }
+    
+    func testOver10000000000000() {
+        let result = cashFormatter(1_900_250_420_123)
+        print(result)
+        XCTAssertEqual(result, "1.90T")
+    }
+    
+    func testMuchOver1000000000000() {
+        let result = cashFormatter(900_900_250_420_123)
+        print(result)
+        XCTAssertEqual(result, "900.90T")
+    }
+    
+    func testOverMaxInt() {
+        let bigDouble = pow(10.0, 20.0)
+        let result = cashFormatter(bigDouble)
+        print(result)
+        XCTAssertEqual(result, "Unfathomable!")
+    }
+    
+    func testUnderMaxNegativeInt() {
+        let bigDouble = pow(10.0, 20.0)
+        let result = cashFormatter(-bigDouble)
+        print(result)
+        XCTAssertEqual(result, "Unfathomable!")
+    }
+    
     static let allTests = [
         ("testBelow1000", testBelow1000),
         ("testExactly1000", testExactly1000),
@@ -80,6 +112,11 @@ final class CashFormatterTests : XCTestCase {
         ("testUnder1000000000", testUnder1000000000),
         ("testExactly1000000000", testExactly1000000000),
         ("testOver1000000000", testOver1000000000),
-        ("testMuchOver1000000000", testMuchOver1000000000)
+        ("testMuchOver1000000000", testMuchOver1000000000),
+        ("testExactly1000000000000", testExactly1000000000000),
+        ("testOver10000000000000", testOver10000000000000),
+        ("testMuchOver1000000000000", testMuchOver1000000000000),
+        ("testOverMaxInt", testOverMaxInt),
+        ("testUnderMaxNegativeInt", testUnderMaxNegativeInt),
     ]
 }

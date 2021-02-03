@@ -8,7 +8,15 @@
 import Foundation
 
 public func cashFormatter(_ double: Double) -> String {
-    if double / 1_000_000_000.0 >= 1 {
+    if abs(double) >= Double(Int.max) {
+        return "Unfathomable!"
+    } else if double / 1_000_000_000_000.0 >= 1 {
+        if Int(double) % 1_000_000_000_000 == 0 {
+            return "\(String(Int(double / 1_000_000_000_000.0)))T"
+        } else {
+            return "\(String(format: "%.2f", double / 1_000_000_000_000.0))T"
+        }
+    } else if double / 1_000_000_000.0 >= 1 {
         if Int(double) % 1_000_000_000 == 0 {
             return "\(String(Int(double / 1_000_000_000.0)))B"
         } else {
