@@ -57,25 +57,28 @@ func createPasswordResetRoutes(_ app: Application) {
         let emailAddress: String = try req.content.get(at: "emailAddress")
         let name: String = try req.content.get(at: "name")
         
+        let sanitizedEmailAddress = emailAddress.sanitized()
+        let sanitizedName = name.sanitized()
+        
         let succesMessage = """
-            <p>A password reset link was sent to email address <span class="text-info">\(emailAddress)</span> if this is a valid email/name combination.</p>
+            <p>A password reset link was sent to email address <span class="text-info">\(sanitizedEmailAddress)</span> if this is a valid email/name combination.</p>
             <p>Please follow further instructions in the email.</p>
         """
         
-        guard let player = app.simulation.players.first(where: { $0.emailAddress == emailAddress }) else {
-            app.logger.warning("No player found with email address \(emailAddress).")
+        guard let player = app.simulation.players.first(where: { $0.emailAddress == sanitizedEmailAddress }) else {
+            app.logger.warning("No player found with email address \(sanitizedEmailAddress).")
             return req.view.render("result", ["successMessage": succesMessage])
         }
         
-        guard player.name == name else {
-            app.logger.warning("No player found with email address \(emailAddress).")
+        guard player.name == sanitizedName else {
+            app.logger.warning("No player found with email address \(sanitizedEmailAddress).")
             return req.view.render("result", ["successMessage": succesMessage])
         }
         
-        app.logger.info("Password reset sent for player \(player.name) with email address \(emailAddress)")
+        app.logger.info("Password reset sent for player \(player.name) with email address \(sanitizedEmailAddress)")
         
         // send email
-        let token = PasswordResetEntry(email: emailAddress)
+        let token = PasswordResetEntry(email: sanitizedEmailAddress)
         app.passwordResetTokens.append(token)
         
         let baseURL = Environment.get("BASE_URL") ?? "http://localhost:8080"

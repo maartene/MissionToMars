@@ -50,6 +50,9 @@ func createFrontEndRoutes(_ app: Application) {
         let password: String = try req.content.get(at: "password")
         let passwordRepeat: String = try req.content.get(at: "passwordRepeat")
         
+        let sanitizedEmailAddress = emailAddress.sanitized()
+        let sanitizedName = name.sanitized()
+        
         guard password == passwordRepeat else {
             throw Abort(.badRequest, reason: "Passwords don't match.")
         }
@@ -60,11 +63,11 @@ func createFrontEndRoutes(_ app: Application) {
         
         var context = CreateCharacterContext()
         do {
-            let result = try app.simulation.createPlayer(emailAddress: emailAddress, name: name, password: password, startImprovementShortName: startingImprovement)
+            let result = try app.simulation.createPlayer(emailAddress: sanitizedEmailAddress, name: sanitizedName, password: password, startImprovementShortName: startingImprovement)
             app.simulation = result.updatedSimulation
             
-            context.email = emailAddress
-            context.name = name
+            context.email = sanitizedEmailAddress
+            context.name = sanitizedName
             context.uuid = String(result.newPlayer.id)
             
             sendWelcomeEmail(to: result.newPlayer, on: req)
@@ -73,7 +76,7 @@ func createFrontEndRoutes(_ app: Application) {
         } catch {
             switch error {
             case Simulation.SimulationError.userAlreadyExists:
-                context.errorMessage = "A user with email address '\(emailAddress)' already exists. Please choose another one."
+                context.errorMessage = "A user with email address '\(sanitizedEmailAddress)' already exists. Please choose another one."
             default:
                 context.errorMessage = error.localizedDescription
             }
@@ -351,12 +354,13 @@ func createFrontEndRoutes(_ app: Application) {
         
     session.post("edit", "mission") { req -> Response in
         let newName: String = try req.content.get(at: "missionName")
+        let sanitizedNewName = newName.sanitized()
         
         let player = try req.getPlayerFromSession()
         
         if let supportedMission = app.simulation.getSupportedMissionForPlayer(player) {
             var changedMission = supportedMission
-            changedMission.missionName = newName
+            changedMission.missionName = sanitizedNewName
             let updatedSimulation = try app.simulation.replaceMission(changedMission)
             app.simulation = updatedSimulation
         }

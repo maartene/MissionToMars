@@ -38,3 +38,11 @@ public func cashFormatter(_ double: Double) -> String {
         return String(Int(double))
     }
 }
+
+extension String {
+    func sanitized() -> String {
+        let pattern = "[^A-Za-z0-9 #_@\\.]+"
+        return replacingOccurrences(of: pattern, with: "", options: [.regularExpression])
+        
+    }
+}

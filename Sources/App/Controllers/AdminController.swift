@@ -84,7 +84,7 @@ func createAdminRoutes(_ app: Application) {
         
         let message: String = try req.content.get(at: "motd")
         
-        app.motd = message
+        app.motd = message.sanitized()
         
         return req.redirect(to: "/admin")
     }
