@@ -7,9 +7,6 @@ Getting to Mars is hard. Very hard. This game aims to become a "hard-scifi" simu
 * It's business only, the assumption being that in the end it requires the will and the funds to get there more than anything else;
 * Whether you spend your funds on improving technology, supporting other players, building improvements is up to you.
 
-## Playable version online
-You can play a playable build of version 0.1.2 on https://www.mission2mars.space 
-
 ## Features
 ### Whats available
 * In the current state, this "game" is only a model with very little simulation;
