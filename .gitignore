@@ -79,3 +79,4 @@ Secrets/
 simulation*.json
 Package.resolved
 loadedSimulation*.json
+dockerbuild.sh
