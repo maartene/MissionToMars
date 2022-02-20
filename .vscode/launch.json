@@ -1,0 +1,33 @@
+{
+    "configurations": [
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Debug Run",
+            "program": "${workspaceFolder:MissionToMars}/.build/debug/Run",
+            "args": [],
+            "cwd": "${workspaceFolder:MissionToMars}",
+            "preLaunchTask": "swift: Build Debug Run"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Release Run",
+            "program": "${workspaceFolder:MissionToMars}/.build/release/Run",
+            "args": [],
+            "cwd": "${workspaceFolder:MissionToMars}",
+            "preLaunchTask": "swift: Build Release Run"
+        },
+        {
+            "type": "lldb",
+            "request": "launch",
+            "name": "Test MissionToMars",
+            "program": "/Applications/Xcode.app/Contents/Developer/usr/bin/xctest",
+            "args": [
+                ".build/debug/MissionToMarsPackageTests.xctest"
+            ],
+            "cwd": "${workspaceFolder:MissionToMars}",
+            "preLaunchTask": "swift: Build All"
+        }
+    ]
+}
