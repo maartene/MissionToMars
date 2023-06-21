@@ -77,6 +77,6 @@ fastlane/test_output
 Secrets/
 .swiftpm/xcode/xcshareddata/xcschemes/MissionToMars.xcscheme
 simulation*.json
-Package.resolved
+# Package.resolved
 loadedSimulation*.json
 dockerbuild.sh
